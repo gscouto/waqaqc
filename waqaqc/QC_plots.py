@@ -9,9 +9,13 @@ from astropy.io import fits
 from astropy.wcs import WCS
 from matplotlib.colorbar import Colorbar
 from vorbin.voronoi_2d_binning import voronoi_2d_binning
+import datapane as dp
+import warnings
 
 
 def l1_plots(self):
+    warnings.filterwarnings("ignore")
+
     config = configparser.ConfigParser()
     config.read(self)
 
@@ -40,6 +44,8 @@ def l1_plots(self):
     rms_r = np.std(red_cube[1].data[np.where(lam_r == 6200.)[0][0] - 50:np.where(lam_r == 6200.)[0][0] + 50], axis=0)
     snr_r = sgn_r / rms_r
 
+    title = blue_cube[0].header['CCNAME1'] + ' - ' + blue_cube[0].header['PLATE'] + ' - ' + blue_cube[0].header['MODE']
+
     # doing the plots
 
     axis_header = fits.Header()
@@ -61,10 +67,6 @@ def l1_plots(self):
     gs = gridspec.GridSpec(6, 5, height_ratios=[1, 0.6, 1, 0.6, 1, 0.6], width_ratios=[1, 0.06, 0.3, 1, 0.06])
     gs.update(left=0.07, right=0.9, bottom=0.05, top=0.95, wspace=0.0, hspace=0.25)
     props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
-
-    fig.suptitle(
-        blue_cube[0].header['CCNAME1'] + ' - ' + blue_cube[0].header['PLATE'] + ' - ' + blue_cube[0].header['MODE'],
-        size=20)
 
     wcs = WCS(axis_header)
     ax = plt.subplot(gs[0, 0], projection=wcs)
@@ -293,19 +295,11 @@ def l1_plots(self):
 
     fits.writeto(gal_dir + 'vorbin_map_red.fits', np.flip(np.rot90(img), axis=0), overwrite=True)
 
-    plt.savefig(gal_dir + 'QC_L1_plots.pdf')
+    qc_l1 = dp.Group(fig, label='L1 datacubes')
 
-
-def l2_plots(self):
-    config = configparser.ConfigParser()
-    config.read(self)
+    # creating plots for APS
 
     aps_cube = fits.open(config.get('QC_plots', 'aps_cube'))
-
-    gal_name = aps_cube[0].header['CCNAME1']
-
-    gal_dir = gal_name + '/'
-    os.makedirs(gal_dir, exist_ok=True)
 
     targetSN = np.float(config.get('QC_plots', 'target_SN'))
     levels = np.array(json.loads(config.get('QC_plots', 'levels'))).astype(np.float)  # SNR levels to display
@@ -341,10 +335,6 @@ def l2_plots(self):
     gs = gridspec.GridSpec(3, 5, height_ratios=[1, 1, 1], width_ratios=[1, 0.06, 0.4, 1, 1])
     gs.update(left=0.07, right=0.9, bottom=0.05, top=0.92, wspace=0.0, hspace=0.25)
     props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
-
-    fig.suptitle(
-        aps_cube[0].header['CCNAME1'] + ' - ' + aps_cube[0].header['OBSMODE'] + ' - ' + aps_cube[0].header['RES-OBS'],
-        size=20)
 
     wcs = WCS(axis_header)
 
@@ -464,4 +454,9 @@ def l2_plots(self):
     plt.axhline(targetSN)
     plt.legend()
 
-    plt.savefig(gal_dir + 'QC_L2_plots.pdf')
+    qc_l2 = dp.Group(fig, label='L2 datacubes')
+
+    night_dp = dp.Select(blocks=[qc_l1, qc_l2], type=dp.SelectType.TABS)
+
+    layout = dp.Report('# Night report', dp.Group('## ' + title, night_dp))
+    layout.save(gal_name + '.html')

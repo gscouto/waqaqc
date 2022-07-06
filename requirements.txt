@@ -3,3 +3,4 @@ numpy~=1.23.0
 astropy~=5.1
 vorbin~=3.1.5
 setuptools~=60.2.0
+datapane~=0.14.0
