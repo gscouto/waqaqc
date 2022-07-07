@@ -4,3 +4,4 @@ astropy~=5.1
 vorbin~=3.1.5
 setuptools~=60.2.0
 datapane~=0.14.0
+spectres~=2.1.1
