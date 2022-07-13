@@ -7,7 +7,7 @@ import spectres
 import multiprocessing as mp
 from astropy.table import Table, Column
 
-# teste
+# teste2
 
 gals_id = ['stackcube_1002022__stackcube_1002021__P001_APS']
 result_dir = '/work1/gcouto/weave/spec_fit/results/'
