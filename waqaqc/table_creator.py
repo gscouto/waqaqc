@@ -1,21 +1,20 @@
 import numpy as np
 from astropy.io import fits
 import os
-import time
 from astropy.table import Table
 import configparser
 
 
 def tab_cre(self):
-    s_time = time.time()
 
     config = configparser.ConfigParser()
     config.read(self)
 
     gal = config.get('spec_fit', 'gal_id')
 
-    res_dir = np.sort(os.listdir(config.get('table_creator', 'results_dir') + config.get('spec_fit', 'gal_id') + '/'))[
-        -1]
+    res_dir = config.get('table_creator', 'results_dir') + config.get('spec_fit', 'gal_id') + '/' + \
+              np.sort(os.listdir(config.get('table_creator', 'results_dir') +
+                                 config.get('spec_fit', 'gal_id') + '/'))[-1] + '/'
 
     c = fits.open(config.get('APS_cube', 'file_dir') + config.get('APS_cube', 'gal_id') + '.fits')
     rss_file = fits.open(res_dir + gal + '_vorbin_RSS.fits')
@@ -223,5 +222,3 @@ def tab_cre(self):
     hdu_elint_maps.writeto(res_dir + gal + '_eline_maps.fits', overwrite=True)
     hdu_stelt_maps.writeto(res_dir + gal + '_stellar_maps.fits', overwrite=True)
     hdu_base_coeff_maps.writeto(res_dir + gal + '_base_coeff_maps.fits', overwrite=True)
-
-    print('This run took ' + str(round(time.time() - s_time, 2)) + ' secs')

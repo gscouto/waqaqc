@@ -89,6 +89,8 @@ def cube_creator(self):
     vorbin_data = np.zeros((len(n_wave), np.unique(yy).shape[0], np.unique(xx).shape[0]))
     vorbin_err = np.zeros((len(n_wave), np.unique(yy).shape[0], np.unique(xx).shape[0]))
 
+    print('')
+
     for i in np.arange(np.unique(xx).shape[0]):
         for j in np.arange(np.unique(yy).shape[0]):
             cnt = + 1
@@ -108,6 +110,8 @@ def cube_creator(self):
 
     del rss_data, rss_err, vorbin_cube_data, vorbin_cube_err
     gc.collect()
+
+    print('')
 
     ncube_data = np.flip(cube_data, axis=2)
     ncube_err = np.flip(cube_err, axis=2)
