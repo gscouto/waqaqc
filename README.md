@@ -1,4 +1,4 @@
 # waqaqc
 QC plots for WEAVE-Apertif Quality Assurance (WAQA) team
 
-Requirements: vorbin
+Requirements: vorbin, datapane (?), spectres

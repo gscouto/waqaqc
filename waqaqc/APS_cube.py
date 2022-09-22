@@ -32,8 +32,8 @@ def cube_creator(self):
 
     os.makedirs(gal_dir, exist_ok=True)
 
-    xx = c[2].data['X']
-    yy = c[2].data['Y']
+    xx = np.around(c[2].data['X'],1)
+    yy = np.around(c[2].data['Y'],1)
 
     aps_id = c[2].data['APS_ID']
     bin_id = c[2].data['BIN_ID']

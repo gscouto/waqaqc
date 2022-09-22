@@ -217,9 +217,9 @@ def l1_plots(self):
     k = np.round((y_t_b - ymin) / pixelsize).astype(int)
     img[j, k] = binNum
 
-    rnd = np.argsort(np.random.random(xNode.size))  # Randomize bin colors
-    for i in np.arange(len(rnd)):
-        img[img == np.unique(img)[i]] = rnd[i]
+#    rnd = np.argsort(np.random.random(xNode.size))  # Randomize bin colors
+#    for i in np.arange(len(rnd)):
+#        img[img == np.unique(img)[i]] = rnd[i]
 
     ax.imshow(np.rot90(img), interpolation='nearest', cmap='prism',
               extent=[xmin - pixelsize / 2, xmax + pixelsize / 2,
@@ -266,9 +266,9 @@ def l1_plots(self):
     k = np.round((y_t_r - ymin) / pixelsize).astype(int)
     img[j, k] = binNum
 
-    rnd = np.argsort(np.random.random(xNode.size))  # Randomize bin colors
-    for i in np.arange(len(rnd)):
-        img[img == np.unique(img)[i]] = rnd[i]
+#    rnd = np.argsort(np.random.random(xNode.size))  # Randomize bin colors
+#    for i in np.arange(len(rnd)):
+#        img[img == np.unique(img)[i]] = rnd[i]
 
     ax.imshow(np.rot90(img), interpolation='nearest', cmap='prism',
               extent=[xmin - pixelsize / 2, xmax + pixelsize / 2,
@@ -428,9 +428,9 @@ def l1_plots(self):
     k = np.round((y_t_a - ymin) / pixelsize).astype(int)
     img[j, k] = binNum
 
-    rnd = np.argsort(np.random.random(xNode.size))  # Randomize bin colors
-    for i in np.arange(len(rnd)):
-        img[img == np.unique(img)[i]] = rnd[i]
+#    rnd = np.argsort(np.random.random(xNode.size))  # Randomize bin colors
+#    for i in np.arange(len(rnd)):
+#        img[img == np.unique(img)[i]] = rnd[i]
 
     ax.imshow(np.rot90(img), interpolation='nearest', cmap='prism',
               extent=[xmin - pixelsize / 2, xmax + pixelsize / 2,
