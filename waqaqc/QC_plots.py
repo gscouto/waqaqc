@@ -36,10 +36,14 @@ def l1_plots(self):
     lam_r = red_cube[1].header['CRVAL3'] + (np.arange(red_cube[1].header['NAXIS3']) * red_cube[1].header['CD3_3'])
     lam_b = blue_cube[1].header['CRVAL3'] + (np.arange(blue_cube[1].header['NAXIS3']) * blue_cube[1].header['CD3_3'])
 
+    med_b = np.median(blue_cube[1].data[np.where(lam_b == 5100.)[0][0] - 50:np.where(lam_b == 5100.)[0][0] + 50],
+                      axis=0)
     sgn_b = np.mean(blue_cube[1].data[np.where(lam_b == 5100.)[0][0] - 50:np.where(lam_b == 5100.)[0][0] + 50], axis=0)
     rms_b = np.std(blue_cube[1].data[np.where(lam_b == 5100.)[0][0] - 50:np.where(lam_b == 5100.)[0][0] + 50], axis=0)
     snr_b = sgn_b / rms_b
 
+    med_r = np.median(red_cube[1].data[np.where(lam_r == 6200.)[0][0] - 50:np.where(lam_r == 6200.)[0][0] + 50],
+                      axis=0)
     sgn_r = np.mean(red_cube[1].data[np.where(lam_r == 6200.)[0][0] - 50:np.where(lam_r == 6200.)[0][0] + 50], axis=0)
     rms_r = np.std(red_cube[1].data[np.where(lam_r == 6200.)[0][0] - 50:np.where(lam_r == 6200.)[0][0] + 50], axis=0)
     snr_r = sgn_r / rms_r
@@ -62,9 +66,9 @@ def l1_plots(self):
     axis_header['CUNIT1'] = blue_cube[1].header['CUNIT1']
     axis_header['CUNIT2'] = blue_cube[1].header['CUNIT2']
 
-    fig = plt.figure(figsize=(16, 30))
+    fig = plt.figure(figsize=(16, 35))
 
-    gs = gridspec.GridSpec(6, 5, height_ratios=[1, 0.6, 1, 0.6, 1, 0.6], width_ratios=[1, 0.06, 0.3, 1, 0.06])
+    gs = gridspec.GridSpec(7, 5, height_ratios=[1, 0.6, 1, 0.6, 0.6, 1, 0.6], width_ratios=[1, 0.06, 0.3, 1, 0.06])
     gs.update(left=0.07, right=0.9, bottom=0.05, top=0.95, wspace=0.0, hspace=0.25)
     props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
 
@@ -158,6 +162,20 @@ def l1_plots(self):
     # ------
 
     ax = plt.subplot(gs[3, 0])
+    ax.plot(med_b, snr_b, 'o', color='blue', alpha=0.3, markeredgecolor='black')
+    ax.set_ylabel(r'SNR [@5100$\AA$]')
+    ax.set_xlabel(r'Median Flux [@5050-5150$\AA$]')
+    ax.grid(True, alpha=0.3, zorder=-1)
+
+    ax = plt.subplot(gs[3, 3])
+    ax.plot(med_r, snr_r, 'o', color='red', alpha=0.3, markeredgecolor='black')
+    ax.set_ylabel(r'SNR [@6200$\AA$]')
+    ax.set_xlabel(r'Median Flux [@6150-6250$\AA$]')
+    ax.grid(True, alpha=0.3, zorder=-1)
+
+    # ------
+
+    ax = plt.subplot(gs[4, 0])
     ax.hist(snr_b[snr_b >= 3], 30, histtype='step', lw=2)
     ax.set_yscale('log')
     ax.set_ylabel(r'N pixels [SNR $\geq$ 3]')
@@ -170,7 +188,7 @@ def l1_plots(self):
     in_ax.axvline(5050, linestyle='--', color='black')
     in_ax.axvline(5150, linestyle='--', color='black')
 
-    ax = plt.subplot(gs[3, 3])
+    ax = plt.subplot(gs[4, 3])
     ax.hist(snr_r[snr_r >= 3], 30, histtype='step', lw=2)
     ax.set_yscale('log')
     ax.set_ylabel(r'N pixels [SNR $\geq$ 3]')
@@ -206,7 +224,7 @@ def l1_plots(self):
                                                                               targetSN,
                                                                               pixelsize=pixelsize, plot=0, quiet=1)
 
-    ax = plt.subplot(gs[4, 0])
+    ax = plt.subplot(gs[5, 0])
 
     xmin, xmax = np.min(x_t_b), np.max(x_t_b)
     ymin, ymax = np.min(y_t_b), np.max(y_t_b)
@@ -232,7 +250,7 @@ def l1_plots(self):
     ax.imshow(snr_b * 0., zorder=-1, cmap='Greys', interpolation='nearest')
     ax.set_title(r'Voronoi binning / Target SNR = ' + str(targetSN))
 
-    ax = plt.subplot(gs[5, 0])
+    ax = plt.subplot(gs[6, 0])
 
     rad = np.sqrt((xBar - xpmax_b[0]) ** 2 + (yBar - ypmax_b[0]) ** 2)  # Use centroids, NOT generators
     plt.plot(np.sqrt((x_t_b - xpmax_b[0]) ** 2 + (y_t_b - ypmax_b[0]) ** 2), sgn_tt_b / rms_tt_b, ',k')
@@ -255,7 +273,7 @@ def l1_plots(self):
                                                                               targetSN,
                                                                               pixelsize=pixelsize, plot=0, quiet=1)
 
-    ax = plt.subplot(gs[4, 3])
+    ax = plt.subplot(gs[5, 3])
 
     xmin, xmax = np.min(x_t_r), np.max(x_t_r)
     ymin, ymax = np.min(y_t_r), np.max(y_t_r)
@@ -281,7 +299,7 @@ def l1_plots(self):
     ax.imshow(snr_r * 0., zorder=-1, cmap='Greys', interpolation='nearest')
     ax.set_title(r'Voronoi binning / Target SNR = ' + str(targetSN))
 
-    ax = plt.subplot(gs[5, 3])
+    ax = plt.subplot(gs[6   , 3])
 
     rad = np.sqrt((xBar - xpmax_r[0]) ** 2 + (yBar - ypmax_r[0]) ** 2)  # Use centroids, NOT generators
     plt.plot(np.sqrt((x_t_b - xpmax_r[0]) ** 2 + (y_t_b - ypmax_r[0]) ** 2), sgn_tt_b / rms_tt_b, ',k')
