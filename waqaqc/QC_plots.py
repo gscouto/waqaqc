@@ -11,6 +11,66 @@ from matplotlib.colorbar import Colorbar
 from vorbin.voronoi_2d_binning import voronoi_2d_binning
 import datapane as dp
 import warnings
+import numpy
+from astropy.table import Table
+import requests
+from PIL import Image
+from io import BytesIO
+
+
+def getimages(ra, dec, filters="grizy"):
+    """Query ps1filenames.py service to get a list of images
+
+    ra, dec = position in degrees
+    size = image size in pixels (0.25 arcsec/pixel)
+    filters = string with filters to include
+    Returns a table with the results
+    """
+
+    service = "https://ps1images.stsci.edu/cgi-bin/ps1filenames.py"
+    url = f"{service}?ra={ra}&dec={dec}&filters={filters}"
+    table = Table.read(url, format='ascii')
+    return table
+
+
+def geturl(ra, dec, size=240, output_size=None, filters="grizy", format="jpg", color=False):
+    """Get URL for images in the table
+
+    ra, dec = position in degrees
+    size = extracted image size in pixels (0.25 arcsec/pixel)
+    output_size = output (display) image size in pixels (default = size).
+                  output_size has no effect for fits format images.
+    filters = string with filters to include
+    format = data format (options are "jpg", "png" or "fits")
+    color = if True, creates a color image (only for jpg or png format).
+            Default is return a list of URLs for single-filter grayscale images.
+    Returns a string with the URL
+    """
+
+    if color and format == "fits":
+        raise ValueError("color images are available only for jpg or png formats")
+    if format not in ("jpg", "png", "fits"):
+        raise ValueError("format must be one of jpg, png, fits")
+    table = getimages(ra, dec, filters=filters)
+    url = (f"https://ps1images.stsci.edu/cgi-bin/fitscut.cgi?"
+           f"ra={ra}&dec={dec}&size={size}&format={format}")
+    if output_size:
+        url = url + "&output_size={}".format(output_size)
+    # sort filters from red to blue
+    flist = ["yzirg".find(x) for x in table['filter']]
+    table = table[numpy.argsort(flist)]
+    if color:
+        if len(table) > 3:
+            # pick 3 filters
+            table = table[[0, len(table) // 2, len(table) - 1]]
+        for i, param in enumerate(["red", "green", "blue"]):
+            url = url + "&{}={}".format(param, table['filename'][i])
+    else:
+        urlbase = url + "&red="
+        url = []
+        for filename in table['filename']:
+            url.append(urlbase + filename)
+    return url
 
 
 def l1_plots(self):
@@ -36,17 +96,24 @@ def l1_plots(self):
     lam_r = red_cube[1].header['CRVAL3'] + (np.arange(red_cube[1].header['NAXIS3']) * red_cube[1].header['CD3_3'])
     lam_b = blue_cube[1].header['CRVAL3'] + (np.arange(blue_cube[1].header['NAXIS3']) * blue_cube[1].header['CD3_3'])
 
-    med_b = np.median(blue_cube[1].data[np.where(lam_b == 5100.)[0][0] - 50:np.where(lam_b == 5100.)[0][0] + 50],
+    med_b = np.median(blue_cube[1].data[np.where(lam_b == 5100.)[0][0] - 500:np.where(lam_b == 5100.)[0][0] + 500],
                       axis=0)
-    sgn_b = np.mean(blue_cube[1].data[np.where(lam_b == 5100.)[0][0] - 50:np.where(lam_b == 5100.)[0][0] + 50], axis=0)
-    rms_b = np.std(blue_cube[1].data[np.where(lam_b == 5100.)[0][0] - 50:np.where(lam_b == 5100.)[0][0] + 50], axis=0)
+    sgn_b = np.mean(blue_cube[1].data[np.where(lam_b == 5100.)[0][0] - 500:np.where(lam_b == 5100.)[0][0] + 500],
+                    axis=0)
+    rms_b = np.std(blue_cube[1].data[np.where(lam_b == 5100.)[0][0] - 500:np.where(lam_b == 5100.)[0][0] + 500], axis=0)
     snr_b = sgn_b / rms_b
 
-    med_r = np.median(red_cube[1].data[np.where(lam_r == 6200.)[0][0] - 50:np.where(lam_r == 6200.)[0][0] + 50],
+    med_r = np.median(red_cube[1].data[np.where(lam_r == 6200.)[0][0] - 500:np.where(lam_r == 6200.)[0][0] + 500],
                       axis=0)
-    sgn_r = np.mean(red_cube[1].data[np.where(lam_r == 6200.)[0][0] - 50:np.where(lam_r == 6200.)[0][0] + 50], axis=0)
-    rms_r = np.std(red_cube[1].data[np.where(lam_r == 6200.)[0][0] - 50:np.where(lam_r == 6200.)[0][0] + 50], axis=0)
+    sgn_r = np.mean(red_cube[1].data[np.where(lam_r == 6200.)[0][0] - 500:np.where(lam_r == 6200.)[0][0] + 500], axis=0)
+    rms_r = np.std(red_cube[1].data[np.where(lam_r == 6200.)[0][0] - 500:np.where(lam_r == 6200.)[0][0] + 500], axis=0)
     snr_r = sgn_r / rms_r
+
+    url = geturl(38.698333, 32.843611, size=480, filters="grizy", output_size=None, format="jpg", color=True)
+    # url = geturl(float(blue_cube[0].header['FLDRA']), float(blue_cube[0].header['FLDDEC']), size=480, filters="grizy",
+    #             output_size=None, format="jpg", color=True)
+    r = requests.get(url)
+    im = Image.open(BytesIO(r.content))
 
     title = blue_cube[0].header['CCNAME1'] + ' - ' + blue_cube[0].header['PLATE'] + ' - ' + blue_cube[0].header['MODE']
 
@@ -66,14 +133,40 @@ def l1_plots(self):
     axis_header['CUNIT1'] = blue_cube[1].header['CUNIT1']
     axis_header['CUNIT2'] = blue_cube[1].header['CUNIT2']
 
-    fig = plt.figure(figsize=(16, 35))
+    fig = plt.figure(figsize=(14, 42))
 
-    gs = gridspec.GridSpec(7, 5, height_ratios=[1, 0.6, 1, 0.6, 0.6, 1, 0.6], width_ratios=[1, 0.06, 0.3, 1, 0.06])
+    gs = gridspec.GridSpec(9, 5, height_ratios=[1, 1, 0.6, 1, 0.6, 0.6, 1, 0.6, 0.6],
+                           width_ratios=[1, 0.06, 0.3, 1, 0.06])
     gs.update(left=0.07, right=0.9, bottom=0.05, top=0.95, wspace=0.0, hspace=0.25)
     props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
 
+    cdelt1 = 0.25
+    cdelt2 = 0.25
+    crpix1 = im.size[1] / 2.
+    crpix2 = im.size[1] / 2.
+
+    x_ax = (np.arange(im.size[1]) + 1 - crpix1) * cdelt1
+    y_ax = (np.arange(im.size[0]) + 1 - crpix2) * cdelt2
+
+    ax = plt.subplot(gs[0, 0])
+    ax.imshow(im, extent=[min(x_ax), max(x_ax), max(y_ax), min(y_ax)])
+    ax.plot(0, 0, marker='H', color='red', markerfacecolor='none', markersize=200)
+    ax2 = ax.secondary_xaxis('top')
+    ay2 = ax.secondary_yaxis('right')
+    ax.tick_params(width=2, size=10)
+    ax2.tick_params(width=2, size=10)
+    ay2.tick_params(width=2, size=10)
+    ax.tick_params(axis="y", direction="inout", color='white')
+    ax.tick_params(axis="x", direction="inout", color='white')
+    ax2.tick_params(direction="inout", color='white')
+    ay2.tick_params(direction="inout", color='white')
+    ax.set_ylabel(r'$\Delta$X [arcsec]')
+    ax.set_xlabel(r'$\Delta$Y [arcsec]')
+
+    # ------
+
     wcs = WCS(axis_header)
-    ax = plt.subplot(gs[0, 0], projection=wcs)
+    ax = plt.subplot(gs[1, 0], projection=wcs)
 
     im = ax.imshow(np.arcsinh(colap_b_map), origin='lower')
 
@@ -86,11 +179,11 @@ def l1_plots(self):
     ax.set_ylabel('Declination (J2000)')
     ax.legend()
 
-    cbax = plt.subplot(gs[0, 1])
+    cbax = plt.subplot(gs[1, 1])
     cbar = Colorbar(ax=cbax, mappable=im)
     cbar.set_label('arcsinh scale')
 
-    ax = plt.subplot(gs[0, 3])
+    ax = plt.subplot(gs[1, 3])
     im = ax.imshow(np.arcsinh(colap_r_map), origin='lower')
 
     ypmax_r = np.where(colap_r_map == np.nanmax(colap_r_map))[0]
@@ -102,19 +195,19 @@ def l1_plots(self):
     ax.set_ylabel('Y [px]')
     ax.legend()
 
-    cbax = plt.subplot(gs[0, 4])
+    cbax = plt.subplot(gs[1, 4])
     cbar = Colorbar(ax=cbax, mappable=im)
     cbar.set_label('arcsinh scale')
 
     # ------
 
-    ax = plt.subplot(gs[1, 0])
+    ax = plt.subplot(gs[2, 0])
     ax.plot(lam_b, blue_cube[1].data[:, ypmax_b[0], xpmax_b[0]])
     ax.set_xlabel(r'$\lambda$ [$\AA$]')
     ax.set_ylabel('Flux?')
     ax.set_title('Blue spectrum at (' + str(xpmax_b[0]) + ', ' + str(ypmax_b[0]) + ')')
 
-    ax = plt.subplot(gs[1, 3])
+    ax = plt.subplot(gs[2, 3])
     ax.plot(lam_r, red_cube[1].data[:, ypmax_r[0], xpmax_r[0]])
     ax.set_xlabel(r'$\lambda$ [$\AA$]')
     ax.set_ylabel('Flux?')
@@ -122,7 +215,7 @@ def l1_plots(self):
 
     # ------
 
-    ax = plt.subplot(gs[2, 0])
+    ax = plt.subplot(gs[3, 0])
     im = ax.imshow(snr_b, origin='lower')
     cs = ax.contour(snr_b, levels, linestyles=np.array([':', '-']), colors='white')
     cs.collections[0].set_label('SNR = 3')
@@ -138,11 +231,11 @@ def l1_plots(self):
     ims_xlims = ax.get_xlim()
     ims_ylims = ax.get_ylim()
 
-    cbax = plt.subplot(gs[2, 1])
+    cbax = plt.subplot(gs[3, 1])
     cbar = Colorbar(ax=cbax, mappable=im)
     cbar.set_label('SNR')
 
-    ax = plt.subplot(gs[2, 3])
+    ax = plt.subplot(gs[3, 3])
     im = ax.imshow(snr_r, origin='lower')
     cs = ax.contour(snr_r, levels, linestyles=np.array([':', '-']), colors='white')
     cs.collections[0].set_label('SNR = 3')
@@ -155,19 +248,19 @@ def l1_plots(self):
     ax.set_xlabel('X [px]')
     ax.set_ylabel('Y [px]')
 
-    cbax = plt.subplot(gs[2, 4])
+    cbax = plt.subplot(gs[3, 4])
     cbar = Colorbar(ax=cbax, mappable=im)
     cbar.set_label('SNR')
 
     # ------
 
-    ax = plt.subplot(gs[3, 0])
+    ax = plt.subplot(gs[4, 0])
     ax.plot(med_b, snr_b, 'o', color='blue', alpha=0.3, markeredgecolor='black')
     ax.set_ylabel(r'SNR [@5100$\AA$]')
     ax.set_xlabel(r'Median Flux [@5050-5150$\AA$]')
     ax.grid(True, alpha=0.3, zorder=-1)
 
-    ax = plt.subplot(gs[3, 3])
+    ax = plt.subplot(gs[4, 3])
     ax.plot(med_r, snr_r, 'o', color='red', alpha=0.3, markeredgecolor='black')
     ax.set_ylabel(r'SNR [@6200$\AA$]')
     ax.set_xlabel(r'Median Flux [@6150-6250$\AA$]')
@@ -175,7 +268,7 @@ def l1_plots(self):
 
     # ------
 
-    ax = plt.subplot(gs[4, 0])
+    ax = plt.subplot(gs[5, 0])
     ax.hist(snr_b[snr_b >= 3], 30, histtype='step', lw=2)
     ax.set_yscale('log')
     ax.set_ylabel(r'N pixels [SNR $\geq$ 3]')
@@ -188,7 +281,7 @@ def l1_plots(self):
     in_ax.axvline(5050, linestyle='--', color='black')
     in_ax.axvline(5150, linestyle='--', color='black')
 
-    ax = plt.subplot(gs[4, 3])
+    ax = plt.subplot(gs[5, 3])
     ax.hist(snr_r[snr_r >= 3], 30, histtype='step', lw=2)
     ax.set_yscale('log')
     ax.set_ylabel(r'N pixels [SNR $\geq$ 3]')
@@ -224,7 +317,7 @@ def l1_plots(self):
                                                                               targetSN,
                                                                               pixelsize=pixelsize, plot=0, quiet=1)
 
-    ax = plt.subplot(gs[5, 0])
+    ax = plt.subplot(gs[6, 0])
 
     xmin, xmax = np.min(x_t_b), np.max(x_t_b)
     ymin, ymax = np.min(y_t_b), np.max(y_t_b)
@@ -235,9 +328,9 @@ def l1_plots(self):
     k = np.round((y_t_b - ymin) / pixelsize).astype(int)
     img[j, k] = binNum
 
-#    rnd = np.argsort(np.random.random(xNode.size))  # Randomize bin colors
-#    for i in np.arange(len(rnd)):
-#        img[img == np.unique(img)[i]] = rnd[i]
+    #    rnd = np.argsort(np.random.random(xNode.size))  # Randomize bin colors
+    #    for i in np.arange(len(rnd)):
+    #        img[img == np.unique(img)[i]] = rnd[i]
 
     ax.imshow(np.rot90(img), interpolation='nearest', cmap='prism',
               extent=[xmin - pixelsize / 2, xmax + pixelsize / 2,
@@ -250,7 +343,7 @@ def l1_plots(self):
     ax.imshow(snr_b * 0., zorder=-1, cmap='Greys', interpolation='nearest')
     ax.set_title(r'Voronoi binning / Target SNR = ' + str(targetSN))
 
-    ax = plt.subplot(gs[6, 0])
+    ax = plt.subplot(gs[7, 0])
 
     rad = np.sqrt((xBar - xpmax_b[0]) ** 2 + (yBar - ypmax_b[0]) ** 2)  # Use centroids, NOT generators
     plt.plot(np.sqrt((x_t_b - xpmax_b[0]) ** 2 + (y_t_b - ypmax_b[0]) ** 2), sgn_tt_b / rms_tt_b, ',k')
@@ -273,7 +366,7 @@ def l1_plots(self):
                                                                               targetSN,
                                                                               pixelsize=pixelsize, plot=0, quiet=1)
 
-    ax = plt.subplot(gs[5, 3])
+    ax = plt.subplot(gs[6, 3])
 
     xmin, xmax = np.min(x_t_r), np.max(x_t_r)
     ymin, ymax = np.min(y_t_r), np.max(y_t_r)
@@ -284,9 +377,9 @@ def l1_plots(self):
     k = np.round((y_t_r - ymin) / pixelsize).astype(int)
     img[j, k] = binNum
 
-#    rnd = np.argsort(np.random.random(xNode.size))  # Randomize bin colors
-#    for i in np.arange(len(rnd)):
-#        img[img == np.unique(img)[i]] = rnd[i]
+    #    rnd = np.argsort(np.random.random(xNode.size))  # Randomize bin colors
+    #    for i in np.arange(len(rnd)):
+    #        img[img == np.unique(img)[i]] = rnd[i]
 
     ax.imshow(np.rot90(img), interpolation='nearest', cmap='prism',
               extent=[xmin - pixelsize / 2, xmax + pixelsize / 2,
@@ -299,7 +392,7 @@ def l1_plots(self):
     ax.imshow(snr_r * 0., zorder=-1, cmap='Greys', interpolation='nearest')
     ax.set_title(r'Voronoi binning / Target SNR = ' + str(targetSN))
 
-    ax = plt.subplot(gs[6   , 3])
+    ax = plt.subplot(gs[7, 3])
 
     rad = np.sqrt((xBar - xpmax_r[0]) ** 2 + (yBar - ypmax_r[0]) ** 2)  # Use centroids, NOT generators
     plt.plot(np.sqrt((x_t_b - xpmax_r[0]) ** 2 + (y_t_b - ypmax_r[0]) ** 2), sgn_tt_b / rms_tt_b, ',k')
@@ -312,6 +405,57 @@ def l1_plots(self):
     plt.legend()
 
     fits.writeto(gal_dir + 'vorbin_map_red.fits', np.flip(np.rot90(img), axis=0), overwrite=True)
+
+    # ------
+
+    xc = []
+    yc = []
+    lamc_b = []
+
+    for i in np.arange(len(blue_cube[1].data[:, 0, 0])):
+        xcx = np.where(blue_cube[1].data[i, :, :] == np.nanmax(blue_cube[1].data[i, :, :]))[1]
+        ycy = np.where(blue_cube[1].data[i, :, :] == np.nanmax(blue_cube[1].data[i, :, :]))[0]
+        if len(xcx) < len(blue_cube[1].data[0, 0, :]):
+            for j in np.arange(len(xcx)):
+                xc.append(xcx[j])
+                yc.append(ycy[j])
+                lamc_b.append(lam_b[i])
+
+    xc = np.array(xc)
+    yc = np.array(yc)
+    lamc_b = np.array(lamc_b)
+
+    ax = plt.subplot(gs[8, 0])
+    ax.plot(lamc_b, xc, '+', color='blue', ms=2, label='X center')
+    ax.plot(lamc_b, yc, '+', color='red', ms=2, label='Y center')
+    ax.set_xlabel(r'$\lambda$ [$\AA$]')
+    ax.set_ylabel(r'X and Y center')
+    ax.set_title('Differential Atmosphere Effect (Blue)')
+    ax.legend(markerscale=5)
+
+    xc = []
+    yc = []
+    lamc_r = []
+
+    for i in np.arange(len(red_cube[1].data[:, 0, 0])):
+        xcx = np.where(red_cube[1].data[i, :, :] == np.nanmax(red_cube[1].data[i, :, :]))[1]
+        ycy = np.where(red_cube[1].data[i, :, :] == np.nanmax(red_cube[1].data[i, :, :]))[0]
+        if len(xcx) < len(red_cube[1].data[0, 0, :]):
+            for j in np.arange(len(xcx)):
+                xc.append(xcx[j])
+                yc.append(ycy[j])
+                lamc_r.append(lam_r[i])
+
+    xc = np.array(xc)
+    yc = np.array(yc)
+    lamc_r = np.array(lamc_r)
+
+    ax = plt.subplot(gs[8, 3])
+    ax.plot(lamc_r, xc, '+', color='blue', ms=2)
+    ax.plot(lamc_r, yc, '+', color='red', ms=2)
+    ax.set_xlabel(r'$\lambda$ [$\AA$]')
+    ax.set_ylabel(r'X and Y center')
+    ax.set_title('Differential Atmosphere Effect (Red)')
 
     qc_l1 = dp.Group(fig, label='L1 datacubes')
 
@@ -446,9 +590,9 @@ def l1_plots(self):
     k = np.round((y_t_a - ymin) / pixelsize).astype(int)
     img[j, k] = binNum
 
-#    rnd = np.argsort(np.random.random(xNode.size))  # Randomize bin colors
-#    for i in np.arange(len(rnd)):
-#        img[img == np.unique(img)[i]] = rnd[i]
+    #    rnd = np.argsort(np.random.random(xNode.size))  # Randomize bin colors
+    #    for i in np.arange(len(rnd)):
+    #        img[img == np.unique(img)[i]] = rnd[i]
 
     ax.imshow(np.rot90(img), interpolation='nearest', cmap='prism',
               extent=[xmin - pixelsize / 2, xmax + pixelsize / 2,
