@@ -16,6 +16,10 @@ from astropy.table import Table
 import requests
 from PIL import Image
 from io import BytesIO
+from paramiko import SSHClient
+from scp import SCPClient
+from astropy.coordinates import SkyCoord, FK5
+import astropy.units as u
 
 
 def getimages(ra, dec, filters="grizy"):
@@ -662,7 +666,11 @@ def html_plots(self):
     rms_r = np.std(red_cube[1].data[np.where(lam_r == 6200.)[0][0] - 500:np.where(lam_r == 6200.)[0][0] + 500], axis=0)
     snr_r = sgn_r / rms_r
 
-    url = geturl(38.698333, 32.843611, size=480, filters="grizy", output_size=None, format="jpg", color=True)
+    sc = SkyCoord(ra=blue_cube[0].header['RA'], dec=blue_cube[0].header['DEC'], unit=(u.hourangle, u.deg), frame=FK5,
+                  equinox='J'+str(blue_cube[0].header['CATEPOCH']))
+    nsc = sc.transform_to(FK5(equinox='J2000.0'))
+
+    url = geturl(nsc.ra.value, nsc.dec.value, size=480, filters="grizy", output_size=None, format="jpg", color=True)
     # url = geturl(float(blue_cube[0].header['FLDRA']), float(blue_cube[0].header['FLDDEC']), size=480, filters="grizy",
     #             output_size=None, format="jpg", color=True)
     r = requests.get(url)
@@ -1194,3 +1202,13 @@ def html_plots(self):
     f.write(text)
 
     f.close()
+    
+    ssh = SSHClient()
+    ssh.load_system_host_keys()
+    ssh.connect(hostname='minos.aip.de', username='gcouto', password=open('minos_pass', 'r').read().splitlines()[0])
+    
+    scp = SCPClient(ssh.get_transport())
+    
+    scp.put([date + '.html', fig_l1, fig_l2], '/store/weave/apertif/')
+    
+    #os.system('scp '+date+'* gcouto@minos.aip.de:/store/weave/apertif/.')
