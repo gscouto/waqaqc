@@ -11,7 +11,6 @@ from matplotlib.colorbar import Colorbar
 from vorbin.voronoi_2d_binning import voronoi_2d_binning
 import datapane as dp
 import warnings
-import numpy
 from astropy.table import Table
 import requests
 from PIL import Image
