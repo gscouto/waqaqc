@@ -26,7 +26,10 @@ def cube_creator(self):
     config = configparser.ConfigParser()
     config.read(self)
 
-    c = fits.open(config.get('APS_cube', 'file_dir') + config.get('APS_cube', 'gal_id') + '.fits')
+    file_dir = config.get('APS_cube', 'file_dir')
+    list_file = os.listdir(file_dir)
+
+    c = fits.open(file_dir + [s for s in list_file if 'APS.fits' in s][0])
 
     gal_id = c[0].header['CCNAME1']
     gal_dir = gal_id
@@ -193,13 +196,15 @@ def cube_creator(self):
 
 
 def cube_creator_new(self):
-    s_time = time.time()
 
     config = configparser.ConfigParser()
     config.read(self)
 
     wcs_c = fits.open(config.get('QC_plots', 'blue_cube'))
-    c = fits.open(config.get('APS_cube', 'file_dir') + config.get('APS_cube', 'gal_id') + '.fits')
+    file_dir = config.get('APS_cube', 'file_dir')
+    list_file = os.listdir(file_dir)
+
+    c = fits.open(file_dir + [s for s in list_file if 'APS.fits' in s][0])
 
     gal_id = c[0].header['CCNAME1']
     gal_dir = gal_id
@@ -308,12 +313,6 @@ def cube_creator_new(self):
 
     print('')
 
-    # ncube_data = np.flip(cube_data, axis=2)
-    # ncube_err = np.flip(cube_err, axis=2)
-    # nvorbin_data = np.flip(vorbin_data, axis=2)
-    # nvorbin_err = np.flip(vorbin_err, axis=2)
-    # nvorbin_map = np.flip(vorbin_map, axis=1)
-
     cpix = [c[2].data['X_0'][0] + (min(c[2].data['X'], key=abs) / 3600), c[2].data['Y_0'][0] +
             (min(c[2].data['Y'], key=abs) / 3600)]
 
@@ -374,5 +373,3 @@ def cube_creator_new(self):
     n_cube.writeto(gal_dir + '/' + gal_id + '_cube.fits', overwrite=True)
     n_vorbin.writeto(gal_dir + '/' + gal_id + '_vorbin_cube.fits', overwrite=True)
     fits.writeto(gal_dir + '/' + 'vorbin_map.fits', vorbin_map, header=map_head, overwrite=True)
-
-    print('This run took ' + str(round(time.time() - s_time, 2)) + ' secs')
