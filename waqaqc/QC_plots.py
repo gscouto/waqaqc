@@ -60,7 +60,7 @@ def geturl(ra, dec, size=240, output_size=None, filters="grizy", format="jpg", c
         url = url + "&output_size={}".format(output_size)
     # sort filters from red to blue
     flist = ["yzirg".find(x) for x in table['filter']]
-    table = table[numpy.argsort(flist)]
+    table = table[np.argsort(flist)]
     if color:
         if len(table) > 3:
             # pick 3 filters
@@ -81,8 +81,10 @@ def html_plots(self):
     config = configparser.ConfigParser()
     config.read(self)
 
-    blue_cube = fits.open(config.get('QC_plots', 'blue_cube'))
-    red_cube = fits.open(config.get('QC_plots', 'red_cube'))
+    file_dir = config.get('APS_cube', 'file_dir')
+
+    blue_cube = fits.open(file_dir + config.get('QC_plots', 'blue_cube'))
+    red_cube = fits.open(file_dir + config.get('QC_plots', 'red_cube'))
 
     gal_name = blue_cube[0].header['CCNAME1']
     date = blue_cube[0].header['DATE-OBS']
@@ -335,10 +337,6 @@ def html_plots(self):
     k = np.round((y_t_b - ymin) / pixelsize).astype(int)
     img[j, k] = binNum
 
-    #    rnd = np.argsort(np.random.random(xNode.size))  # Randomize bin colors
-    #    for i in np.arange(len(rnd)):
-    #        img[img == np.unique(img)[i]] = rnd[i]
-
     ax.imshow(np.rot90(img), interpolation='nearest', cmap='prism',
               extent=[xmin - pixelsize / 2, xmax + pixelsize / 2,
                       ymin - pixelsize / 2, ymax + pixelsize / 2])
@@ -383,10 +381,6 @@ def html_plots(self):
     j = np.round((x_t_r - xmin) / pixelsize).astype(int)
     k = np.round((y_t_r - ymin) / pixelsize).astype(int)
     img[j, k] = binNum
-
-    #    rnd = np.argsort(np.random.random(xNode.size))  # Randomize bin colors
-    #    for i in np.arange(len(rnd)):
-    #        img[img == np.unique(img)[i]] = rnd[i]
 
     ax.imshow(np.rot90(img), interpolation='nearest', cmap='prism',
               extent=[xmin - pixelsize / 2, xmax + pixelsize / 2,
@@ -472,7 +466,7 @@ def html_plots(self):
 
     # creating plots for APS
 
-    aps_cube = fits.open(config.get('QC_plots', 'aps_cube'))
+    aps_cube = fits.open(gal_name+'/'+gal_name+'_cube.fits')
 
     targetSN = np.float(config.get('QC_plots', 'target_SN'))
     levels = np.array(json.loads(config.get('QC_plots', 'levels'))).astype(np.float)  # SNR levels to display
