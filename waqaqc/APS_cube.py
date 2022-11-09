@@ -23,10 +23,10 @@ def cube_creator(self):
     config = configparser.ConfigParser()
     config.read(self)
 
-    wcs_c = fits.open(config.get('QC_plots', 'blue_cube'))
     file_dir = config.get('APS_cube', 'file_dir')
     list_file = os.listdir(file_dir)
 
+    wcs_c = fits.open(file_dir + config.get('QC_plots', 'blue_cube'))
     c = fits.open(file_dir + [s for s in list_file if 'APS.fits' in s][0])
 
     gal_id = c[0].header['CCNAME1']
@@ -170,6 +170,19 @@ def cube_creator(self):
     cube_head['OBSMODE'] = c[0].header['OBSMODE']
     cube_head['RES-OBS'] = c[0].header['RES-OBS']
 
+    # this is how I used to do CRPIX and CRVAL before using WCS coordinates
+
+    # cube_head['CRPIX1'] = \
+    #     np.where(np.unique(c[2].data['X']) == np.min(np.unique(c[2].data['X'])[np.unique(c[2].data['X']) > 0]))[0][
+    #         0] + 1  # X from APS with lower absolute value
+    # cube_head['CRPIX2'] = \
+    #     np.where(np.unique(c[2].data['Y']) == np.min(np.unique(c[2].data['Y'])[np.unique(c[2].data['Y']) > 0]))[0][
+    #         0] + 1  # Y from APS with lower absolute value
+    # cube_head['CRVAL1'] = np.unique(c[2].data['X_0'])[0] + (np.min(
+    #     np.unique(c[2].data['X'])[np.unique(c[2].data['X']) > 0]) / 3600.)  # X from central pixel plus position X_0
+    # cube_head['CRVAL2'] = np.unique(c[2].data['Y_0'])[0] + (np.min(
+    #     np.unique(c[2].data['Y'])[np.unique(c[2].data['Y']) > 0]) / 3600.)  # Y from central pixel plus position Y_0
+
     map_head = fits.Header()
     map_head['SIMPLE'] = True
     map_head['BITPIX'] = -32
@@ -177,12 +190,12 @@ def cube_creator(self):
     map_head['NAXIS1'] = vorbin_map.shape[1]
     map_head['NAXIS2'] = vorbin_map.shape[0]
     map_head['DISPAXIS'] = 1
-    cube_head['CRPIX1'] = cpix_x
-    cube_head['CRPIX2'] = cpix_y
-    cube_head['CRVAL1'] = cpix[0]
-    cube_head['CRVAL2'] = cpix[1]
-    cube_head['CDELT1'] = axis_header['CD1_1']
-    cube_head['CDELT2'] = axis_header['CD2_2']
+    map_head['CRPIX1'] = cpix_x
+    map_head['CRPIX2'] = cpix_y
+    map_head['CRVAL1'] = cpix[0]
+    map_head['CRVAL2'] = cpix[1]
+    map_head['CDELT1'] = axis_header['CD1_1']
+    map_head['CDELT2'] = axis_header['CD2_2']
     map_head['CTYPE1'] = 'RA---TAN'
     map_head['CTYPE2'] = 'DEC--TAN'
     map_head['CUNIT1'] = 'deg'
