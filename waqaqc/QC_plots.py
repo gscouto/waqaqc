@@ -18,6 +18,7 @@ from paramiko import SSHClient
 from scp import SCPClient
 from astropy.coordinates import SkyCoord, FK5
 import astropy.units as u
+import multiprocessing as mp
 
 
 def getimages(ra, dec, filters="grizy"):
@@ -75,6 +76,20 @@ def geturl(ra, dec, size=240, output_size=None, filters="grizy", format="jpg", c
     return url
 
 
+def vorbin_loop(args):
+    i, vorbin_m, cam = args
+
+    nb_pixs = np.where(vorbin_m == i)
+    if cam == 'WEAVEBLUE':
+        nbc = np.nanmean(blue_cube_data[:, nb_pixs[1], nb_pixs[0]], axis=1)
+        nbc_err = np.nanmean(blue_cube_err[:, nb_pixs[1], nb_pixs[0]], axis=1)
+    elif cam == 'WEAVERED':
+        nbc = np.nanmean(red_cube_data[:, nb_pixs[1], nb_pixs[0]], axis=1)
+        nbc_err = np.nanmean(red_cube_err[:, nb_pixs[1], nb_pixs[0]], axis=1)
+
+    return nbc, nbc_err, nb_pixs
+
+
 def html_plots(self):
     warnings.filterwarnings("ignore")
 
@@ -83,8 +98,20 @@ def html_plots(self):
 
     file_dir = config.get('APS_cube', 'file_dir')
 
+    global blue_cube_data
+    global blue_cube_err
+
+    global red_cube_data
+    global red_cube_err
+
     blue_cube = fits.open(file_dir + config.get('QC_plots', 'blue_cube'))
     red_cube = fits.open(file_dir + config.get('QC_plots', 'red_cube'))
+
+    blue_cube_data = blue_cube[1].data
+    blue_cube_err = blue_cube[2].data
+
+    red_cube_data = red_cube[1].data
+    red_cube_err = red_cube[2].data
 
     gal_name = blue_cube[0].header['CCNAME1']
     date = blue_cube[0].header['DATE-OBS']
@@ -115,7 +142,7 @@ def html_plots(self):
     snr_r = sgn_r / rms_r
 
     sc = SkyCoord(ra=blue_cube[0].header['RA'], dec=blue_cube[0].header['DEC'], unit=(u.hourangle, u.deg), frame=FK5,
-                  equinox='J'+str(blue_cube[0].header['CATEPOCH']))
+                  equinox='J' + str(blue_cube[0].header['CATEPOCH']))
     nsc = sc.transform_to(FK5(equinox='J2000.0'))
 
     url = geturl(nsc.ra.value, nsc.dec.value, size=480, filters="grizy", output_size=None, format="jpg", color=True)
@@ -330,11 +357,9 @@ def html_plots(self):
 
     xmin, xmax = np.min(x_t_b), np.max(x_t_b)
     ymin, ymax = np.min(y_t_b), np.max(y_t_b)
-    nx = int(round((xmax - xmin) / pixelsize) + 1)
-    ny = int(round((ymax - ymin) / pixelsize) + 1)
-    img = np.full((nx, ny), np.nan)  # use nan for missing data
-    j = np.round((x_t_b - xmin) / pixelsize).astype(int)
-    k = np.round((y_t_b - ymin) / pixelsize).astype(int)
+    img = np.full((blue_cube[1].data.shape[2], blue_cube[1].data.shape[1]), np.nan)  # use nan for missing data
+    j = np.round(x_t_b / pixelsize).astype(int)
+    k = np.round(y_t_b / pixelsize).astype(int)
     img[j, k] = binNum
 
     ax.imshow(np.rot90(img), interpolation='nearest', cmap='prism',
@@ -362,6 +387,50 @@ def html_plots(self):
 
     fits.writeto(gal_dir + 'vorbin_map_blue.fits', np.flip(np.rot90(img), axis=0), overwrite=True)
 
+    # saving voronoi datacube
+    vorbin_map = img
+    nb_cube_data = np.zeros(blue_cube[1].data.shape)
+    nb_cube_err = np.zeros(blue_cube[1].data.shape)
+
+    with mp.Pool(int(config.get('APS_cube', 'n_proc'))) as pool:
+        nb_cube = pool.starmap(vorbin_loop, zip((i, vorbin_map, blue_cube[0].header['CAMERA'])
+                                                for i in np.arange(np.nanmax(vorbin_map))))
+
+    for i in np.arange(int(np.nanmax(vorbin_map))):
+        for j in np.arange(len(nb_cube[i][2][0])):
+            nb_cube_data[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][0]
+            nb_cube_err[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][1]
+
+    cube_head = fits.Header()
+    cube_head['SIMPLE'] = True
+    cube_head['BITPIX'] = -32
+    cube_head['NAXIS'] = 3
+    cube_head['NAXIS1'] = blue_cube[1].data.shape[2]
+    cube_head['NAXIS2'] = blue_cube[1].data.shape[1]
+    cube_head['NAXIS3'] = blue_cube[1].data.shape[0]
+    cube_head['CTYPE3'] = 'WAVELENGTH'
+    cube_head['CUNIT3'] = 'Angstrom'
+    cube_head['CDELT3'] = blue_cube[1].header['CD3_3']
+    cube_head['DISPAXIS'] = 1
+    cube_head['CRVAL3'] = blue_cube[1].header['CRVAL3']
+    cube_head['CRPIX3'] = blue_cube[1].header['CRPIX3']
+    cube_head['CRPIX1'] = blue_cube[1].header['CRPIX1']
+    cube_head['CRPIX2'] = blue_cube[1].header['CRPIX2']
+    cube_head['CRVAL1'] = blue_cube[1].header['CRVAL1']
+    cube_head['CRVAL2'] = blue_cube[1].header['CRVAL2']
+    cube_head['CDELT1'] = axis_header['CD1_1']
+    cube_head['CDELT2'] = axis_header['CD2_2']
+    cube_head['CTYPE1'] = 'RA---TAN'
+    cube_head['CTYPE2'] = 'DEC--TAN'
+    cube_head['CUNIT1'] = 'deg'
+    cube_head['CUNIT2'] = 'deg'
+
+    n_cube = fits.HDUList([fits.PrimaryHDU(data=nb_cube_data, header=cube_head),
+                           fits.ImageHDU(data=nb_cube_err, header=cube_head, name='ERROR')])
+
+    n_cube.writeto(gal_dir + 'blue_cube_vorbin.fits', overwrite=True)
+    #
+
     x_t_r = x_t[sgn_t_r / rms_t_r > 3]
     y_t_r = y_t[sgn_t_r / rms_t_r > 3]
     sgn_tt_r = sgn_t_r[sgn_t_r / rms_t_r > 3]
@@ -375,11 +444,9 @@ def html_plots(self):
 
     xmin, xmax = np.min(x_t_r), np.max(x_t_r)
     ymin, ymax = np.min(y_t_r), np.max(y_t_r)
-    nx = int(round((xmax - xmin) / pixelsize) + 1)
-    ny = int(round((ymax - ymin) / pixelsize) + 1)
-    img = np.full((nx, ny), np.nan)  # use nan for missing data
-    j = np.round((x_t_r - xmin) / pixelsize).astype(int)
-    k = np.round((y_t_r - ymin) / pixelsize).astype(int)
+    img = np.full((red_cube[1].data.shape[2], red_cube[1].data.shape[1]), np.nan)  # use nan for missing data
+    j = np.round(x_t_r / pixelsize).astype(int)
+    k = np.round(y_t_r / pixelsize).astype(int)
     img[j, k] = binNum
 
     ax.imshow(np.rot90(img), interpolation='nearest', cmap='prism',
@@ -406,6 +473,50 @@ def html_plots(self):
     plt.legend()
 
     fits.writeto(gal_dir + 'vorbin_map_red.fits', np.flip(np.rot90(img), axis=0), overwrite=True)
+
+    # saving voronoi datacube
+    vorbin_map = img
+    nb_cube_data = np.zeros(red_cube[1].data.shape)
+    nb_cube_err = np.zeros(red_cube[1].data.shape)
+
+    with mp.Pool(int(config.get('APS_cube', 'n_proc'))) as pool:
+        nb_cube = pool.starmap(vorbin_loop, zip((i, vorbin_map, red_cube[0].header['CAMERA'])
+                                                for i in np.arange(np.nanmax(vorbin_map))))
+
+    for i in np.arange(int(np.nanmax(vorbin_map))):
+        for j in np.arange(len(nb_cube[i][2][0])):
+            nb_cube_data[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][0]
+            nb_cube_err[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][1]
+
+    cube_head = fits.Header()
+    cube_head['SIMPLE'] = True
+    cube_head['BITPIX'] = -32
+    cube_head['NAXIS'] = 3
+    cube_head['NAXIS1'] = red_cube[1].data.shape[2]
+    cube_head['NAXIS2'] = red_cube[1].data.shape[1]
+    cube_head['NAXIS3'] = red_cube[1].data.shape[0]
+    cube_head['CTYPE3'] = 'WAVELENGTH'
+    cube_head['CUNIT3'] = 'Angstrom'
+    cube_head['CDELT3'] = red_cube[1].header['CD3_3']
+    cube_head['DISPAXIS'] = 1
+    cube_head['CRVAL3'] = red_cube[1].header['CRVAL3']
+    cube_head['CRPIX3'] = red_cube[1].header['CRPIX3']
+    cube_head['CRPIX1'] = red_cube[1].header['CRPIX1']
+    cube_head['CRPIX2'] = red_cube[1].header['CRPIX2']
+    cube_head['CRVAL1'] = red_cube[1].header['CRVAL1']
+    cube_head['CRVAL2'] = red_cube[1].header['CRVAL2']
+    cube_head['CDELT1'] = axis_header['CD1_1']
+    cube_head['CDELT2'] = axis_header['CD2_2']
+    cube_head['CTYPE1'] = 'RA---TAN'
+    cube_head['CTYPE2'] = 'DEC--TAN'
+    cube_head['CUNIT1'] = 'deg'
+    cube_head['CUNIT2'] = 'deg'
+
+    n_cube = fits.HDUList([fits.PrimaryHDU(data=nb_cube_data, header=cube_head),
+                           fits.ImageHDU(data=nb_cube_err, header=cube_head, name='ERROR')])
+
+    n_cube.writeto(gal_dir + 'red_cube_vorbin.fits', overwrite=True)
+    #
 
     # ------
 
@@ -466,7 +577,7 @@ def html_plots(self):
 
     # creating plots for APS
 
-    aps_cube = fits.open(gal_name+'/'+gal_name+'_cube.fits')
+    aps_cube = fits.open(gal_name + '/' + gal_name + '_cube.fits')
 
     targetSN = np.float(config.get('QC_plots', 'target_SN'))
     levels = np.array(json.loads(config.get('QC_plots', 'levels'))).astype(np.float)  # SNR levels to display
@@ -640,11 +751,11 @@ def html_plots(self):
     f.write(text)
 
     f.close()
-    
+
     ssh = SSHClient()
     ssh.load_system_host_keys()
     ssh.connect(hostname='minos.aip.de', username='gcouto', password=open('minos_pass', 'r').read().splitlines()[0])
-    
+
     scp = SCPClient(ssh.get_transport())
-    
+
     scp.put([date + '.html', fig_l1, fig_l2], '/store/weave/apertif/')
