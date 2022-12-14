@@ -152,9 +152,12 @@ def cube_creator(self):
     cube_head['NAXIS3'] = cube_data.shape[0]
     cube_head['CTYPE3'] = 'WAVELENGTH'
     cube_head['CUNIT3'] = 'Angstrom'
-    cube_head['CDELT3'] = 0.1
+    if c[0].header['RES-OBS'] == 'HR':
+        cube_head['CDELT3'] = 0.1
+    else:
+        cube_head['CDELT3'] = 0.3
     cube_head['DISPAXIS'] = 1
-    cube_head['CRVAL3'] = min(wave)
+    cube_head['CRVAL3'] = min(n_wave)
     cube_head['CRPIX3'] = 1
     cube_head['CRPIX1'] = cpix_x
     cube_head['CRPIX2'] = cpix_y
@@ -173,15 +176,15 @@ def cube_creator(self):
     # this is how I used to do CRPIX and CRVAL before using WCS coordinates
 
     # cube_head['CRPIX1'] = \
-    #     np.where(np.unique(c[2].data['X']) == np.min(np.unique(c[2].data['X'])[np.unique(c[2].data['X']) > 0]))[0][
-    #         0] + 1  # X from APS with lower absolute value
+    # np.where(np.unique(c[2].data['X']) == np.min(np.unique(c[2].data['X'])[np.unique(c[2].data['X']) > 0]))[0][
+    # 0] + 1  # X from APS with lower absolute value
     # cube_head['CRPIX2'] = \
-    #     np.where(np.unique(c[2].data['Y']) == np.min(np.unique(c[2].data['Y'])[np.unique(c[2].data['Y']) > 0]))[0][
-    #         0] + 1  # Y from APS with lower absolute value
+    # np.where(np.unique(c[2].data['Y']) == np.min(np.unique(c[2].data['Y'])[np.unique(c[2].data['Y']) > 0]))[0][
+    # 0] + 1  # Y from APS with lower absolute value
     # cube_head['CRVAL1'] = np.unique(c[2].data['X_0'])[0] + (np.min(
-    #     np.unique(c[2].data['X'])[np.unique(c[2].data['X']) > 0]) / 3600.)  # X from central pixel plus position X_0
+    # np.unique(c[2].data['X'])[np.unique(c[2].data['X']) > 0]) / 3600.)  # X from central pixel plus position X_0
     # cube_head['CRVAL2'] = np.unique(c[2].data['Y_0'])[0] + (np.min(
-    #     np.unique(c[2].data['Y'])[np.unique(c[2].data['Y']) > 0]) / 3600.)  # Y from central pixel plus position Y_0
+    # np.unique(c[2].data['Y'])[np.unique(c[2].data['Y']) > 0]) / 3600.)  # Y from central pixel plus position Y_0
 
     map_head = fits.Header()
     map_head['SIMPLE'] = True
