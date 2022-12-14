@@ -608,11 +608,11 @@ def html_plots(self):
     axis_header['CUNIT1'] = aps_cube[1].header['CUNIT1']
     axis_header['CUNIT2'] = aps_cube[1].header['CUNIT2']
 
-    fig = plt.figure(figsize=(16, 16))
+    fig = plt.figure(figsize=(16, 20))
 
     fig.suptitle(gal_name + ' L2/APS QC plots', size=22, weight='bold')
 
-    gs = gridspec.GridSpec(3, 5, height_ratios=[1, 1, 1], width_ratios=[1, 0.06, 0.4, 1, 1])
+    gs = gridspec.GridSpec(4, 5, height_ratios=[1, 1, 1, 1], width_ratios=[1, 0.06, 0.4, 1, 1])
     gs.update(left=0.07, right=0.9, bottom=0.05, top=0.92, wspace=0.0, hspace=0.25)
     props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
 
@@ -729,6 +729,37 @@ def html_plots(self):
     plt.axis([np.min(rad), np.max(rad), 0, np.max(sn) * 1.05])  # x0, x1, y0, y1
     plt.axhline(targetSN)
     plt.legend()
+    
+    # ------
+
+    xc = []
+    yc = []
+    lamc_a = []
+    
+    for i in np.arange(len(aps_cube[1].data[:, 0, 0])):
+        xcx = np.where(aps_cube[1].data[i, :, :] == np.nanmax(aps_cube[1].data[i, :, :]))[1]
+        ycy = np.where(aps_cube[1].data[i, :, :] == np.nanmax(aps_cube[1].data[i, :, :]))[0]
+        if len(xcx) < len(aps_cube[1].data[0, 0, :]):
+            for j in np.arange(len(xcx)):
+                xc.append(xcx[j])
+                yc.append(ycy[j])
+                lamc_a.append(lam_a[i])
+
+    xc = np.array(xc)
+    yc = np.array(yc)
+    lamc_a = np.array(lamc_a)
+
+    ax = plt.subplot(gs[3, 3:5])
+    ax.plot(lamc_a, xc, '+', color='blue', ms=2, label='X center')
+    ax.plot(lamc_a, yc, '+', color='red', ms=2, label='Y center')
+    ax.set_xlabel(r'$\lambda$ [$\AA$]')
+    ax.set_ylabel(r'X and Y center')
+    ax.set_title('Differential Atmosphere Effect (L2)')
+    ax.legend(markerscale=5)
+    
+    
+    # ------
+
 
     fig_l2 = date + '_' + gal_name + '_L2.png'
 
