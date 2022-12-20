@@ -29,7 +29,7 @@ def cube_creator(self):
     wcs_c = fits.open(file_dir + config.get('QC_plots', 'blue_cube'))
     c = fits.open(file_dir + [s for s in list_file if 'APS.fits' in s][0])
 
-    gal_id = c[0].header['CCNAME1']
+    gal_id = c[0].header['CCNAME']
     gal_dir = gal_id
 
     os.makedirs(gal_dir, exist_ok=True)
@@ -169,7 +169,7 @@ def cube_creator(self):
     cube_head['CTYPE2'] = 'DEC--TAN'
     cube_head['CUNIT1'] = 'deg'
     cube_head['CUNIT2'] = 'deg'
-    cube_head['CCNAME1'] = c[0].header['CCNAME1']
+    cube_head['CCNAME'] = c[0].header['CCNAME']
     cube_head['OBSMODE'] = c[0].header['OBSMODE']
     cube_head['RES-OBS'] = c[0].header['RES-OBS']
 
