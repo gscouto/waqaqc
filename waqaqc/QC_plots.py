@@ -3,6 +3,7 @@ import configparser
 import json
 
 import matplotlib.gridspec as gridspec
+import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.io import fits
@@ -125,25 +126,27 @@ def html_plots(self):
     colap_b_map = np.sum(blue_cube[1].data[:], axis=0)
     colap_r_map = np.sum(red_cube[1].data[:], axis=0)
 
+    blue_cen_wave = int(config.get('QC_plots', 'blue_wav'))
+    red_cen_wave = int(config.get('QC_plots', 'red_wav'))
+
     lam_r = red_cube[1].header['CRVAL3'] + (np.arange(red_cube[1].header['NAXIS3']) * red_cube[1].header['CD3_3'])
     lam_b = blue_cube[1].header['CRVAL3'] + (np.arange(blue_cube[1].header['NAXIS3']) * blue_cube[1].header['CD3_3'])
 
-    med_b = np.median(blue_cube[1].data[np.where(lam_b == 5100.)[0][0] - 500:np.where(lam_b == 5100.)[0][0] + 500],
-                      axis=0)
-    sgn_b = np.mean(blue_cube[1].data[np.where(lam_b == 5100.)[0][0] - 500:np.where(lam_b == 5100.)[0][0] + 500],
-                    axis=0)
-    rms_b = np.std(blue_cube[1].data[np.where(lam_b == 5100.)[0][0] - 500:np.where(lam_b == 5100.)[0][0] + 500], axis=0)
+    med_b = np.median(blue_cube[1].data[np.where(lam_b == blue_cen_wave)[0][0] -
+                                        500:np.where(lam_b == blue_cen_wave)[0][0] + 500], axis=0)
+    sgn_b = np.mean(blue_cube[1].data[np.where(lam_b == blue_cen_wave)[0][0] -
+                                      500:np.where(lam_b == blue_cen_wave)[0][0] + 500], axis=0)
+    rms_b = np.sqrt(sgn_b)
     snr_b = sgn_b / rms_b
 
-    med_r = np.median(red_cube[1].data[np.where(lam_r == 6200.)[0][0] - 500:np.where(lam_r == 6200.)[0][0] + 500],
-                      axis=0)
-    sgn_r = np.mean(red_cube[1].data[np.where(lam_r == 6200.)[0][0] - 500:np.where(lam_r == 6200.)[0][0] + 500], axis=0)
-    rms_r = np.std(red_cube[1].data[np.where(lam_r == 6200.)[0][0] - 500:np.where(lam_r == 6200.)[0][0] + 500], axis=0)
+    med_r = np.median(red_cube[1].data[np.where(lam_r == red_cen_wave)[0][0] -
+                                       500:np.where(lam_r == red_cen_wave)[0][0] + 500], axis=0)
+    sgn_r = np.mean(red_cube[1].data[np.where(lam_r == red_cen_wave)[0][0] -
+                                     500:np.where(lam_r == red_cen_wave)[0][0] + 500], axis=0)
+    rms_r = np.sqrt(sgn_r)
     snr_r = sgn_r / rms_r
 
-    sc = SkyCoord(ra=blue_cube[0].header['RA'], dec=blue_cube[0].header['DEC'], unit=(u.hourangle, u.deg), frame=FK5,
-                  equinox='J' + str(blue_cube[0].header['CATEPOCH']))
-    nsc = sc.transform_to(FK5(equinox='J2000.0'))
+    nsc = SkyCoord(ra=blue_cube[1].header['CRVAL1'], dec=blue_cube[1].header['CRVAL2'], unit='deg', frame=FK5)
 
     url = geturl(nsc.ra.value, nsc.dec.value, size=480, filters="grizy", output_size=None, format="jpg", color=True)
     r = requests.get(url)
@@ -186,7 +189,7 @@ def html_plots(self):
 
     ax = plt.subplot(gs[0, 0])
     ax.imshow(im, extent=[min(x_ax), max(x_ax), max(y_ax), min(y_ax)])
-    ax.plot(0, 0, marker='H', color='red', markerfacecolor='none', markersize=200)
+    ax.plot(0, 0, marker=(6, 0, 0), color='red', markerfacecolor='none', markersize=275)
     ax2 = ax.secondary_xaxis('top')
     ay2 = ax.secondary_yaxis('right')
     ax.tick_params(width=2, size=10)
@@ -204,7 +207,7 @@ def html_plots(self):
     wcs = WCS(axis_header)
     ax = plt.subplot(gs[1, 0], projection=wcs)
 
-    im = ax.imshow(np.arcsinh(colap_b_map), origin='lower')
+    im = ax.imshow(np.log10(colap_b_map), origin='lower')
 
     ypmax_b = np.where(colap_b_map == np.nanmax(colap_b_map))[0]
     xpmax_b = np.where(colap_b_map == np.nanmax(colap_b_map))[1]
@@ -217,10 +220,10 @@ def html_plots(self):
 
     cbax = plt.subplot(gs[1, 1])
     cbar = Colorbar(ax=cbax, mappable=im)
-    cbar.set_label('arcsinh scale')
+    cbar.set_label('log scale')
 
     ax = plt.subplot(gs[1, 3])
-    im = ax.imshow(np.arcsinh(colap_r_map), origin='lower')
+    im = ax.imshow(np.log10(colap_r_map), origin='lower')
 
     ypmax_r = np.where(colap_r_map == np.nanmax(colap_r_map))[0]
     xpmax_r = np.where(colap_r_map == np.nanmax(colap_r_map))[1]
@@ -233,7 +236,7 @@ def html_plots(self):
 
     cbax = plt.subplot(gs[1, 4])
     cbar = Colorbar(ax=cbax, mappable=im)
-    cbar.set_label('arcsinh scale')
+    cbar.set_label('log scale')
 
     # ------
 
@@ -254,13 +257,11 @@ def html_plots(self):
     ax = plt.subplot(gs[3, 0])
     im = ax.imshow(snr_b, origin='lower')
     cs = ax.contour(snr_b, levels, linestyles=np.array([':', '-']), colors='white')
-    cs.collections[0].set_label('SNR = 3')
-    cs.collections[1].set_label('SNR = 30')
-    leg = ax.legend(framealpha=1, fontsize=8, loc='lower left')
-    leg.legendHandles[0].set_color('black')
-    leg.legendHandles[1].set_color('black')
+    m1 = mlines.Line2D([], [], color='black', linestyle=':', markersize=5, label='SNR = ' + str(levels[0]))
+    m2 = mlines.Line2D([], [], color='black', linestyle='-', markersize=5, label='SNR = ' + str(levels[1]))
+    ax.legend(handles=[m1, m2], framealpha=1, fontsize=8, loc='lower left')
 
-    ax.set_title(r'SNR @5100$\AA$')
+    ax.set_title(r'SNR @' + str(blue_cen_wave) + '$\AA$')
     ax.set_xlabel('X [px]')
     ax.set_ylabel('Y [px]')
 
@@ -274,13 +275,11 @@ def html_plots(self):
     ax = plt.subplot(gs[3, 3])
     im = ax.imshow(snr_r, origin='lower')
     cs = ax.contour(snr_r, levels, linestyles=np.array([':', '-']), colors='white')
-    cs.collections[0].set_label('SNR = 3')
-    cs.collections[1].set_label('SNR = 30')
-    leg = ax.legend(framealpha=1, fontsize=8, loc='lower left')
-    leg.legendHandles[0].set_color('black')
-    leg.legendHandles[1].set_color('black')
+    m1 = mlines.Line2D([], [], color='black', linestyle=':', markersize=5, label='SNR = ' + str(levels[0]))
+    m2 = mlines.Line2D([], [], color='black', linestyle='-', markersize=5, label='SNR = ' + str(levels[1]))
+    ax.legend(handles=[m1, m2], framealpha=1, fontsize=8, loc='lower left')
 
-    ax.set_title(r'SNR @6200$\AA$')
+    ax.set_title(r'SNR @' + str(red_cen_wave) + '$\AA$')
     ax.set_xlabel('X [px]')
     ax.set_ylabel('Y [px]')
 
@@ -291,15 +290,15 @@ def html_plots(self):
     # ------
 
     ax = plt.subplot(gs[4, 0])
-    ax.plot(med_b, snr_b, 'o', color='blue', alpha=0.3, markeredgecolor='black')
-    ax.set_ylabel(r'SNR [@5100$\AA$]')
-    ax.set_xlabel(r'Median Flux [@5050-5150$\AA$]')
+    ax.plot(med_b, snr_b, 'o', color='blue', alpha=0.3, markeredgecolor='white')
+    ax.set_ylabel(r'SNR [@' + str(blue_cen_wave) + '$\AA$]')
+    ax.set_xlabel(r'Median Flux [@' + str(blue_cen_wave - 50) + '-' + str(blue_cen_wave + 50) + '$\AA$]')
     ax.grid(True, alpha=0.3, zorder=-1)
 
     ax = plt.subplot(gs[4, 3])
     ax.plot(med_r, snr_r, 'o', color='red', alpha=0.3, markeredgecolor='black')
-    ax.set_ylabel(r'SNR [@6200$\AA$]')
-    ax.set_xlabel(r'Median Flux [@6150-6250$\AA$]')
+    ax.set_ylabel(r'SNR [@' + str(red_cen_wave) + '$\AA$]')
+    ax.set_xlabel(r'Median Flux [@' + str(red_cen_wave - 50) + '-' + str(red_cen_wave + 50) + '$\AA$]')
     ax.grid(True, alpha=0.3, zorder=-1)
 
     # ------
@@ -308,33 +307,33 @@ def html_plots(self):
     ax.hist(snr_b[snr_b >= 3], 30, histtype='step', lw=2)
     ax.set_yscale('log')
     ax.set_ylabel(r'N pixels [SNR $\geq$ 3]')
-    ax.set_xlabel(r'SNR [@5100$\AA$]')
+    ax.set_xlabel(r'SNR [@' + str(blue_cen_wave) + '$\AA$]')
 
     int_spec_b = np.sum(blue_cube[1].data * ((snr_b >= 3)[np.newaxis, :, :]), axis=(1, 2))
-    in_ax = ax.inset_axes([0.55, 0.6, 0.4, 0.3])
-    in_ax.set_title(r'          integrated spec [SNR$\geq$3]', fontsize=10)
+    in_ax = ax.inset_axes([0.55, 0.5, 0.4, 0.3])
+    in_ax.set_title(r'integrated spec [SNR$\geq$3]', fontsize=10)
     in_ax.plot(lam_b, int_spec_b)
-    in_ax.axvline(5050, linestyle='--', color='black')
-    in_ax.axvline(5150, linestyle='--', color='black')
+    in_ax.axvline(blue_cen_wave - 50, linestyle='--', color='black')
+    in_ax.axvline(blue_cen_wave + 50, linestyle='--', color='black')
 
     ax = plt.subplot(gs[5, 3])
     ax.hist(snr_r[snr_r >= 3], 30, histtype='step', lw=2)
     ax.set_yscale('log')
     ax.set_ylabel(r'N pixels [SNR $\geq$ 3]')
-    ax.set_xlabel(r'SNR [@6200$\AA$]')
+    ax.set_xlabel(r'SNR [@' + str(red_cen_wave) + '$\AA$]')
 
     int_spec_r = np.sum(red_cube[1].data * ((snr_r >= 3)[np.newaxis, :, :]), axis=(1, 2))
-    in_ax = ax.inset_axes([0.55, 0.6, 0.4, 0.3])
-    in_ax.set_title(r'          integrated spec [SNR$\geq$3]', fontsize=10)
+    in_ax = ax.inset_axes([0.55, 0.5, 0.4, 0.3])
+    in_ax.set_title(r'integrated spec [SNR$\geq$3]', fontsize=10)
     in_ax.plot(lam_r, int_spec_r)
-    in_ax.axvline(6150, linestyle='--', color='black')
-    in_ax.axvline(6250, linestyle='--', color='black')
+    in_ax.axvline(red_cen_wave - 50, linestyle='--', color='black')
+    in_ax.axvline(red_cen_wave + 50, linestyle='--', color='black')
 
     # doing voronoi binning
 
     pixelsize = 1
 
-    yy, xx = np.indices(snr_r.shape)
+    yy, xx = np.indices(snr_b.shape)
 
     x_t = np.ravel(xx)
     y_t = np.ravel(yy)
@@ -542,7 +541,7 @@ def html_plots(self):
     ax.plot(lamc_b, yc, '+', color='red', ms=2, label='Y center')
     ax.set_xlabel(r'$\lambda$ [$\AA$]')
     ax.set_ylabel(r'X and Y center')
-    ax.set_title('Differential Atmosphere Effect (Blue)')
+    ax.set_title('Differential Atmospheric Refraction (Blue)')
     ax.legend(markerscale=5)
 
     xc = []
@@ -567,7 +566,7 @@ def html_plots(self):
     ax.plot(lamc_r, yc, '+', color='red', ms=2)
     ax.set_xlabel(r'$\lambda$ [$\AA$]')
     ax.set_ylabel(r'X and Y center')
-    ax.set_title('Differential Atmosphere Effect (Red)')
+    ax.set_title('Differential Atmospheric Refraction (Red)')
 
     fig_l1 = date + '_' + gal_name + '_L1.png'
 
@@ -586,10 +585,10 @@ def html_plots(self):
 
     lam_a = aps_cube[0].header['CRVAL3'] + (np.arange(aps_cube[0].header['NAXIS3']) * aps_cube[0].header['CDELT3'])
 
-    sgn_a = np.mean(aps_cube[0].data[np.where(lam_a == min(lam_a, key=lambda x: abs(x - 6200)))[0][0] - 50:
-                                     np.where(lam_a == min(lam_a, key=lambda x: abs(x - 6200)))[0][0] + 50], axis=0)
-    rms_a = np.std(aps_cube[0].data[np.where(lam_a == min(lam_a, key=lambda x: abs(x - 6200)))[0][0] - 50:
-                                    np.where(lam_a == min(lam_a, key=lambda x: abs(x - 6200)))[0][0] + 50], axis=0)
+    sgn_a = np.mean(aps_cube[0].data[np.where(lam_a == min(lam_a, key=lambda x: abs(x - red_cen_wave)))[0][0] - 50:
+                                     np.where(lam_a == min(lam_a, key=lambda x: abs(x - red_cen_wave)))[0][0] + 50],
+                    axis=0)
+    rms_a = np.sqrt(sgn_a)
     snr_a = sgn_a / rms_a
 
     # doing the plots
@@ -619,7 +618,7 @@ def html_plots(self):
     wcs = WCS(axis_header)
 
     ax = plt.subplot(gs[0, 0], projection=wcs)
-    im = ax.imshow(np.arcsinh(colap_a_map), origin='lower')
+    im = ax.imshow(np.log10(colap_a_map), origin='lower')
 
     ypmax_a = np.where(colap_a_map == np.nanmax(colap_a_map))[0]
     xpmax_a = np.where(colap_a_map == np.nanmax(colap_a_map))[1]
@@ -632,7 +631,7 @@ def html_plots(self):
 
     cbax = plt.subplot(gs[0, 1])
     cbar = Colorbar(ax=cbax, mappable=im)
-    cbar.set_label('arcsinh scale')
+    cbar.set_label('log scale')
 
     # ------
 
@@ -647,13 +646,11 @@ def html_plots(self):
     ax = plt.subplot(gs[1, 0])
     im = ax.imshow(snr_a, origin='lower')
     cs = ax.contour(snr_a, levels, linestyles=np.array([':', '-']), colors='white')
-    cs.collections[0].set_label('SNR = 3')
-    cs.collections[1].set_label('SNR = 30')
-    leg = ax.legend(framealpha=1, fontsize=8, loc='lower left')
-    leg.legendHandles[0].set_color('black')
-    leg.legendHandles[1].set_color('black')
+    m1 = mlines.Line2D([], [], color='black', linestyle=':', markersize=5, label='SNR = ' + str(levels[0]))
+    m2 = mlines.Line2D([], [], color='black', linestyle='-', markersize=5, label='SNR = ' + str(levels[1]))
+    ax.legend(handles=[m1, m2], framealpha=1, fontsize=8, loc='lower left')
 
-    ax.set_title(r'SNR @6200$\AA$')
+    ax.set_title(r'SNR @' + str(red_cen_wave) + '$\AA$')
     ax.set_xlabel('X [px]')
     ax.set_ylabel('Y [px]')
 
@@ -667,14 +664,14 @@ def html_plots(self):
     ax.hist(snr_a[snr_a >= 3], 30, histtype='step', lw=2)
     ax.set_yscale('log')
     ax.set_ylabel(r'N pixels [SNR $\geq$ 3]')
-    ax.set_xlabel(r'SNR [@6200$\AA$]')
+    ax.set_xlabel(r'SNR [@' + str(red_cen_wave) + '$\AA$]')
 
     int_spec_a = np.sum(aps_cube[0].data * ((snr_a >= 3)[np.newaxis, :, :]), axis=(1, 2))
-    in_ax = ax.inset_axes([0.55, 0.6, 0.4, 0.3])
-    in_ax.set_title(r'          integrated spec [SNR$\geq$3]', fontsize=10)
+    in_ax = ax.inset_axes([0.55, 0.5, 0.4, 0.3])
+    in_ax.set_title(r'integrated spec [SNR$\geq$3]', fontsize=10)
     in_ax.plot(lam_a, int_spec_a)
-    in_ax.axvline(6150, linestyle='--', color='black')
-    in_ax.axvline(6250, linestyle='--', color='black')
+    in_ax.axvline(red_cen_wave - 50, linestyle='--', color='black')
+    in_ax.axvline(red_cen_wave + 50, linestyle='--', color='black')
 
     # doing voronoi binning
 
@@ -729,17 +726,17 @@ def html_plots(self):
     plt.axis([np.min(rad), np.max(rad), 0, np.max(sn) * 1.05])  # x0, x1, y0, y1
     plt.axhline(targetSN)
     plt.legend()
-    
+
     # ------
 
     xc = []
     yc = []
     lamc_a = []
-    
-    for i in np.arange(len(aps_cube[1].data[:, 0, 0])):
-        xcx = np.where(aps_cube[1].data[i, :, :] == np.nanmax(aps_cube[1].data[i, :, :]))[1]
-        ycy = np.where(aps_cube[1].data[i, :, :] == np.nanmax(aps_cube[1].data[i, :, :]))[0]
-        if len(xcx) < len(aps_cube[1].data[0, 0, :]):
+
+    for i in np.arange(len(aps_cube[0].data[:, 0, 0])):
+        xcx = np.where(aps_cube[0].data[i, :, :] == np.nanmax(aps_cube[0].data[i, :, :]))[1]
+        ycy = np.where(aps_cube[0].data[i, :, :] == np.nanmax(aps_cube[0].data[i, :, :]))[0]
+        if len(xcx) < len(aps_cube[0].data[0, 0, :]):
             for j in np.arange(len(xcx)):
                 xc.append(xcx[j])
                 yc.append(ycy[j])
@@ -754,12 +751,10 @@ def html_plots(self):
     ax.plot(lamc_a, yc, '+', color='red', ms=2, label='Y center')
     ax.set_xlabel(r'$\lambda$ [$\AA$]')
     ax.set_ylabel(r'X and Y center')
-    ax.set_title('Differential Atmosphere Effect (L2)')
+    ax.set_title('Differential Atmospheric Refraction (L2)')
     ax.legend(markerscale=5)
-    
-    
-    # ------
 
+    # ------
 
     fig_l2 = date + '_' + gal_name + '_L2.png'
 
@@ -771,7 +766,7 @@ def html_plots(self):
             <div style="text-align: center;">
                 <h1>Night report ''' + date + '''</h1>
                 <img src="''' + fig_l1 + '''" class="center">
-                <img src="''' + fig_l2 + '''" class="center">
+                <img src = "''' + fig_l2 + '''" class ="center" >
             </div>
         </body>
     </html>
