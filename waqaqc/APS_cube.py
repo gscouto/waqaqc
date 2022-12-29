@@ -11,7 +11,7 @@ from astropy.wcs import WCS
 def forloop(args):
     i, n_wave, wave, c_spec, c_espec = args
 
-    n_flux, n_err = spectres.spectres(n_wave, wave, c_spec, c_espec)
+    n_flux, n_err = spectres.spectres(n_wave, wave, c_spec, c_espec, verbose=False)
 
     if (i / 500.).is_integer():
         print(i)
