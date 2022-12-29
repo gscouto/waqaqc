@@ -581,7 +581,7 @@ def html_plots(self):
     targetSN = np.float(config.get('QC_plots', 'target_SN'))
     levels = np.array(json.loads(config.get('QC_plots', 'levels'))).astype(np.float)  # SNR levels to display
 
-    colap_a_map = np.sum(aps_cube[0].data[:], axis=0)
+    colap_a_map = np.nansum(aps_cube[0].data[:], axis=0)
 
     lam_a = aps_cube[0].header['CRVAL3'] + (np.arange(aps_cube[0].header['NAXIS3']) * aps_cube[0].header['CDELT3'])
 
