@@ -41,7 +41,7 @@ def cube_creator(self):
     wave = np.exp(c[1].data['LOGLAM'][0])
     if c[0].header['RES-OBS'] == 'HR':
         n_wave = np.arange(min(wave) + 0.01, max(wave), 0.1)
-    else:
+    elif c[0].header['RES-OBS'] == 'LR':
         n_wave = np.arange(min(wave) + 0.01, max(wave), 0.5)
 
     axis_header = fits.Header()
@@ -154,7 +154,7 @@ def cube_creator(self):
     cube_head['CUNIT3'] = 'Angstrom'
     if c[0].header['RES-OBS'] == 'HR':
         cube_head['CDELT3'] = 0.1
-    else:
+    elif c[0].header['RES-OBS'] == 'LR':
         cube_head['CDELT3'] = 0.5
     cube_head['DISPAXIS'] = 1
     cube_head['CRVAL3'] = min(n_wave)
