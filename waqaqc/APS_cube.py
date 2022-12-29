@@ -42,7 +42,7 @@ def cube_creator(self):
     if c[0].header['RES-OBS'] == 'HR':
         n_wave = np.arange(min(wave) + 0.01, max(wave), 0.1)
     else:
-        n_wave = np.arange(min(wave) + 0.01, max(wave), 0.3)
+        n_wave = np.arange(min(wave) + 0.01, max(wave), 0.5)
 
     axis_header = fits.Header()
     axis_header['NAXIS1'] = wcs_c[1].header['NAXIS1']
@@ -155,7 +155,7 @@ def cube_creator(self):
     if c[0].header['RES-OBS'] == 'HR':
         cube_head['CDELT3'] = 0.1
     else:
-        cube_head['CDELT3'] = 0.3
+        cube_head['CDELT3'] = 0.5
     cube_head['DISPAXIS'] = 1
     cube_head['CRVAL3'] = min(n_wave)
     cube_head['CRPIX3'] = 1
