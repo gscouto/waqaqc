@@ -11,7 +11,7 @@ from astropy.wcs import WCS
 def forloop(args):
     i, n_wave, wave, c_spec, c_espec = args
 
-    n_flux, n_err = spectres.spectres(n_wave, wave, c_spec, c_espec, verbose=False)
+    n_flux, n_err = spectres.spectres(n_wave, wave, c_spec, c_espec)
 
     if (i / 500.).is_integer():
         print(i)
@@ -40,9 +40,9 @@ def cube_creator(self):
 
     wave = np.exp(c[1].data['LOGLAM'][0])
     if c[0].header['RES-OBS'] == 'HR':
-        n_wave = np.arange(min(wave) + 0.01, max(wave), 0.1)
+        n_wave = np.arange(min(wave)+0.1, max(wave), 0.1)
     elif c[0].header['RES-OBS'] == 'LR':
-        n_wave = np.arange(min(wave) + 0.01, max(wave), 0.5)
+        n_wave = np.arange(min(wave)+0.5, max(wave), 0.5)
 
     axis_header = fits.Header()
     axis_header['NAXIS1'] = wcs_c[1].header['NAXIS1']
