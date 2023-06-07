@@ -106,7 +106,7 @@ def html_plots(self):
 
     global red_cube_data
     global red_cube_err
-    
+
     global aps_cube_data
     global aps_cube_err
 
@@ -130,15 +130,15 @@ def html_plots(self):
 
     colap_b_map = np.sum(blue_cube[1].data[:], axis=0)
     colap_r_map = np.sum(red_cube[1].data[:], axis=0)
-    
+
     mean_b_map = np.nanmean(blue_cube[1].data[:], axis=0)
     mean_r_map = np.nanmean(red_cube[1].data[:], axis=0)
 
     median_b_map = np.nanmedian(blue_cube[1].data[:], axis=0)
     median_r_map = np.nanmedian(red_cube[1].data[:], axis=0)
 
-    blue_sky_cube = blue_cube[3].data-blue_cube[1].data
-    red_sky_cube = red_cube[3].data-red_cube[1].data
+    blue_sky_cube = blue_cube[3].data - blue_cube[1].data
+    red_sky_cube = red_cube[3].data - red_cube[1].data
     fits.writeto(gal_dir + 'blue_sky_cube.fits', blue_sky_cube, overwrite=True)
     fits.writeto(gal_dir + 'red_sky_cube.fits', red_sky_cube, overwrite=True)
 
@@ -158,21 +158,25 @@ def html_plots(self):
     mask_faint_r = (mean_r_map > 0) & (median_r_map <= median_r_sky_map)
     mask_all_r = mean_r_map > 0
 
-    int_b_spec_bright = np.sum(blue_cube[1].data*mask_bright_b[np.newaxis, :, :], axis=(1, 2))*blue_cube[5].data[:]/\
-                       np.sum(mask_bright_b)
-    int_b_spec_medium = np.sum(blue_cube[1].data*mask_medium_b[np.newaxis, :, :], axis=(1, 2))*blue_cube[5].data[:]/\
-                       np.sum(mask_medium_b)
-    int_b_spec_faint = np.sum(blue_cube[1].data*mask_faint_b[np.newaxis, :, :], axis=(1, 2))*blue_cube[5].data[:]/\
+    int_b_spec_bright = np.sum(blue_cube[1].data * mask_bright_b[np.newaxis, :, :], axis=(1, 2)) * blue_cube[5].data[
+                                                                                                   :] / \
+                        np.sum(mask_bright_b)
+    int_b_spec_medium = np.sum(blue_cube[1].data * mask_medium_b[np.newaxis, :, :], axis=(1, 2)) * blue_cube[5].data[
+                                                                                                   :] / \
+                        np.sum(mask_medium_b)
+    int_b_spec_faint = np.sum(blue_cube[1].data * mask_faint_b[np.newaxis, :, :], axis=(1, 2)) * blue_cube[5].data[:] / \
                        np.sum(mask_faint_b)
-    int_r_spec_bright = np.sum(red_cube[1].data*mask_bright_r[np.newaxis, :, :], axis=(1, 2))*red_cube[5].data[:]/\
-                       np.sum(mask_bright_r)
-    int_r_spec_medium = np.sum(red_cube[1].data*mask_medium_r[np.newaxis, :, :], axis=(1, 2))*red_cube[5].data[:]/\
-                       np.sum(mask_medium_r)
-    int_r_spec_faint = np.sum(red_cube[1].data*mask_faint_r[np.newaxis, :, :], axis=(1, 2))*red_cube[5].data[:]/\
+    int_r_spec_bright = np.sum(red_cube[1].data * mask_bright_r[np.newaxis, :, :], axis=(1, 2)) * red_cube[5].data[:] / \
+                        np.sum(mask_bright_r)
+    int_r_spec_medium = np.sum(red_cube[1].data * mask_medium_r[np.newaxis, :, :], axis=(1, 2)) * red_cube[5].data[:] / \
+                        np.sum(mask_medium_r)
+    int_r_spec_faint = np.sum(red_cube[1].data * mask_faint_r[np.newaxis, :, :], axis=(1, 2)) * red_cube[5].data[:] / \
                        np.sum(mask_faint_r)
 
-    int_b_sky_spec = np.sum(blue_cube[3].data-blue_cube[1].data, axis=(1, 2))*blue_cube[5].data[:]/np.sum(mask_faint_b)
-    int_r_sky_spec = np.sum(red_cube[3].data-red_cube[1].data, axis=(1, 2))*red_cube[5].data[:]/np.sum(mask_faint_r)
+    int_b_sky_spec = np.sum(blue_cube[3].data - blue_cube[1].data, axis=(1, 2)) * blue_cube[5].data[:] / np.sum(
+        mask_faint_b)
+    int_r_sky_spec = np.sum(red_cube[3].data - red_cube[1].data, axis=(1, 2)) * red_cube[5].data[:] / np.sum(
+        mask_faint_r)
 
     blue_cen_wave = int(config.get('QC_plots', 'blue_wav'))
     red_cen_wave = int(config.get('QC_plots', 'red_wav'))
@@ -200,8 +204,6 @@ def html_plots(self):
     r = requests.get(url)
     im = Image.open(BytesIO(r.content))
 
-    title = blue_cube[0].header['CCNAME1'] + ' - ' + blue_cube[0].header['PLATE'] + ' - ' + blue_cube[0].header['MODE']
-
     # doing the plots
 
     axis_header = fits.Header()
@@ -218,11 +220,12 @@ def html_plots(self):
     axis_header['CUNIT1'] = blue_cube[1].header['CUNIT1']
     axis_header['CUNIT2'] = blue_cube[1].header['CUNIT2']
 
-    fig = plt.figure(figsize=(14, 68))
+    fig = plt.figure(figsize=(14, 72))
 
-    fig.suptitle(gal_name + ' / ' + blue_cube[0].header['MODE'] + ' / ' + ' L1 QC plots', size=22, weight='bold')
+    fig.suptitle(gal_name + ' / ' + blue_cube[0].header['OBTITLE'] + ' / '  + blue_cube[0].header['MODE'] + ' / ' +
+                 ' L1 QC plots', size=22, weight='bold')
 
-    gs = gridspec.GridSpec(15, 5, height_ratios=[1, 1, 0.6, 1, 1, 1, 1, 0.6, 0.6, 1, 0.6, 0.6, 1, 0.6, 0.6],
+    gs = gridspec.GridSpec(16, 5, height_ratios=[1, 1, 0.6, 0.6, 1, 1, 1, 1, 0.6, 0.6, 1, 0.6, 0.6, 1, 0.6, 0.6],
                            width_ratios=[1, 0.06, 0.3, 1, 0.06])
     gs.update(left=0.07, right=0.9, bottom=0.05, top=0.95, wspace=0.0, hspace=0.25)
     props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
@@ -236,6 +239,7 @@ def html_plots(self):
     y_ax = (np.arange(im.size[0]) + 1 - crpix2) * cdelt2
 
     ax = plt.subplot(gs[0, :])
+    ax.set_title('PanSTARRS composite image')
     ax.imshow(im, extent=[min(x_ax), max(x_ax), max(y_ax), min(y_ax)])
     ax.plot(0, 0, marker=(6, 0, 0), color='red', markerfacecolor='none', markersize=275)
     ax2 = ax.secondary_xaxis('top')
@@ -301,70 +305,94 @@ def html_plots(self):
     ax.set_title('Red spectrum at (' + str(xpmax_r[0]) + ', ' + str(ypmax_r[0]) + ')')
 
     # ------
-    
-    # mean and median maps
+
+    # plot sensitivity function
 
     ax = plt.subplot(gs[3, 0])
-    im = ax.imshow(np.log10(median_b_map), origin='lower')
-    ax.set_title(r'Median Map (blue cube)', fontsize=10)
-
-    cbax = plt.subplot(gs[3, 1])
-    cbar = Colorbar(ax=cbax, mappable=im)
-    cbar.set_label('counts log scale')
+    ax.plot(lam_b, blue_cube[5].data)
+    ax.set_xlabel(r'$\lambda$ [$\AA$]')
+    ax.set_ylabel('Flux')
+    ax.set_yscale('log')
+    ax.set_title('Blue sensitivity function')
 
     ax = plt.subplot(gs[3, 3])
-    im = ax.imshow(np.log10(median_r_map), origin='lower')
-    ax.set_title(r'Median Map (red cube)', fontsize=10)
+    ax.plot(lam_r, red_cube[5].data)
+    ax.set_xlabel(r'$\lambda$ [$\AA$]')
+    ax.set_ylabel('Flux')
+    ax.set_yscale('log')
+    ax.set_title('Red sensitivity function')
 
-    cbax = plt.subplot(gs[3, 4])
-    cbar = Colorbar(ax=cbax, mappable=im)
-    cbar.set_label('counts log scale')
-    
+    # ------
+
+    # mean and median maps
+
     ax = plt.subplot(gs[4, 0])
-    im = ax.imshow(np.log10(median_b_sky_map), origin='lower')
-    ax.set_title(r'Median Sky Map (blue cube)', fontsize=10)
+    im = ax.imshow(np.log10(median_b_map), origin='lower')
+    ax.contour(mask_faint_b, levels=[0.5], colors=['r'])
+    ax.contour(mask_medium_b, levels=[0.5], colors=['b'])
+    ax.contour(mask_bright_b, levels=[0.5], colors=['k'])
+    ax.set_title(r'Median Map (blue cube)', fontsize=10)
 
     cbax = plt.subplot(gs[4, 1])
     cbar = Colorbar(ax=cbax, mappable=im)
     cbar.set_label('counts log scale')
 
     ax = plt.subplot(gs[4, 3])
-    im = ax.imshow(np.log10(median_r_sky_map), origin='lower')
-    ax.set_title(r'Median Sky Map (red cube)', fontsize=10)
+    im = ax.imshow(np.log10(median_r_map), origin='lower')
+    ax.contour(mask_faint_r, levels=[0.5], colors=['r'])
+    ax.contour(mask_medium_r, levels=[0.5], colors=['b'])
+    ax.contour(mask_bright_r, levels=[0.5], colors=['k'])
+    ax.set_title(r'Median Map (red cube)', fontsize=10)
 
     cbax = plt.subplot(gs[4, 4])
     cbar = Colorbar(ax=cbax, mappable=im)
     cbar.set_label('counts log scale')
 
     ax = plt.subplot(gs[5, 0])
-    im = ax.imshow(np.log10(mean_b_map), origin='lower')
-    ax.set_title(r'Mean Map (blue cube)', fontsize=10)
+    im = ax.imshow(np.log10(median_b_sky_map), origin='lower')
+    ax.set_title(r'Median Sky Map (blue cube)', fontsize=10)
 
     cbax = plt.subplot(gs[5, 1])
     cbar = Colorbar(ax=cbax, mappable=im)
     cbar.set_label('counts log scale')
 
     ax = plt.subplot(gs[5, 3])
-    im = ax.imshow(np.log10(mean_r_map), origin='lower')
-    ax.set_title(r'Mean Map (red cube)', fontsize=10)
+    im = ax.imshow(np.log10(median_r_sky_map), origin='lower')
+    ax.set_title(r'Median Sky Map (red cube)', fontsize=10)
 
     cbax = plt.subplot(gs[5, 4])
     cbar = Colorbar(ax=cbax, mappable=im)
     cbar.set_label('counts log scale')
 
     ax = plt.subplot(gs[6, 0])
-    im = ax.imshow(np.log10(mean_b_sky_map), origin='lower')
-    ax.set_title(r'Mean Sky Map (blue cube)', fontsize=10)
+    im = ax.imshow(np.log10(mean_b_map), origin='lower')
+    ax.set_title(r'Mean Map (blue cube)', fontsize=10)
 
     cbax = plt.subplot(gs[6, 1])
     cbar = Colorbar(ax=cbax, mappable=im)
     cbar.set_label('counts log scale')
 
     ax = plt.subplot(gs[6, 3])
+    im = ax.imshow(np.log10(mean_r_map), origin='lower')
+    ax.set_title(r'Mean Map (red cube)', fontsize=10)
+
+    cbax = plt.subplot(gs[6, 4])
+    cbar = Colorbar(ax=cbax, mappable=im)
+    cbar.set_label('counts log scale')
+
+    ax = plt.subplot(gs[7, 0])
+    im = ax.imshow(np.log10(mean_b_sky_map), origin='lower')
+    ax.set_title(r'Mean Sky Map (blue cube)', fontsize=10)
+
+    cbax = plt.subplot(gs[7, 1])
+    cbar = Colorbar(ax=cbax, mappable=im)
+    cbar.set_label('counts log scale')
+
+    ax = plt.subplot(gs[7, 3])
     im = ax.imshow(np.log10(mean_r_sky_map), origin='lower')
     ax.set_title(r'Mean Sky Map (red cube)', fontsize=10)
 
-    cbax = plt.subplot(gs[6, 4])
+    cbax = plt.subplot(gs[7, 4])
     cbar = Colorbar(ax=cbax, mappable=im)
     cbar.set_label('counts log scale')
 
@@ -372,7 +400,7 @@ def html_plots(self):
 
     # sky spectra
 
-    ax = plt.subplot(gs[7, :])
+    ax = plt.subplot(gs[8, :])
     ax.plot(lam_b, int_b_sky_spec, color='gray', alpha=0.2, label='sky')
     ax.plot(lam_b, int_b_spec_faint, color='red', label='faint')
     ax.plot(lam_b, int_b_spec_medium, color='blue', label='medium')
@@ -385,7 +413,7 @@ def html_plots(self):
     ax.grid()
     ax.legend()
 
-    ax = plt.subplot(gs[8, :])
+    ax = plt.subplot(gs[9, :])
     ax.plot(lam_r, int_r_sky_spec, color='gray', alpha=0.2, label='sky')
     ax.plot(lam_r, int_r_spec_faint, color='red', label='faint')
     ax.plot(lam_r, int_r_spec_medium, color='blue', label='medium')
@@ -400,7 +428,7 @@ def html_plots(self):
 
     # ------
 
-    ax = plt.subplot(gs[9, 0])
+    ax = plt.subplot(gs[10, 0])
     im = ax.imshow(snr_b, origin='lower')
     cs = ax.contour(snr_b, levels, linestyles=np.array([':', '-']), colors='white')
     m1 = mlines.Line2D([], [], color='black', linestyle=':', markersize=5, label='SNR = ' + str(levels[0]))
@@ -414,11 +442,11 @@ def html_plots(self):
     ims_xlims = ax.get_xlim()
     ims_ylims = ax.get_ylim()
 
-    cbax = plt.subplot(gs[9, 1])
+    cbax = plt.subplot(gs[10, 1])
     cbar = Colorbar(ax=cbax, mappable=im)
     cbar.set_label('SNR')
 
-    ax = plt.subplot(gs[9, 3])
+    ax = plt.subplot(gs[10, 3])
     im = ax.imshow(snr_r, origin='lower')
     cs = ax.contour(snr_r, levels, linestyles=np.array([':', '-']), colors='white')
     m1 = mlines.Line2D([], [], color='black', linestyle=':', markersize=5, label='SNR = ' + str(levels[0]))
@@ -429,19 +457,19 @@ def html_plots(self):
     ax.set_xlabel('X [px]')
     ax.set_ylabel('Y [px]')
 
-    cbax = plt.subplot(gs[9, 4])
+    cbax = plt.subplot(gs[10, 4])
     cbar = Colorbar(ax=cbax, mappable=im)
     cbar.set_label('SNR')
 
     # ------
 
-    ax = plt.subplot(gs[10, 0])
+    ax = plt.subplot(gs[11, 0])
     ax.plot(med_b, snr_b, 'o', color='blue', alpha=0.3, markeredgecolor='white')
     ax.set_ylabel(r'SNR [@' + str(blue_cen_wave) + '$\AA$]')
     ax.set_xlabel(r'Median Flux [@' + str(blue_cen_wave - 50) + '-' + str(blue_cen_wave + 50) + '$\AA$]')
     ax.grid(True, alpha=0.3, zorder=-1)
 
-    ax = plt.subplot(gs[10, 3])
+    ax = plt.subplot(gs[11, 3])
     ax.plot(med_r, snr_r, 'o', color='red', alpha=0.3, markeredgecolor='black')
     ax.set_ylabel(r'SNR [@' + str(red_cen_wave) + '$\AA$]')
     ax.set_xlabel(r'Median Flux [@' + str(red_cen_wave - 50) + '-' + str(red_cen_wave + 50) + '$\AA$]')
@@ -449,7 +477,7 @@ def html_plots(self):
 
     # ------
 
-    ax = plt.subplot(gs[11, 0])
+    ax = plt.subplot(gs[12, 0])
     ax.hist(snr_b[snr_b >= 3], 30, histtype='step', lw=2)
     ax.set_yscale('log')
     ax.set_ylabel(r'N pixels [SNR $\geq$ 3]')
@@ -462,7 +490,7 @@ def html_plots(self):
     in_ax.axvline(blue_cen_wave - 50, linestyle='--', color='black')
     in_ax.axvline(blue_cen_wave + 50, linestyle='--', color='black')
 
-    ax = plt.subplot(gs[11, 3])
+    ax = plt.subplot(gs[12, 3])
     ax.hist(snr_r[snr_r >= 3], 30, histtype='step', lw=2)
     ax.set_yscale('log')
     ax.set_ylabel(r'N pixels [SNR $\geq$ 3]')
@@ -500,7 +528,7 @@ def html_plots(self):
                                                                               targetSN,
                                                                               pixelsize=pixelsize, plot=0, quiet=1)
 
-    ax = plt.subplot(gs[12, 0])
+    ax = plt.subplot(gs[13, 0])
 
     xmin, xmax = np.min(x_t_b), np.max(x_t_b)
     ymin, ymax = np.min(y_t_b), np.max(y_t_b)
@@ -520,7 +548,7 @@ def html_plots(self):
     ax.imshow(snr_b * 0., zorder=-1, cmap='Greys', interpolation='nearest')
     ax.set_title(r'Voronoi binning / Target SNR = ' + str(targetSN))
 
-    ax = plt.subplot(gs[13, 0])
+    ax = plt.subplot(gs[14, 0])
 
     rad = np.sqrt((xBar - xpmax_b[0]) ** 2 + (yBar - ypmax_b[0]) ** 2)  # Use centroids, NOT generators
     plt.plot(np.sqrt((x_t_b - xpmax_b[0]) ** 2 + (y_t_b - ypmax_b[0]) ** 2), sgn_tt_b / rms_tt_b, ',k')
@@ -576,7 +604,7 @@ def html_plots(self):
                            fits.ImageHDU(data=nb_cube_err, header=cube_head, name='ERROR')])
 
     n_cube.writeto(gal_dir + 'blue_cube_vorbin.fits', overwrite=True)
-    
+
     #
 
     x_t_r = x_t[sgn_t_r / rms_t_r > 3]
@@ -588,7 +616,7 @@ def html_plots(self):
                                                                               targetSN,
                                                                               pixelsize=pixelsize, plot=0, quiet=1)
 
-    ax = plt.subplot(gs[12, 3])
+    ax = plt.subplot(gs[13, 3])
 
     xmin, xmax = np.min(x_t_r), np.max(x_t_r)
     ymin, ymax = np.min(y_t_r), np.max(y_t_r)
@@ -608,7 +636,7 @@ def html_plots(self):
     ax.imshow(snr_r * 0., zorder=-1, cmap='Greys', interpolation='nearest')
     ax.set_title(r'Voronoi binning / Target SNR = ' + str(targetSN))
 
-    ax = plt.subplot(gs[13, 3])
+    ax = plt.subplot(gs[14, 3])
 
     rad = np.sqrt((xBar - xpmax_r[0]) ** 2 + (yBar - ypmax_r[0]) ** 2)  # Use centroids, NOT generators
     plt.plot(np.sqrt((x_t_b - xpmax_r[0]) ** 2 + (y_t_b - ypmax_r[0]) ** 2), sgn_tt_b / rms_tt_b, ',k')
@@ -685,12 +713,12 @@ def html_plots(self):
     yc = np.array(yc)
     lamc_b = np.array(lamc_b)
 
-    ax = plt.subplot(gs[14, 0])
+    ax = plt.subplot(gs[15, 0])
     ax.plot(lamc_b, xc, '+', color='blue', ms=2, label='X center')
     ax.plot(lamc_b, yc, '+', color='red', ms=2, label='Y center')
     ax.set_xlabel(r'$\lambda$ [$\AA$]')
     ax.set_ylabel(r'X and Y center')
-    ax.set_title('Differential Atmospheric Refraction (Blue)')
+    ax.set_title('Peak flux spaxel (Blue)')
     ax.legend(markerscale=5)
 
     xc = []
@@ -710,12 +738,12 @@ def html_plots(self):
     yc = np.array(yc)
     lamc_r = np.array(lamc_r)
 
-    ax = plt.subplot(gs[14, 3])
+    ax = plt.subplot(gs[15, 3])
     ax.plot(lamc_r, xc, '+', color='blue', ms=2)
     ax.plot(lamc_r, yc, '+', color='red', ms=2)
     ax.set_xlabel(r'$\lambda$ [$\AA$]')
     ax.set_ylabel(r'X and Y center')
-    ax.set_title('Differential Atmospheric Refraction (Red)')
+    ax.set_title('Peak flux spaxel (Red)')
 
     fig_l1 = date + '_' + gal_name + '_L1.png'
 
@@ -726,9 +754,9 @@ def html_plots(self):
     # creating plots for APS
 
     aps_cube = fits.open(gal_name + '/' + gal_name + '_cube.fits')
-    
+
     aps_cube_data = aps_cube[0].data
-    aps_cube_err = aps_cube[0].data    
+    aps_cube_err = aps_cube[0].data
 
     targetSN = np.float(config.get('QC_plots', 'target_SN'))
     levels = np.array(json.loads(config.get('QC_plots', 'levels'))).astype(np.float)  # SNR levels to display
@@ -761,7 +789,8 @@ def html_plots(self):
 
     fig = plt.figure(figsize=(16, 20))
 
-    fig.suptitle(gal_name + ' / ' + blue_cube[0].header['MODE'] + ' / ' + ' L2/APS QC plots', size=22, weight='bold')
+    fig.suptitle(gal_name + ' / ' + blue_cube[0].header['OBTITLE'] + ' / ' + blue_cube[0].header['MODE'] + ' / ' +
+                 ' L2/APS QC plots', size=22, weight='bold')
 
     gs = gridspec.GridSpec(4, 5, height_ratios=[1, 1, 1, 1], width_ratios=[1, 0.06, 0.4, 1, 1])
     gs.update(left=0.07, right=0.9, bottom=0.05, top=0.92, wspace=0.0, hspace=0.25)
@@ -893,32 +922,31 @@ def html_plots(self):
             na_cube_data[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][0]
             na_cube_err[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][1]
 
-
     cube_head = aps_cube[0].header.copy()
 
-    #cube_head = fits.Header()
-    #cube_head['SIMPLE'] = True
-    #cube_head['BITPIX'] = -32
-    #cube_head['NAXIS'] = 3
-    #cube_head['NAXIS1'] = aps_cube[0].data.shape[2]
-    #cube_head['NAXIS2'] = aps_cube[0].data.shape[1]
-    #cube_head['NAXIS3'] = aps_cube[0].data.shape[0]
-    #cube_head['CTYPE3'] = 'WAVELENGTH'
-    #cube_head['CUNIT3'] = 'Angstrom'
-    #cube_head['CDELT3'] = aps_cube[0].header['CDELT3']
-    #cube_head['DISPAXIS'] = 1
-    #cube_head['CRVAL3'] = aps_cube[0].header['CRVAL3']
-    #cube_head['CRPIX3'] = aps_cube[0].header['CRPIX3']
-    #cube_head['CRPIX1'] = aps_cube[0].header['CRPIX1']
-    #cube_head['CRPIX2'] = aps_cube[0].header['CRPIX2']
-    #cube_head['CRVAL1'] = aps_cube[0].header['CRVAL1']
-    #cube_head['CRVAL2'] = aps_cube[0].header['CRVAL2']
-    #cube_head['CDELT1'] = aps_cube[0].header['CDELT1']
-    #cube_head['CDELT2'] = aps_cube[0].header['CDELT2']
-    #cube_head['CTYPE1'] = 'RA---TAN'
-    #cube_head['CTYPE2'] = 'DEC--TAN'
-    #cube_head['CUNIT1'] = 'deg'
-    #cube_head['CUNIT2'] = 'deg'
+    # cube_head = fits.Header()
+    # cube_head['SIMPLE'] = True
+    # cube_head['BITPIX'] = -32
+    # cube_head['NAXIS'] = 3
+    # cube_head['NAXIS1'] = aps_cube[0].data.shape[2]
+    # cube_head['NAXIS2'] = aps_cube[0].data.shape[1]
+    # cube_head['NAXIS3'] = aps_cube[0].data.shape[0]
+    # cube_head['CTYPE3'] = 'WAVELENGTH'
+    # cube_head['CUNIT3'] = 'Angstrom'
+    # cube_head['CDELT3'] = aps_cube[0].header['CDELT3']
+    # cube_head['DISPAXIS'] = 1
+    # cube_head['CRVAL3'] = aps_cube[0].header['CRVAL3']
+    # cube_head['CRPIX3'] = aps_cube[0].header['CRPIX3']
+    # cube_head['CRPIX1'] = aps_cube[0].header['CRPIX1']
+    # cube_head['CRPIX2'] = aps_cube[0].header['CRPIX2']
+    # cube_head['CRVAL1'] = aps_cube[0].header['CRVAL1']
+    # cube_head['CRVAL2'] = aps_cube[0].header['CRVAL2']
+    # cube_head['CDELT1'] = aps_cube[0].header['CDELT1']
+    # cube_head['CDELT2'] = aps_cube[0].header['CDELT2']
+    # cube_head['CTYPE1'] = 'RA---TAN'
+    # cube_head['CTYPE2'] = 'DEC--TAN'
+    # cube_head['CUNIT1'] = 'deg'
+    # cube_head['CUNIT2'] = 'deg'
 
     n_cube = fits.HDUList([fits.PrimaryHDU(data=na_cube_data, header=cube_head),
                            fits.ImageHDU(data=na_cube_err, header=cube_head, name='ERROR')])
@@ -949,7 +977,7 @@ def html_plots(self):
     ax.plot(lamc_a, yc, '+', color='red', ms=2, label='Y center')
     ax.set_xlabel(r'$\lambda$ [$\AA$]')
     ax.set_ylabel(r'X and Y center')
-    ax.set_title('Differential Atmospheric Refraction (L2)')
+    ax.set_title('Peak flux spaxel (L2)')
     ax.legend(markerscale=5)
 
     # ------
@@ -964,13 +992,13 @@ def html_plots(self):
             <div style="text-align: center;">
                 <h1>Night report ''' + date + '''</h1>
                 <img src="''' + fig_l1 + '''" class="center">
-                <img src = "''' + fig_l2 + '''" class ="center" >
+                <img src="''' + fig_l2 + '''" class="center">
             </div>
         </body>
     </html>
     '''
 
-    f = open(date + ".html", "w")
+    f = open(date + '_' + gal_name + ".html", "w")
 
     f.write(text)
 
@@ -982,4 +1010,4 @@ def html_plots(self):
 
     scp = SCPClient(ssh.get_transport())
 
-    scp.put([date + '.html', fig_l1, fig_l2], '/store/weave/apertif/')
+    scp.put([date + '_' + gal_name + '.html', fig_l1, fig_l2], '/store/weave/apertif/')
