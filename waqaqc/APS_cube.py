@@ -24,10 +24,9 @@ def cube_creator(self):
     config.read(self)
 
     file_dir = config.get('APS_cube', 'file_dir')
-    list_file = os.listdir(file_dir)
 
     wcs_c = fits.open(file_dir + config.get('QC_plots', 'blue_cube'))
-    c = fits.open(file_dir + [s for s in list_file if 'APS.fits' in s][0])
+    c = fits.open(file_dir + config.get('APS_cubell', 'aps_file'))
 
     gal_id = c[0].header['CCNAME']
     gal_dir = gal_id
