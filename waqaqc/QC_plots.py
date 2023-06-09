@@ -222,7 +222,7 @@ def html_plots(self):
 
     fig = plt.figure(figsize=(14, 72))
 
-    fig.suptitle(gal_name + ' / ' + blue_cube[0].header['OBTITLE'] + ' / '  + blue_cube[0].header['MODE'] + ' / ' +
+    fig.suptitle(gal_name + ' / ' + blue_cube[0].header['OBTITLE'] + ' / ' + blue_cube[0].header['MODE'] + ' / ' +
                  ' L1 QC plots', size=22, weight='bold')
 
     gs = gridspec.GridSpec(16, 5, height_ratios=[1, 1, 0.6, 0.6, 1, 1, 1, 1, 0.6, 0.6, 1, 0.6, 0.6, 1, 0.6, 0.6],
@@ -530,8 +530,8 @@ def html_plots(self):
 
     ax = plt.subplot(gs[13, 0])
 
-    xmin, xmax = 0, sgn_b.shape[1]-1
-    ymin, ymax = 0, sgn_b.shape[0]-1
+    xmin, xmax = 0, sgn_b.shape[1] - 1
+    ymin, ymax = 0, sgn_b.shape[0] - 1
     img = np.full((blue_cube[1].data.shape[2], blue_cube[1].data.shape[1]), np.nan)  # use nan for missing data
     j = np.round(x_t_b / pixelsize).astype(int)
     k = np.round(y_t_b / pixelsize).astype(int)
@@ -569,9 +569,9 @@ def html_plots(self):
 
     with mp.Pool(int(config.get('APS_cube', 'n_proc'))) as pool:
         nb_cube = pool.starmap(vorbin_loop, zip((i, vorbin_map, blue_cube[0].header['CAMERA'])
-                                                for i in np.arange(np.nanmax(vorbin_map)+1)))
+                                                for i in np.arange(np.nanmax(vorbin_map) + 1)))
 
-    for i in np.arange(int(np.nanmax(vorbin_map))+1):
+    for i in np.arange(int(np.nanmax(vorbin_map)) + 1):
         for j in np.arange(len(nb_cube[i][2][0])):
             nb_cube_data[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][0] * blue_cube[5].data[:]
             nb_cube_err[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][1] * blue_cube[5].data[:]
@@ -618,8 +618,8 @@ def html_plots(self):
 
     ax = plt.subplot(gs[13, 3])
 
-    xmin, xmax = 0, sgn_r.shape[1]-1
-    ymin, ymax = 0, sgn_r.shape[0]-1
+    xmin, xmax = 0, sgn_r.shape[1] - 1
+    ymin, ymax = 0, sgn_r.shape[0] - 1
     img = np.full((red_cube[1].data.shape[2], red_cube[1].data.shape[1]), np.nan)  # use nan for missing data
     j = np.round(x_t_r / pixelsize).astype(int)
     k = np.round(y_t_r / pixelsize).astype(int)
@@ -657,9 +657,9 @@ def html_plots(self):
 
     with mp.Pool(int(config.get('APS_cube', 'n_proc'))) as pool:
         nb_cube = pool.starmap(vorbin_loop, zip((i, vorbin_map, red_cube[0].header['CAMERA'])
-                                                for i in np.arange(np.nanmax(vorbin_map)+1)))
+                                                for i in np.arange(np.nanmax(vorbin_map) + 1)))
 
-    for i in np.arange(int(np.nanmax(vorbin_map))+1):
+    for i in np.arange(int(np.nanmax(vorbin_map)) + 1):
         for j in np.arange(len(nb_cube[i][2][0])):
             nb_cube_data[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][0] * red_cube[5].data[:]
             nb_cube_err[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][1] * red_cube[5].data[:]
@@ -753,250 +753,266 @@ def html_plots(self):
 
     # creating plots for APS
 
-    aps_cube = fits.open(gal_name + '/' + gal_name + '_cube.fits')
+    if int(config.get('QC_plots', 'aps_flag')) == 1:
 
-    aps_cube_data = aps_cube[0].data
-    aps_cube_err = aps_cube[0].data
+        aps_cube = fits.open(gal_name + '/' + gal_name + '_cube.fits')
 
-    targetSN = np.float(config.get('QC_plots', 'target_SN'))
-    levels = np.array(json.loads(config.get('QC_plots', 'levels'))).astype(np.float)  # SNR levels to display
+        aps_cube_data = aps_cube[0].data
+        aps_cube_err = aps_cube[0].data
 
-    colap_a_map = np.nansum(aps_cube[0].data[:], axis=0)
+        targetSN = np.float(config.get('QC_plots', 'target_SN'))
+        levels = np.array(json.loads(config.get('QC_plots', 'levels'))).astype(np.float)  # SNR levels to display
 
-    lam_a = aps_cube[0].header['CRVAL3'] + (np.arange(aps_cube[0].header['NAXIS3']) * aps_cube[0].header['CDELT3'])
+        colap_a_map = np.nansum(aps_cube[0].data[:], axis=0)
 
-    sgn_a = np.mean(aps_cube[0].data[np.where(lam_a == min(lam_a, key=lambda x: abs(x - red_cen_wave)))[0][0] - 100:
-                                     np.where(lam_a == min(lam_a, key=lambda x: abs(x - red_cen_wave)))[0][0] + 100],
-                    axis=0)
-    rms_a = np.sqrt(sgn_a)
-    snr_a = sgn_a / rms_a
+        lam_a = aps_cube[0].header['CRVAL3'] + (np.arange(aps_cube[0].header['NAXIS3']) * aps_cube[0].header['CDELT3'])
 
-    # doing the plots
+        sgn_a = np.mean(aps_cube[0].data[np.where(lam_a == min(lam_a, key=lambda x: abs(x - red_cen_wave)))[0][0] - 100:
+                                         np.where(lam_a == min(lam_a, key=lambda x: abs(x - red_cen_wave)))[0][
+                                             0] + 100],
+                        axis=0)
+        rms_a = np.sqrt(sgn_a)
+        snr_a = sgn_a / rms_a
 
-    axis_header = fits.Header()
-    axis_header['NAXIS1'] = aps_cube[1].header['NAXIS1']
-    axis_header['NAXIS2'] = aps_cube[1].header['NAXIS2']
-    axis_header['CD1_1'] = aps_cube[1].header['CDELT1']
-    axis_header['CD2_2'] = aps_cube[1].header['CDELT2']
-    axis_header['CRPIX1'] = aps_cube[1].header['CRPIX1']
-    axis_header['CRPIX2'] = aps_cube[1].header['CRPIX2']
-    axis_header['CRVAL1'] = aps_cube[1].header['CRVAL1']
-    axis_header['CRVAL2'] = aps_cube[1].header['CRVAL2']
-    axis_header['CTYPE1'] = aps_cube[1].header['CTYPE1']
-    axis_header['CTYPE2'] = aps_cube[1].header['CTYPE2']
-    axis_header['CUNIT1'] = aps_cube[1].header['CUNIT1']
-    axis_header['CUNIT2'] = aps_cube[1].header['CUNIT2']
+        # doing the plots
 
-    fig = plt.figure(figsize=(16, 20))
+        axis_header = fits.Header()
+        axis_header['NAXIS1'] = aps_cube[1].header['NAXIS1']
+        axis_header['NAXIS2'] = aps_cube[1].header['NAXIS2']
+        axis_header['CD1_1'] = aps_cube[1].header['CDELT1']
+        axis_header['CD2_2'] = aps_cube[1].header['CDELT2']
+        axis_header['CRPIX1'] = aps_cube[1].header['CRPIX1']
+        axis_header['CRPIX2'] = aps_cube[1].header['CRPIX2']
+        axis_header['CRVAL1'] = aps_cube[1].header['CRVAL1']
+        axis_header['CRVAL2'] = aps_cube[1].header['CRVAL2']
+        axis_header['CTYPE1'] = aps_cube[1].header['CTYPE1']
+        axis_header['CTYPE2'] = aps_cube[1].header['CTYPE2']
+        axis_header['CUNIT1'] = aps_cube[1].header['CUNIT1']
+        axis_header['CUNIT2'] = aps_cube[1].header['CUNIT2']
 
-    fig.suptitle(gal_name + ' / ' + blue_cube[0].header['OBTITLE'] + ' / ' + blue_cube[0].header['MODE'] + ' / ' +
-                 ' L2/APS QC plots', size=22, weight='bold')
+        fig = plt.figure(figsize=(16, 20))
 
-    gs = gridspec.GridSpec(4, 5, height_ratios=[1, 1, 1, 1], width_ratios=[1, 0.06, 0.4, 1, 1])
-    gs.update(left=0.07, right=0.9, bottom=0.05, top=0.92, wspace=0.0, hspace=0.25)
-    props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+        fig.suptitle(gal_name + ' / ' + blue_cube[0].header['OBTITLE'] + ' / ' + blue_cube[0].header['MODE'] + ' / ' +
+                     ' L2/APS QC plots', size=22, weight='bold')
 
-    wcs = WCS(axis_header)
+        gs = gridspec.GridSpec(4, 5, height_ratios=[1, 1, 1, 1], width_ratios=[1, 0.06, 0.4, 1, 1])
+        gs.update(left=0.07, right=0.9, bottom=0.05, top=0.92, wspace=0.0, hspace=0.25)
+        props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
 
-    ax = plt.subplot(gs[0, 0], projection=wcs)
-    im = ax.imshow(np.log10(colap_a_map), origin='lower')
+        wcs = WCS(axis_header)
 
-    ypmax_a = np.where(colap_a_map == np.nanmax(colap_a_map))[0]
-    xpmax_a = np.where(colap_a_map == np.nanmax(colap_a_map))[1]
+        ax = plt.subplot(gs[0, 0], projection=wcs)
+        im = ax.imshow(np.log10(colap_a_map), origin='lower')
 
-    ax.plot(xpmax_a, ypmax_a, 'x', color='red', markersize=4, label=str(xpmax_a) + ', ' + str(ypmax_a))
-    ax.set_title('Collapsed APS Datacube')
-    ax.set_xlabel('X [px]')
-    ax.set_ylabel('Y [px]')
-    ax.legend()
+        ypmax_a = np.where(colap_a_map == np.nanmax(colap_a_map))[0]
+        xpmax_a = np.where(colap_a_map == np.nanmax(colap_a_map))[1]
 
-    cbax = plt.subplot(gs[0, 1])
-    cbar = Colorbar(ax=cbax, mappable=im)
-    cbar.set_label('log scale')
+        ax.plot(xpmax_a, ypmax_a, 'x', color='red', markersize=4, label=str(xpmax_a) + ', ' + str(ypmax_a))
+        ax.set_title('Collapsed APS Datacube')
+        ax.set_xlabel('X [px]')
+        ax.set_ylabel('Y [px]')
+        ax.legend()
 
-    # ------
+        cbax = plt.subplot(gs[0, 1])
+        cbar = Colorbar(ax=cbax, mappable=im)
+        cbar.set_label('log scale')
 
-    ax = plt.subplot(gs[0, 3:5])
-    ax.plot(lam_a, aps_cube[0].data[:, ypmax_a[0], xpmax_a[0]])
-    ax.set_xlabel(r'$\lambda$ [$\AA$]')
-    ax.set_ylabel('Counts')
-    ax.set_title('APS spectrum at (' + str(xpmax_a[0]) + ', ' + str(ypmax_a[0]) + ')')
+        # ------
 
-    # ------
+        ax = plt.subplot(gs[0, 3:5])
+        ax.plot(lam_a, aps_cube[0].data[:, ypmax_a[0], xpmax_a[0]])
+        ax.set_xlabel(r'$\lambda$ [$\AA$]')
+        ax.set_ylabel('Counts')
+        ax.set_title('APS spectrum at (' + str(xpmax_a[0]) + ', ' + str(ypmax_a[0]) + ')')
 
-    ax = plt.subplot(gs[1, 0])
-    im = ax.imshow(snr_a, origin='lower')
-    cs = ax.contour(snr_a, levels, linestyles=np.array([':', '-']), colors='white')
-    m1 = mlines.Line2D([], [], color='black', linestyle=':', markersize=5, label='SNR = ' + str(levels[0]))
-    m2 = mlines.Line2D([], [], color='black', linestyle='-', markersize=5, label='SNR = ' + str(levels[1]))
-    ax.legend(handles=[m1, m2], framealpha=1, fontsize=8, loc='lower left')
+        # ------
 
-    ax.set_title(r'SNR @' + str(red_cen_wave) + '$\AA$')
-    ax.set_xlabel('X [px]')
-    ax.set_ylabel('Y [px]')
+        ax = plt.subplot(gs[1, 0])
+        im = ax.imshow(snr_a, origin='lower')
+        cs = ax.contour(snr_a, levels, linestyles=np.array([':', '-']), colors='white')
+        m1 = mlines.Line2D([], [], color='black', linestyle=':', markersize=5, label='SNR = ' + str(levels[0]))
+        m2 = mlines.Line2D([], [], color='black', linestyle='-', markersize=5, label='SNR = ' + str(levels[1]))
+        ax.legend(handles=[m1, m2], framealpha=1, fontsize=8, loc='lower left')
 
-    cbax = plt.subplot(gs[1, 1])
-    cbar = Colorbar(ax=cbax, mappable=im)
-    cbar.set_label('SNR')
+        ax.set_title(r'SNR @' + str(red_cen_wave) + '$\AA$')
+        ax.set_xlabel('X [px]')
+        ax.set_ylabel('Y [px]')
 
-    # ------
+        cbax = plt.subplot(gs[1, 1])
+        cbar = Colorbar(ax=cbax, mappable=im)
+        cbar.set_label('SNR')
 
-    ax = plt.subplot(gs[1, 3:5])
-    ax.hist(snr_a[snr_a >= 3], 30, histtype='step', lw=2)
-    ax.set_yscale('log')
-    ax.set_ylabel(r'N pixels [SNR $\geq$ 3]')
-    ax.set_xlabel(r'SNR [@' + str(red_cen_wave) + '$\AA$]')
+        # ------
 
-    int_spec_a = np.sum(aps_cube[0].data * ((snr_a >= 3)[np.newaxis, :, :]), axis=(1, 2))
-    in_ax = ax.inset_axes([0.55, 0.5, 0.4, 0.3])
-    in_ax.set_title(r'integrated spec [SNR$\geq$3]', fontsize=10)
-    in_ax.plot(lam_a, int_spec_a)
-    in_ax.axvline(red_cen_wave - 50, linestyle='--', color='black')
-    in_ax.axvline(red_cen_wave + 50, linestyle='--', color='black')
+        ax = plt.subplot(gs[1, 3:5])
+        ax.hist(snr_a[snr_a >= 3], 30, histtype='step', lw=2)
+        ax.set_yscale('log')
+        ax.set_ylabel(r'N pixels [SNR $\geq$ 3]')
+        ax.set_xlabel(r'SNR [@' + str(red_cen_wave) + '$\AA$]')
 
-    # doing voronoi binning
+        int_spec_a = np.sum(aps_cube[0].data * ((snr_a >= 3)[np.newaxis, :, :]), axis=(1, 2))
+        in_ax = ax.inset_axes([0.55, 0.5, 0.4, 0.3])
+        in_ax.set_title(r'integrated spec [SNR$\geq$3]', fontsize=10)
+        in_ax.plot(lam_a, int_spec_a)
+        in_ax.axvline(red_cen_wave - 50, linestyle='--', color='black')
+        in_ax.axvline(red_cen_wave + 50, linestyle='--', color='black')
 
-    pixelsize = 1
+        # doing voronoi binning
 
-    yy_a, xx_a = np.indices(snr_a.shape)
+        pixelsize = 1
 
-    x_ta = np.ravel(xx_a)
-    y_ta = np.ravel(yy_a)
+        yy_a, xx_a = np.indices(snr_a.shape)
 
-    sgn_t_a = np.ravel(sgn_a)
-    rms_t_a = np.ravel(rms_a)
+        x_ta = np.ravel(xx_a)
+        y_ta = np.ravel(yy_a)
 
-    x_t_a = x_ta[sgn_t_a / rms_t_a > 3]
-    y_t_a = y_ta[sgn_t_a / rms_t_a > 3]
-    sgn_tt_a = sgn_t_a[sgn_t_a / rms_t_a > 3]
-    rms_tt_a = rms_t_a[sgn_t_a / rms_t_a > 3]
+        sgn_t_a = np.ravel(sgn_a)
+        rms_t_a = np.ravel(rms_a)
 
-    binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_a, y_t_a, sgn_tt_a, rms_tt_a,
-                                                                              targetSN,
-                                                                              pixelsize=pixelsize, plot=0, quiet=1)
+        x_t_a = x_ta[sgn_t_a / rms_t_a > 3]
+        y_t_a = y_ta[sgn_t_a / rms_t_a > 3]
+        sgn_tt_a = sgn_t_a[sgn_t_a / rms_t_a > 3]
+        rms_tt_a = rms_t_a[sgn_t_a / rms_t_a > 3]
 
-    ax = plt.subplot(gs[2, 0])
+        binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_a, y_t_a, sgn_tt_a, rms_tt_a,
+                                                                                  targetSN,
+                                                                                  pixelsize=pixelsize, plot=0, quiet=1)
 
-    xmin, xmax = 0, sgn_a.shape[1]-1
-    ymin, ymax = 0, sgn_a.shape[0]-1
-    nx = sgn_a.shape[1]
-    ny = sgn_a.shape[0]
-    img = np.full((nx, ny), np.nan)  # use nan for missing data
-    j = np.round((x_t_a - xmin) / pixelsize).astype(int)
-    k = np.round((y_t_a - ymin) / pixelsize).astype(int)
-    img[j, k] = binNum
+        ax = plt.subplot(gs[2, 0])
 
-    ax.imshow(np.rot90(img), interpolation='nearest', cmap='prism',
-              extent=[xmin - pixelsize / 2, xmax + pixelsize / 2,
-                      ymin - pixelsize / 2, ymax + pixelsize / 2])
-    ax.plot(xNode, yNode, '+w', scalex=False, scaley=False)  # do not rescale after imshow()
-    ax.set_xlabel('X [px]')
-    ax.set_ylabel('Y [px]')
-    ax.set_title(r'Voronoi binning / Target SNR = ' + str(targetSN))
+        xmin, xmax = 0, sgn_a.shape[1] - 1
+        ymin, ymax = 0, sgn_a.shape[0] - 1
+        nx = sgn_a.shape[1]
+        ny = sgn_a.shape[0]
+        img = np.full((nx, ny), np.nan)  # use nan for missing data
+        j = np.round((x_t_a - xmin) / pixelsize).astype(int)
+        k = np.round((y_t_a - ymin) / pixelsize).astype(int)
+        img[j, k] = binNum
 
-    fits.writeto(gal_dir + 'vorbin_map_aps.fits', np.flip(np.rot90(img), axis=0), overwrite=True)
+        ax.imshow(np.rot90(img), interpolation='nearest', cmap='prism',
+                  extent=[xmin - pixelsize / 2, xmax + pixelsize / 2,
+                          ymin - pixelsize / 2, ymax + pixelsize / 2])
+        ax.plot(xNode, yNode, '+w', scalex=False, scaley=False)  # do not rescale after imshow()
+        ax.set_xlabel('X [px]')
+        ax.set_ylabel('Y [px]')
+        ax.set_title(r'Voronoi binning / Target SNR = ' + str(targetSN))
 
-    ax = plt.subplot(gs[2, 3:5])
+        fits.writeto(gal_dir + 'vorbin_map_aps.fits', np.flip(np.rot90(img), axis=0), overwrite=True)
 
-    rad = np.sqrt((xBar - xpmax_a[0]) ** 2 + (yBar - ypmax_a[0]) ** 2)  # Use centroids, NOT generators
-    plt.plot(np.sqrt((x_t_a - xpmax_a[0]) ** 2 + (y_t_a - ypmax_a[0]) ** 2), sgn_tt_a / rms_tt_a, ',k')
-    plt.plot(rad[nPixels < 2], sn[nPixels < 2], 'xb', label='Not binned')
-    plt.plot(rad[nPixels > 1], sn[nPixels > 1], 'or', label='Voronoi bins')
-    plt.xlabel('R [pixels]')
-    plt.ylabel('Bin S/N')
-    plt.axis([np.min(rad), np.max(rad), 0, np.max(sn) * 1.05])  # x0, x1, y0, y1
-    plt.axhline(targetSN)
-    plt.legend()
+        ax = plt.subplot(gs[2, 3:5])
 
-    # saving voronoi datacube
-    vorbin_map = img
-    na_cube_data = np.zeros(aps_cube[0].data.shape)
-    na_cube_err = np.zeros(aps_cube[0].data.shape)
+        rad = np.sqrt((xBar - xpmax_a[0]) ** 2 + (yBar - ypmax_a[0]) ** 2)  # Use centroids, NOT generators
+        plt.plot(np.sqrt((x_t_a - xpmax_a[0]) ** 2 + (y_t_a - ypmax_a[0]) ** 2), sgn_tt_a / rms_tt_a, ',k')
+        plt.plot(rad[nPixels < 2], sn[nPixels < 2], 'xb', label='Not binned')
+        plt.plot(rad[nPixels > 1], sn[nPixels > 1], 'or', label='Voronoi bins')
+        plt.xlabel('R [pixels]')
+        plt.ylabel('Bin S/N')
+        plt.axis([np.min(rad), np.max(rad), 0, np.max(sn) * 1.05])  # x0, x1, y0, y1
+        plt.axhline(targetSN)
+        plt.legend()
 
-    with mp.Pool(int(config.get('APS_cube', 'n_proc'))) as pool:
-        nb_cube = pool.starmap(vorbin_loop, zip((i, vorbin_map, 'APS')
-                                                for i in np.arange(np.nanmax(vorbin_map)+1)))
+        # saving voronoi datacube
+        vorbin_map = img
+        na_cube_data = np.zeros(aps_cube[0].data.shape)
+        na_cube_err = np.zeros(aps_cube[0].data.shape)
 
-    for i in np.arange(int(np.nanmax(vorbin_map))+1):
-        for j in np.arange(len(nb_cube[i][2][0])):
-            na_cube_data[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][0]
-            na_cube_err[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][1]
+        with mp.Pool(int(config.get('APS_cube', 'n_proc'))) as pool:
+            nb_cube = pool.starmap(vorbin_loop, zip((i, vorbin_map, 'APS')
+                                                    for i in np.arange(np.nanmax(vorbin_map) + 1)))
 
-    cube_head = aps_cube[0].header.copy()
+        for i in np.arange(int(np.nanmax(vorbin_map)) + 1):
+            for j in np.arange(len(nb_cube[i][2][0])):
+                na_cube_data[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][0]
+                na_cube_err[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][1]
 
-    # cube_head = fits.Header()
-    # cube_head['SIMPLE'] = True
-    # cube_head['BITPIX'] = -32
-    # cube_head['NAXIS'] = 3
-    # cube_head['NAXIS1'] = aps_cube[0].data.shape[2]
-    # cube_head['NAXIS2'] = aps_cube[0].data.shape[1]
-    # cube_head['NAXIS3'] = aps_cube[0].data.shape[0]
-    # cube_head['CTYPE3'] = 'WAVELENGTH'
-    # cube_head['CUNIT3'] = 'Angstrom'
-    # cube_head['CDELT3'] = aps_cube[0].header['CDELT3']
-    # cube_head['DISPAXIS'] = 1
-    # cube_head['CRVAL3'] = aps_cube[0].header['CRVAL3']
-    # cube_head['CRPIX3'] = aps_cube[0].header['CRPIX3']
-    # cube_head['CRPIX1'] = aps_cube[0].header['CRPIX1']
-    # cube_head['CRPIX2'] = aps_cube[0].header['CRPIX2']
-    # cube_head['CRVAL1'] = aps_cube[0].header['CRVAL1']
-    # cube_head['CRVAL2'] = aps_cube[0].header['CRVAL2']
-    # cube_head['CDELT1'] = aps_cube[0].header['CDELT1']
-    # cube_head['CDELT2'] = aps_cube[0].header['CDELT2']
-    # cube_head['CTYPE1'] = 'RA---TAN'
-    # cube_head['CTYPE2'] = 'DEC--TAN'
-    # cube_head['CUNIT1'] = 'deg'
-    # cube_head['CUNIT2'] = 'deg'
+        cube_head = aps_cube[0].header.copy()
 
-    n_cube = fits.HDUList([fits.PrimaryHDU(data=na_cube_data, header=cube_head),
-                           fits.ImageHDU(data=na_cube_err, header=cube_head, name='ERROR')])
+        # cube_head = fits.Header()
+        # cube_head['SIMPLE'] = True
+        # cube_head['BITPIX'] = -32
+        # cube_head['NAXIS'] = 3
+        # cube_head['NAXIS1'] = aps_cube[0].data.shape[2]
+        # cube_head['NAXIS2'] = aps_cube[0].data.shape[1]
+        # cube_head['NAXIS3'] = aps_cube[0].data.shape[0]
+        # cube_head['CTYPE3'] = 'WAVELENGTH'
+        # cube_head['CUNIT3'] = 'Angstrom'
+        # cube_head['CDELT3'] = aps_cube[0].header['CDELT3']
+        # cube_head['DISPAXIS'] = 1
+        # cube_head['CRVAL3'] = aps_cube[0].header['CRVAL3']
+        # cube_head['CRPIX3'] = aps_cube[0].header['CRPIX3']
+        # cube_head['CRPIX1'] = aps_cube[0].header['CRPIX1']
+        # cube_head['CRPIX2'] = aps_cube[0].header['CRPIX2']
+        # cube_head['CRVAL1'] = aps_cube[0].header['CRVAL1']
+        # cube_head['CRVAL2'] = aps_cube[0].header['CRVAL2']
+        # cube_head['CDELT1'] = aps_cube[0].header['CDELT1']
+        # cube_head['CDELT2'] = aps_cube[0].header['CDELT2']
+        # cube_head['CTYPE1'] = 'RA---TAN'
+        # cube_head['CTYPE2'] = 'DEC--TAN'
+        # cube_head['CUNIT1'] = 'deg'
+        # cube_head['CUNIT2'] = 'deg'
 
-    n_cube.writeto(gal_dir + 'APS_cube_vorbin.fits', overwrite=True)
+        n_cube = fits.HDUList([fits.PrimaryHDU(data=na_cube_data, header=cube_head),
+                               fits.ImageHDU(data=na_cube_err, header=cube_head, name='ERROR')])
 
-    # ------
+        n_cube.writeto(gal_dir + 'APS_cube_vorbin.fits', overwrite=True)
 
-    xc = []
-    yc = []
-    lamc_a = []
+        # ------
 
-    for i in np.arange(len(aps_cube[0].data[:, 0, 0])):
-        xcx = np.where(aps_cube[0].data[i, :, :] == np.nanmax(aps_cube[0].data[i, :, :]))[1]
-        ycy = np.where(aps_cube[0].data[i, :, :] == np.nanmax(aps_cube[0].data[i, :, :]))[0]
-        if len(xcx) < len(aps_cube[0].data[0, 0, :]):
-            for j in np.arange(len(xcx)):
-                xc.append(xcx[j])
-                yc.append(ycy[j])
-                lamc_a.append(lam_a[i])
+        xc = []
+        yc = []
+        lamc_a = []
 
-    xc = np.array(xc)
-    yc = np.array(yc)
-    lamc_a = np.array(lamc_a)
+        for i in np.arange(len(aps_cube[0].data[:, 0, 0])):
+            xcx = np.where(aps_cube[0].data[i, :, :] == np.nanmax(aps_cube[0].data[i, :, :]))[1]
+            ycy = np.where(aps_cube[0].data[i, :, :] == np.nanmax(aps_cube[0].data[i, :, :]))[0]
+            if len(xcx) < len(aps_cube[0].data[0, 0, :]):
+                for j in np.arange(len(xcx)):
+                    xc.append(xcx[j])
+                    yc.append(ycy[j])
+                    lamc_a.append(lam_a[i])
 
-    ax = plt.subplot(gs[3, 3:5])
-    ax.plot(lamc_a, xc, '+', color='blue', ms=2, label='X center')
-    ax.plot(lamc_a, yc, '+', color='red', ms=2, label='Y center')
-    ax.set_xlabel(r'$\lambda$ [$\AA$]')
-    ax.set_ylabel(r'X and Y center')
-    ax.set_title('Peak flux spaxel (L2)')
-    ax.legend(markerscale=5)
+        xc = np.array(xc)
+        yc = np.array(yc)
+        lamc_a = np.array(lamc_a)
 
-    # ------
+        ax = plt.subplot(gs[3, 3:5])
+        ax.plot(lamc_a, xc, '+', color='blue', ms=2, label='X center')
+        ax.plot(lamc_a, yc, '+', color='red', ms=2, label='Y center')
+        ax.set_xlabel(r'$\lambda$ [$\AA$]')
+        ax.set_ylabel(r'X and Y center')
+        ax.set_title('Peak flux spaxel (L2)')
+        ax.legend(markerscale=5)
 
-    fig_l2 = date + '_' + gal_name + '_L2.png'
+        # ------
 
-    fig.savefig(fig_l2)
+        fig_l2 = date + '_' + gal_name + '_L2.png'
 
-    text = '''
-    <html>
-        <body style="background-color:white;">
-            <div style="text-align: center;">
-                <h1>Night report ''' + date + '''</h1>
-                <img src="''' + fig_l1 + '''" class="center">
-                <img src="''' + fig_l2 + '''" class="center">
-            </div>
-        </body>
-    </html>
-    '''
+        fig.savefig(fig_l2)
+
+        text = '''
+        <html>
+            <body style="background-color:white;">
+                <div style="text-align: center;">
+                    <h1>Night report ''' + date + '''</h1>
+                    <img src="''' + fig_l1 + '''" class="center">
+                    <img src="''' + fig_l2 + '''" class="center">
+                </div>
+            </body>
+        </html>
+        '''
+
+    else:
+
+        text = '''
+        <html>
+            <body style="background-color:white;">
+                <div style="text-align: center;">
+                    <h1>Night report ''' + date + '''</h1>
+                    <img src="''' + fig_l1 + '''" class="center">
+                </div>
+            </body>
+        </html>
+        '''
 
     f = open(date + '_' + gal_name + ".html", "w")
 
@@ -1010,4 +1026,7 @@ def html_plots(self):
 
     scp = SCPClient(ssh.get_transport())
 
-    scp.put([date + '_' + gal_name + '.html', fig_l1, fig_l2], '/store/weave/apertif/')
+    if int(config.get('QC_plots', 'aps_flag')) == 1:
+        scp.put([date + '_' + gal_name + '.html', fig_l1, fig_l2], '/store/weave/apertif/')
+    else:
+        scp.put([date + '_' + gal_name + '.html', fig_l1], '/store/weave/apertif/')
