@@ -31,14 +31,6 @@ def specs(self):
         rss_err = np.zeros((len(np.unique(vorbin_map[vorbin_map >= 0])), len(wave)), dtype=np.float32)
 
         for i in np.unique(vorbin_map[vorbin_map >= 0]):
-            # I believe this part here is using a sensitivity function, which should not be necessary for APS (but still
-            # keeping commented just in case, for now)
-
-            # rss_data[int(i)] = c[0].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]] * \
-            #                    c[5].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]]
-            # rss_err[int(i)] = c[1].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]] * \
-            #                   c[5].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]]
-
             rss_data[int(i)] = c[0].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]]
             rss_err[int(i)] = c[1].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]]
 

@@ -530,8 +530,8 @@ def html_plots(self):
 
     ax = plt.subplot(gs[13, 0])
 
-    xmin, xmax = np.min(x_t_b), np.max(x_t_b)
-    ymin, ymax = np.min(y_t_b), np.max(y_t_b)
+    xmin, xmax = 0, sgn_b.shape[1]-1
+    ymin, ymax = 0, sgn_b.shape[0]-1
     img = np.full((blue_cube[1].data.shape[2], blue_cube[1].data.shape[1]), np.nan)  # use nan for missing data
     j = np.round(x_t_b / pixelsize).astype(int)
     k = np.round(y_t_b / pixelsize).astype(int)
@@ -569,12 +569,12 @@ def html_plots(self):
 
     with mp.Pool(int(config.get('APS_cube', 'n_proc'))) as pool:
         nb_cube = pool.starmap(vorbin_loop, zip((i, vorbin_map, blue_cube[0].header['CAMERA'])
-                                                for i in np.arange(np.nanmax(vorbin_map))))
+                                                for i in np.arange(np.nanmax(vorbin_map)+1)))
 
-    for i in np.arange(int(np.nanmax(vorbin_map))):
+    for i in np.arange(int(np.nanmax(vorbin_map))+1):
         for j in np.arange(len(nb_cube[i][2][0])):
-            nb_cube_data[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][0]
-            nb_cube_err[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][1]
+            nb_cube_data[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][0] * blue_cube[5].data[:]
+            nb_cube_err[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][1] * blue_cube[5].data[:]
 
     cube_head = fits.Header()
     cube_head['SIMPLE'] = True
@@ -618,8 +618,8 @@ def html_plots(self):
 
     ax = plt.subplot(gs[13, 3])
 
-    xmin, xmax = np.min(x_t_r), np.max(x_t_r)
-    ymin, ymax = np.min(y_t_r), np.max(y_t_r)
+    xmin, xmax = 0, sgn_r.shape[1]-1
+    ymin, ymax = 0, sgn_r.shape[0]-1
     img = np.full((red_cube[1].data.shape[2], red_cube[1].data.shape[1]), np.nan)  # use nan for missing data
     j = np.round(x_t_r / pixelsize).astype(int)
     k = np.round(y_t_r / pixelsize).astype(int)
@@ -657,12 +657,12 @@ def html_plots(self):
 
     with mp.Pool(int(config.get('APS_cube', 'n_proc'))) as pool:
         nb_cube = pool.starmap(vorbin_loop, zip((i, vorbin_map, red_cube[0].header['CAMERA'])
-                                                for i in np.arange(np.nanmax(vorbin_map))))
+                                                for i in np.arange(np.nanmax(vorbin_map)+1)))
 
-    for i in np.arange(int(np.nanmax(vorbin_map))):
+    for i in np.arange(int(np.nanmax(vorbin_map))+1):
         for j in np.arange(len(nb_cube[i][2][0])):
-            nb_cube_data[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][0]
-            nb_cube_err[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][1]
+            nb_cube_data[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][0] * red_cube[5].data[:]
+            nb_cube_err[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][1] * red_cube[5].data[:]
 
     cube_head = fits.Header()
     cube_head['SIMPLE'] = True
@@ -877,10 +877,10 @@ def html_plots(self):
 
     ax = plt.subplot(gs[2, 0])
 
-    xmin, xmax = np.min(x_t_a), np.max(x_t_a)
-    ymin, ymax = np.min(y_t_a), np.max(y_t_a)
-    nx = int(round((xmax - xmin) / pixelsize) + 1)
-    ny = int(round((ymax - ymin) / pixelsize) + 1)
+    xmin, xmax = 0, sgn_a.shape[1]-1
+    ymin, ymax = 0, sgn_a.shape[0]-1
+    nx = sgn_a.shape[1]
+    ny = sgn_a.shape[0]
     img = np.full((nx, ny), np.nan)  # use nan for missing data
     j = np.round((x_t_a - xmin) / pixelsize).astype(int)
     k = np.round((y_t_a - ymin) / pixelsize).astype(int)
@@ -915,9 +915,9 @@ def html_plots(self):
 
     with mp.Pool(int(config.get('APS_cube', 'n_proc'))) as pool:
         nb_cube = pool.starmap(vorbin_loop, zip((i, vorbin_map, 'APS')
-                                                for i in np.arange(np.nanmax(vorbin_map))))
+                                                for i in np.arange(np.nanmax(vorbin_map)+1)))
 
-    for i in np.arange(int(np.nanmax(vorbin_map))):
+    for i in np.arange(int(np.nanmax(vorbin_map))+1):
         for j in np.arange(len(nb_cube[i][2][0])):
             na_cube_data[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][0]
             na_cube_err[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][1]
