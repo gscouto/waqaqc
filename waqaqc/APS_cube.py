@@ -81,6 +81,9 @@ def cube_creator(self):
 
     apsid_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
     vorbin_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
+    stel_vel_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
+    aps_maps = np.zeros((len(c[4].data.names) - 1, np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
+    aps_maps_names = []
 
     print('')
     print('Recreating original datacube from APS file. This may take a few minutes...')
@@ -117,6 +120,9 @@ def cube_creator(self):
     vorbin_err = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1))
 
     cnt = 0
+    
+    for j in np.arange(len(c[4].data.names) - 1):
+        aps_maps_names.append(c[4].data.names[j+1])
     for i in pix_mapt:
         apsid_map[i[1], i[0]] = aps_id[cnt]
         vorbin_map[i[1], i[0]] = bin_id[cnt]
@@ -126,6 +132,12 @@ def cube_creator(self):
         if vorbin_map[i[1], i[0]] >= 0:
             vorbin_data[:, i[1], i[0]] = vorbin_cube_data[r_bin_id == vorbin_map[i[1], i[0]]][0]
             vorbin_err[:, i[1], i[0]] = vorbin_cube_err[r_bin_id == vorbin_map[i[1], i[0]]][0]
+            stel_vel_map[i[1], i[0]] = c[4].data['V'][r_bin_id == bin_id[cnt]]
+            for j in np.arange(len(c[4].data.names) - 1):
+                if len(c[4].data[c[4].data.names[j+1]][r_bin_id == bin_id[cnt]].shape) == 1:
+                    aps_maps[j, i[1], i[0]] = c[4].data[c[4].data.names[j+1]][r_bin_id == bin_id[cnt]]
+                else:
+                    np.delete(aps_maps, j, axis=0)
         print('Rearranging into datacube formats: ' + str(
             round(100. * cnt / pix_mapt.shape[0], 2)) + '%', end='\r')
         cnt += 1
@@ -207,7 +219,11 @@ def cube_creator(self):
                            fits.ImageHDU(data=cube_err, header=cube_head, name='ERROR')])
     n_vorbin = fits.HDUList([fits.PrimaryHDU(data=vorbin_data, header=cube_head),
                              fits.ImageHDU(data=vorbin_err, header=cube_head, name='ERROR')])
+    maps_HDU = fits.HDUList([fits.PrimaryHDU()])
+    for i in np.arange(len(aps_maps)):
+        maps_HDU.append(fits.ImageHDU(data=aps_maps[i], header=map_head, name=aps_maps_names[i]))
 
     n_cube.writeto(gal_dir + '/' + gal_id + '_cube.fits', overwrite=True)
     n_vorbin.writeto(gal_dir + '/' + gal_id + '_vorbin_cube.fits', overwrite=True)
+    maps_HDU.writeto(gal_dir + '/' + gal_id + '_APS_maps.fits', overwrite=True)
     fits.writeto(gal_dir + '/' + 'vorbin_map.fits', vorbin_map, header=map_head, overwrite=True)
