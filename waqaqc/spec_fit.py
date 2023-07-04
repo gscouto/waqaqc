@@ -56,14 +56,13 @@ def specs(self):
         print('Running PyParadise best fit')
 
         if int(config.get('spec_fit', 'EL_flag')):
-            print('oi')
             os.system('ParadiseApp.py ' + gal + '_APS_vorbin_RSS.fits ' + gal + '_APS_vorbin ' +
                       config.get('spec_fit', 'fwhm') +
-                      ' --SSP_par parameters_stellar --line_par parameters_eline --parallel ' +
+                      ' --SSP_par parameters_stellar_aps --line_par parameters_eline_aps --parallel ' +
                       config.get('APS_cube', 'n_proc') + ' --verbose')
         else:
             os.system('ParadiseApp.py ' + gal + '_APS_vorbin_RSS.fits ' + gal + '_APS_vorbin ' +
-                      config.get('spec_fit', 'fwhm') + ' --SSP_par parameters_stellar --parallel ' +
+                      config.get('spec_fit', 'fwhm') + ' --SSP_par parameters_stellar_aps --parallel ' +
                       config.get('APS_cube', 'n_proc') + ' --verbose')
 
         if int(config.get('spec_fit', 'boots_flag')):
@@ -71,13 +70,13 @@ def specs(self):
             print('Running bootstrap models')
 
             os.system(
-                'ParadiseApp.py ' + gal + '_APS_vorbin_RSS.fits ' + gal + '_APS_vorbin ' + config.get('spec_fit',
-                                                                                                      'fwhm') +
-                ' --SSP_par parameters_stellar --line_par parameters_eline --bootstraps 100 --modkeep 80 --parallel ' +
-                config.get('APS_cube', 'n_proc') + ' --verbose')
+                'ParadiseApp.py ' + gal + '_APS_vorbin_RSS.fits ' + gal + '_APS_vorbin ' +
+                config.get('spec_fit', 'fwhm') + ' --SSP_par parameters_stellar_aps --line_par parameters_eline_aps '
+                '--bootstraps 100 --modkeep 80 --parallel ' + config.get('APS_cube', 'n_proc') + ' --verbose')
 
         os.system('mv ' + gal + '*.fits ' + gal_dir + '/.')
-        os.system('cp config_file.env excl* lines.fit par.lines parameters_eline parameters_stellar ' + gal_dir + '/.')
+        os.system('cp config_file.env excl* lines_aps.fit par_aps.lines parameters_eline_aps parameters_stellar_aps '
+                  + gal_dir + '/.')
 
     if int(config.get('spec_fit', 'blue_fit')) == 1:
 
