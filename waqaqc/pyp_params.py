@@ -471,12 +471,8 @@ def pp(self):
     g.write('Gauss: Hbeta\n')
     g.write('restwave 4861.33\n')
     g.write('flux ' + str(line_flux) + ' 1\n')
-    if z < 0.428:
-        g.write('vel Halpha\n')
-        g.write('disp Halpha\n')
-    else:
-        g.write('vel ' + str(vel) + ' 1\n')
-        g.write('disp 100 1\n')
+    g.write('vel Halpha\n')
+    g.write('disp Halpha\n')
     g.write('\n')
 
     # if (z < 0.910):
@@ -551,8 +547,8 @@ def pp(self):
     g.write('Gauss: NII6548\n')
     g.write('restwave 6548.05\n')
     g.write('flux NII6583:0.33\n')
-    g.write('vel NII6583\n')
-    g.write('disp NII6583\n')
+    g.write('vel Halpha\n')
+    g.write('disp Halpha\n')
     g.write('\n')
 
     g.write('Gauss: Halpha\n')
@@ -565,8 +561,8 @@ def pp(self):
     g.write('Gauss: NII6583\n')
     g.write('restwave 6583.45\n')
     g.write('flux ' + str(line_flux) + ' 1\n')
-    g.write('vel ' + str(vel) + ' 1\n')
-    g.write('disp 100 1\n')
+    g.write('vel Halpha\n')
+    g.write('disp Halpha\n')
     g.write('\n')
 
     # if (z < 0.407):
@@ -586,15 +582,15 @@ def pp(self):
     g.write('Gauss: SII6717\n')
     g.write('restwave 6716.44\n')
     g.write('flux ' + str(line_flux) + ' 1\n')
-    g.write('vel ' + str(vel) + ' 1\n')
-    g.write('disp 100 1\n')
+    g.write('vel Halpha\n')
+    g.write('disp Halpha\n')
     g.write('\n')
 
     g.write('Gauss: SII6730\n')
     g.write('restwave 6730.81\n')
     g.write('flux ' + str(line_flux) + ' 1\n')
-    g.write('vel ' + str(vel) + ' 1\n')
-    g.write('disp 100 1\n')
+    g.write('vel Halpha\n')
+    g.write('disp Halpha\n')
     g.write('\n')
 
     # if (z < 0.330):
