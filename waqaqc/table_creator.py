@@ -37,7 +37,7 @@ def tab_cre(self):
 
         vorbin_map = fits.getdata(gal + '/vorbin_map_aps.fits')
 
-        params_stel = open(res_dir + '/parameters_stellar', 'r')
+        params_stel = open(res_dir + '/parameters_stellar_aps', 'r')
         lines = params_stel.readlines()
 
         elint_t = Table(elint_file[1].data)
