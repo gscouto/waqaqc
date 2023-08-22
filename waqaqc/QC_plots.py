@@ -758,19 +758,20 @@ def html_plots(self):
         aps_cube = fits.open(gal_name + '/' + gal_name + '_cube.fits')
 
         aps_cube_data = aps_cube[0].data
-        aps_cube_err = aps_cube[0].data
+        aps_cube_err = aps_cube[1].data
 
         targetSN = np.float(config.get('QC_plots', 'target_SN'))
         levels = np.array(json.loads(config.get('QC_plots', 'levels'))).astype(np.float)  # SNR levels to display
+
+        aps_cen_wave = int(config.get('QC_plots', 'aps_wav'))
 
         colap_a_map = np.nansum(aps_cube[0].data[:], axis=0)
 
         lam_a = aps_cube[0].header['CRVAL3'] + (np.arange(aps_cube[0].header['NAXIS3']) * aps_cube[0].header['CDELT3'])
 
-        sgn_a = np.mean(aps_cube[0].data[np.where(lam_a == min(lam_a, key=lambda x: abs(x - red_cen_wave)))[0][0] - 100:
-                                         np.where(lam_a == min(lam_a, key=lambda x: abs(x - red_cen_wave)))[0][
-                                             0] + 100],
-                        axis=0)
+        sgn_a = np.mean(aps_cube[0].data[np.where(lam_a == min(lam_a, key=lambda x: abs(x - aps_cen_wave)))[0][0] - 100:
+                                         np.where(lam_a == min(lam_a, key=lambda x: abs(x - aps_cen_wave)))[0][0] + 100]
+                        , axis=0)
         rms_a = np.sqrt(sgn_a)
         snr_a = sgn_a / rms_a
 
@@ -834,7 +835,7 @@ def html_plots(self):
         m2 = mlines.Line2D([], [], color='black', linestyle='-', markersize=5, label='SNR = ' + str(levels[1]))
         ax.legend(handles=[m1, m2], framealpha=1, fontsize=8, loc='lower left')
 
-        ax.set_title(r'SNR @' + str(red_cen_wave) + '$\AA$')
+        ax.set_title(r'SNR @' + str(aps_cen_wave) + '$\AA$')
         ax.set_xlabel('X [px]')
         ax.set_ylabel('Y [px]')
 
@@ -848,14 +849,14 @@ def html_plots(self):
         ax.hist(snr_a[snr_a >= 3], 30, histtype='step', lw=2)
         ax.set_yscale('log')
         ax.set_ylabel(r'N pixels [SNR $\geq$ 3]')
-        ax.set_xlabel(r'SNR [@' + str(red_cen_wave) + '$\AA$]')
+        ax.set_xlabel(r'SNR [@' + str(aps_cen_wave) + '$\AA$]')
 
         int_spec_a = np.sum(aps_cube[0].data * ((snr_a >= 3)[np.newaxis, :, :]), axis=(1, 2))
         in_ax = ax.inset_axes([0.55, 0.5, 0.4, 0.3])
         in_ax.set_title(r'integrated spec [SNR$\geq$3]', fontsize=10)
         in_ax.plot(lam_a, int_spec_a)
-        in_ax.axvline(red_cen_wave - 50, linestyle='--', color='black')
-        in_ax.axvline(red_cen_wave + 50, linestyle='--', color='black')
+        in_ax.axvline(aps_cen_wave - 100, linestyle='--', color='black')
+        in_ax.axvline(aps_cen_wave + 100, linestyle='--', color='black')
 
         # doing voronoi binning
 
