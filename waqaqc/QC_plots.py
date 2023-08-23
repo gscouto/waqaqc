@@ -600,7 +600,8 @@ def html_plots(self):
     cube_head['CUNIT1'] = 'deg'
     cube_head['CUNIT2'] = 'deg'
 
-    n_cube = fits.HDUList([fits.PrimaryHDU(data=nb_cube_data, header=cube_head),
+    n_cube = fits.HDUList([fits.PrimaryHDU(),
+                           fits.ImageHDU(data=nb_cube_data, header=cube_head, name='DATA'),
                            fits.ImageHDU(data=nb_cube_err, header=cube_head, name='ERROR')])
 
     n_cube.writeto(gal_dir + 'blue_cube_vorbin.fits', overwrite=True)
@@ -688,7 +689,8 @@ def html_plots(self):
     cube_head['CUNIT1'] = 'deg'
     cube_head['CUNIT2'] = 'deg'
 
-    n_cube = fits.HDUList([fits.PrimaryHDU(data=nb_cube_data, header=cube_head),
+    n_cube = fits.HDUList([fits.PrimaryHDU(),
+                           fits.ImageHDU(data=nb_cube_data, header=cube_head, name='DATA'),
                            fits.ImageHDU(data=nb_cube_err, header=cube_head, name='ERROR')])
 
     n_cube.writeto(gal_dir + 'red_cube_vorbin.fits', overwrite=True)
@@ -952,7 +954,8 @@ def html_plots(self):
         # cube_head['CUNIT1'] = 'deg'
         # cube_head['CUNIT2'] = 'deg'
 
-        n_cube = fits.HDUList([fits.PrimaryHDU(data=na_cube_data, header=cube_head),
+        n_cube = fits.HDUList([fits.PrimaryHDU(),
+                               fits.ImageHDU(data=na_cube_data, header=cube_head, name='DATA'),
                                fits.ImageHDU(data=na_cube_err, header=cube_head, name='ERROR')])
 
         n_cube.writeto(gal_dir + 'APS_cube_vorbin.fits', overwrite=True)
