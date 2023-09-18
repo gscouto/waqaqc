@@ -83,7 +83,6 @@ def cube_creator(self):
     vorbin_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
     stel_vel_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
     aps_maps = np.zeros((len(c[4].data.names) - 1, np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
-    aps_maps_names = []
 
     print('')
     print('Recreating original datacube from APS file. This may take a few minutes...')
@@ -119,19 +118,27 @@ def cube_creator(self):
     vorbin_data = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1))
     vorbin_err = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1))
 
+    aps_maps_names = []
+
     cnt = 0
-    
+    #
     for j in np.arange(len(c[4].data.names) - 1):
         aps_maps_names.append(c[4].data.names[j+1])
     for i in pix_mapt:
         apsid_map[i[1], i[0]] = aps_id[cnt]
         vorbin_map[i[1], i[0]] = bin_id[cnt]
+        cnt += 1
+
+    cnt = 0
+    for i in pix_mapt:
         if apsid_map[i[1], i[0]] >= 0:
             cube_data[:, i[1], i[0]] = rss_data[aps_id == apsid_map[i[1], i[0]]][0]
             cube_err[:, i[1], i[0]] = rss_err[aps_id == apsid_map[i[1], i[0]]][0]
         if vorbin_map[i[1], i[0]] >= 0:
-            vorbin_data[:, i[1], i[0]] = vorbin_cube_data[r_bin_id == vorbin_map[i[1], i[0]]][0]
-            vorbin_err[:, i[1], i[0]] = vorbin_cube_err[r_bin_id == vorbin_map[i[1], i[0]]][0]
+            vorbin_data[:, i[1], i[0]] = vorbin_cube_data[r_bin_id == vorbin_map[i[1], i[0]]][0] / \
+                                         len(np.where(vorbin_map == vorbin_map[i[1], i[0]])[0])
+            vorbin_err[:, i[1], i[0]] = vorbin_cube_err[r_bin_id == vorbin_map[i[1], i[0]]][0] / \
+                                         len(np.where(vorbin_map == vorbin_map[i[1], i[0]])[0])
             stel_vel_map[i[1], i[0]] = c[4].data['V'][r_bin_id == bin_id[cnt]]
             for j in np.arange(len(c[4].data.names) - 1):
                 if len(c[4].data[c[4].data.names[j+1]][r_bin_id == bin_id[cnt]].shape) == 1:
