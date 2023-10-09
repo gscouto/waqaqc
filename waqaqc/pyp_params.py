@@ -1,4 +1,5 @@
 import configparser
+from astropy import constants as const
 
 def pp(self):
     config = configparser.ConfigParser()
@@ -45,6 +46,8 @@ def pp(self):
 
         # =======
         # create stellar parameters file
+        
+        vel = round(vel + (const.c.to('km/s').value * z), 1)
 
         f = open("parameters_stellar_blue", "w+")
 
@@ -64,7 +67,7 @@ def pp(self):
         f.write('vel_max            ' + str(vel + 200) + '                                  '
                                                          '!maximum velocity in km/s (float)\n')
         f.write(
-            'disp_min           40.0                                        '
+            'disp_min           10.0                                        '
             '!minimum velocity dispersion in km/s (float)\n')
         f.write('disp_max           ' + config.get('pyp_params', 'disp_max') +
                 '                                       !maximum velocity  dispersion in km/s (float)\n')
@@ -225,6 +228,8 @@ def pp(self):
     # =================== running for red cube ===========================
 
     if int(config.get('pyp_params', 'red_fit')) == 1:
+
+        vel = round(vel + (const.c.to('km/s').value * z), 1)
 
         # =======
         # create stellar parameters file
