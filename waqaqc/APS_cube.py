@@ -28,8 +28,8 @@ def cube_creator(self):
     wcs_c = fits.open(file_dir + config.get('QC_plots', 'blue_cube'))
     c = fits.open(file_dir + config.get('APS_cube', 'aps_file'))
 
-    gal_id = c[0].header['CCNAME']
-    gal_dir = gal_id
+    gal_id = c[1].data['CNAME'][0]
+    gal_dir = gal_id + '_' + wcs_c[0].header['MODE'] + '_' + str(wcs_c[0].header['OBID'])
 
     os.makedirs(gal_dir, exist_ok=True)
 
@@ -38,9 +38,9 @@ def cube_creator(self):
     r_bin_id = c[3].data['BIN_ID']
 
     wave = np.exp(c[1].data['LOGLAM'][0])
-    if c[0].header['RES-OBS'] == 'HR':
+    if wcs_c[0].header['MODE'] == 'HIGHRES':
         n_wave = np.arange(min(wave)+0.1, max(wave), 0.1)
-    elif c[0].header['RES-OBS'] == 'LR':
+    elif wcs_c[0].header['MODE'] == 'LOWRES':
         n_wave = np.arange(min(wave)+0.5, max(wave), 0.5)
 
     axis_header = fits.Header()
@@ -170,9 +170,9 @@ def cube_creator(self):
     cube_head['NAXIS3'] = cube_data.shape[0]
     cube_head['CTYPE3'] = 'WAVELENGTH'
     cube_head['CUNIT3'] = 'Angstrom'
-    if c[0].header['RES-OBS'] == 'HR':
+    if wcs_c[0].header['MODE'] == 'HIGHRES':
         cube_head['CDELT3'] = 0.1
-    elif c[0].header['RES-OBS'] == 'LR':
+    if wcs_c[0].header['MODE'] == 'LOWRES':
         cube_head['CDELT3'] = 0.5
     cube_head['DISPAXIS'] = 1
     cube_head['CRVAL3'] = min(n_wave)
@@ -187,22 +187,9 @@ def cube_creator(self):
     cube_head['CTYPE2'] = 'DEC--TAN'
     cube_head['CUNIT1'] = 'deg'
     cube_head['CUNIT2'] = 'deg'
-    cube_head['CCNAME'] = c[0].header['CCNAME']
+    cube_head['CCNAME'] = gal_id
     cube_head['OBSMODE'] = c[0].header['OBSMODE']
-    cube_head['RES-OBS'] = c[0].header['RES-OBS']
-
-    # this is how I used to do CRPIX and CRVAL before using WCS coordinates
-
-    # cube_head['CRPIX1'] = \
-    # np.where(np.unique(c[2].data['X']) == np.min(np.unique(c[2].data['X'])[np.unique(c[2].data['X']) > 0]))[0][
-    # 0] + 1  # X from APS with lower absolute value
-    # cube_head['CRPIX2'] = \
-    # np.where(np.unique(c[2].data['Y']) == np.min(np.unique(c[2].data['Y'])[np.unique(c[2].data['Y']) > 0]))[0][
-    # 0] + 1  # Y from APS with lower absolute value
-    # cube_head['CRVAL1'] = np.unique(c[2].data['X_0'])[0] + (np.min(
-    # np.unique(c[2].data['X'])[np.unique(c[2].data['X']) > 0]) / 3600.)  # X from central pixel plus position X_0
-    # cube_head['CRVAL2'] = np.unique(c[2].data['Y_0'])[0] + (np.min(
-    # np.unique(c[2].data['Y'])[np.unique(c[2].data['Y']) > 0]) / 3600.)  # Y from central pixel plus position Y_0
+    cube_head['MODE'] = wcs_c[0].header['MODE']
 
     map_head = fits.Header()
     map_head['SIMPLE'] = True
