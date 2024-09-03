@@ -26,3 +26,22 @@ or within interactive python:
 ```
 $ run runner.py
 ```
+
+The runner
+---------------------
+The runner is a simple script that will call each of the package modules. You can list the galaxies IDs in the beginning
+of the script at 'gals' list, so you can run for several WEAVE targets, given that each target has a specific 
+config_file.env. Then it will run every listed module, which are described below. Comment a specific block related to a 
+module, and it will skip this process. In principle each module is independent of each other, given that the 
+config_file.env reflects that (see more below).
+
+Package modules
+---------------------
+Here we describe in more detail each module:
+
+1) APS_cube: this module is responsible for creating the datacubes from the PyAPS WEAVE L2 data, the APS product. As the
+APS product is a fits file containing tables, datacubes may be more user convenient when data handling.
+The input parameters regarding this module, which can be edited within the config_file.env, are:
+- n_proc: number of computer cores to be used while running WAQAQC (this also applies to the other modules)
+- file_dir: directory path to the data to be used (not only APS, but other WEAVE data).
+- aps_file: APS file name in file_dir (should end with _APS.fits).
