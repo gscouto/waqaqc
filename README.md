@@ -10,8 +10,7 @@ To install this package, do a git clone and, inside the waqaqc directory, do a
 $ pip install -e .
 ```
 
-How to run the module
----------------------
+## How to run the module
 To run the module, you will need two files that can be found in the 'config' directory within the WAQAQC package: the 
 config_file.env and runner.py files. Copy these files to a fresh directory where you will be working. The 
 config_file.env contains a few parameters necessary to run the WAQAQC module, while the runner.py is simply a python 
@@ -27,8 +26,7 @@ or within interactive python:
 $ run runner.py
 ```
 
-The runner
----------------------
+## The runner
 The runner is a simple script that will call each of the package modules. You can list the galaxies IDs in the beginning
 of the script at 'gals' list, so you can run for several WEAVE targets, given that each target has a specific 
 config_file.env. Then it will run every listed module, which are described below. Comment a specific block related to a 
@@ -36,10 +34,9 @@ module, and it will skip this process. In principle each module is independent o
 config_file.env reflects that (see more below).
 
 ## Package modules
-
 Here we describe in more detail each module:
 
-### APS_cube 
+### APS_cube
 This module is responsible for creating the datacubes from the PyAPS WEAVE L2 data, the APS product. As the APS product 
 is a fits file containing tables, datacubes may be more user convenient when data handling. This means a datacube format
 of both the blue and the red arms spectra joined in a full wavelength range.
@@ -57,9 +54,10 @@ procedure.
 - APS maps: file named as the CNAME + _APS_maps.fits. A fits file containing all APS products related to the pPXF 
 spectral fitting. Each file extension represents a map (ex: FLUX_HA_6562.80).
 
-2) QC_plots: this module creates quality control plots of the data obtained for the given target. Several plots are 
-created, such as the fiber spectral resolution, sky maps, S/N maps and peak flux variability (to be further detailed). 
-It also performs Voronoi binning of both the L1 datacubes, and the APS datacube, in case APS flag is turned on.
+### QC_plots
+This module creates quality control plots of the data obtained for the given target. Several plots are created, such as 
+the fiber spectral resolution, sky maps, S/N maps and peak flux variability (to be further detailed). It also performs 
+Voronoi binning of both the L1 datacubes, and the APS datacube, in case APS flag is turned on.
 
 The input parameters regarding this module, which can be edited within the config_file.env, are:
 - blue(red)_cube: L1 datacubes (stackcube) data file name (located in file_dir).
@@ -76,9 +74,15 @@ L0, L1 and L2 dataset is created a .png image containing its QC plots.
 - html page: file named as the obs date + CNAME + observation mode (LOWRES, HIGHRES) + OBID + .html. The QC plot images 
 are collected into a html page.
 - Vorbin cubes: file named as blue/red/aps_cube_vorbin.fits. Datacubes created using the Voronoi binning performed.
-- Vorbin maps: file named as 
+- Vorbin maps: file named as
 
 OBS: the html pages are transferred to minos, a repository environment within AIP. (to be edited)
+
+### pyp_params
+
+### spec_fit
+
+### table_creator
 
 Most output files (aside from the QC plots png and html files, saved in the working directory) are saved in a directory 
 named as the target "CNAME +_+ observation mode (LOWRES, HIGHRES) +_+ OBID", created where the WAQAQC package is running.
