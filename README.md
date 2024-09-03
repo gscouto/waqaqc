@@ -46,6 +46,7 @@ The input parameters regarding this module, which can be edited within the confi
 - n_proc: number of computer cores to be used while running WAQAQC (this also applies to the other modules)
 - file_dir: directory path to the data to be used (not only APS, but other WEAVE data).
 - aps_file: APS file name in file_dir (should end with _APS.fits).
+
 The output files of this module are:
 - APS cube: file named as the CNAME + _cube.fits. This is the APS datacube (after merging the blue and the red arm).
 - Vorbin cube: file named as the CNAME + _vorbin_cube.fits. Cube created following the Voronoi binning used at the APS 
