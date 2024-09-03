@@ -74,7 +74,7 @@ L0, L1 and L2 dataset is created a .png image containing its QC plots.
 - html page: file named as the obs date + CNAME + observation mode (LOWRES, HIGHRES) + OBID + .html. The QC plot images 
 are collected into a html page.
 - Vorbin cubes: file named as blue/red/aps_cube_vorbin.fits. Datacubes created using the Voronoi binning performed.
-- Vorbin maps: file named as
+- Vorbin maps: file named as vorbin_map_blue/red/aps.fits. Fits maps of the Voronoi regions selected.
 
 OBS: the html pages are transferred to minos, a repository environment within AIP. (to be edited)
 
