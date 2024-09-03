@@ -35,13 +35,15 @@ config_file.env. Then it will run every listed module, which are described below
 module, and it will skip this process. In principle each module is independent of each other, given that the 
 config_file.env reflects that (see more below).
 
-Package modules
----------------------
+## Package modules
+
 Here we describe in more detail each module:
 
-1) APS_cube: this module is responsible for creating the datacubes from the PyAPS WEAVE L2 data, the APS product. As the
-APS product is a fits file containing tables, datacubes may be more user convenient when data handling. This means a 
-datacube format of both the blue and the red arms spectra joined in a full wavelength range.
+### APS_cube 
+This module is responsible for creating the datacubes from the PyAPS WEAVE L2 data, the APS product. As the APS product 
+is a fits file containing tables, datacubes may be more user convenient when data handling. This means a datacube format
+of both the blue and the red arms spectra joined in a full wavelength range.
+
 The input parameters regarding this module, which can be edited within the config_file.env, are:
 - n_proc: number of computer cores to be used while running WAQAQC (this also applies to the other modules)
 - file_dir: directory path to the data to be used (not only APS, but other WEAVE data).
@@ -55,7 +57,28 @@ procedure.
 - APS maps: file named as the CNAME + _APS_maps.fits. A fits file containing all APS products related to the pPXF 
 spectral fitting. Each file extension represents a map (ex: FLUX_HA_6562.80).
 
-2) QC_plots:
+2) QC_plots: this module creates quality control plots of the data obtained for the given target. Several plots are 
+created, such as the fiber spectral resolution, sky maps, S/N maps and peak flux variability (to be further detailed). 
+It also performs Voronoi binning of both the L1 datacubes, and the APS datacube, in case APS flag is turned on.
 
-All output files are saved in a directory named as the target "CNAME +_+ observation mode (LOWRES, HIGHRES) +_+ OBID", 
-created where the WAQAQC package is running.
+The input parameters regarding this module, which can be edited within the config_file.env, are:
+- blue(red)_cube: L1 datacubes (stackcube) data file name (located in file_dir).
+- aps_flag: flag for making plots for APS or not. 1 = yes, 0 = no. Use it if you do not have APS files (or have not 
+created using APS_cube before).
+- target_SN: target S/N ratio when performing Voronoi binning. Suggested values are 20 or 30 (for high S/N observations).
+- levels: list of level values when plotting the S/N map contours. Suggested are [5, 30].
+- blue(red/aps)_wav: central wavelength where S/N is estimated, for each spectral range (blue, red, APS). A window of 
+50 Angstrom is created centered in the given wavelength.
+
+The output files of this module are:
+- PNG images: file named as the obs date + CNAME + observation mode (LOWRES, HIGHRES) + OBID + _L0(L1/L2).png. For each 
+L0, L1 and L2 dataset is created a .png image containing its QC plots. 
+- html page: file named as the obs date + CNAME + observation mode (LOWRES, HIGHRES) + OBID + .html. The QC plot images 
+are collected into a html page.
+- Vorbin cubes: file named as blue/red/aps_cube_vorbin.fits. Datacubes created using the Voronoi binning performed.
+- Vorbin maps: file named as 
+
+OBS: the html pages are transferred to minos, a repository environment within AIP. (to be edited)
+
+Most output files (aside from the QC plots png and html files, saved in the working directory) are saved in a directory 
+named as the target "CNAME +_+ observation mode (LOWRES, HIGHRES) +_+ OBID", created where the WAQAQC package is running.
