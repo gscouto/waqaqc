@@ -73,8 +73,13 @@ The output files of this module are:
 L0, L1 and L2 dataset is created a .png image containing its QC plots. 
 - html page: file named as the obs date + CNAME + observation mode (LOWRES, HIGHRES) + OBID + .html. The QC plot images 
 are collected into a html page.
-- Vorbin cubes: file named as blue/red/aps_cube_vorbin.fits. Datacubes created using the Voronoi binning performed.
-- Vorbin maps: file named as vorbin_map_blue/red/aps.fits. Fits maps of the Voronoi regions selected.
+- Vorbin cubes: files named as blue/red/aps_cube_vorbin.fits. Datacubes created using the Voronoi binning performed.
+- Vorbin maps: files named as vorbin_map_blue/red/aps.fits. Fits maps of the Voronoi regions selected.
+- Resolution tables: files named as resol_table_+ L0 data name +.txt, and resol_table_aps/blue/red/mean.txt. Spectra 
+resolution is measured by fitting the sky lines in the L0 spectra. These are saved as wavelength and FWHM (in A) 
+columns in these files. Each one is created for each single exposure file, and master resolution files are created for 
+the blue and the red, and extrapolated for aps. A single mean value is calculated for the three modes (blue, red and 
+aps). These files can be later used to run PyParadise.
 
 OBS: the html pages are transferred to minos, a repository environment within AIP. (to be edited)
 
