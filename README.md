@@ -1,6 +1,6 @@
 # WAQAQC
-WAQAQC is a module package intended to produce QC plots for WEAVE-Apertif Quality Assurance (WAQA) team. It also is a 
-wrapper for fitting the PyParadise code to WEAVE Large IFU (LIFU) data.
+WAQAQC is a module package intended to produce quality control (QC) plots for WEAVE-Apertif Quality Assurance (WAQA) 
+team. It also is a wrapper for fitting the PyParadise code to WEAVE Large IFU (LIFU) data.
 
 The PyParadise code can be obtained here: https://github.com/brandherd/PyParadise
 
