@@ -46,8 +46,8 @@ The input parameters regarding this module, which can be edited within the confi
 - file_dir: directory path to the data to be used (not only APS, but other WEAVE data).
 - aps_file: APS file name in file_dir (should end with _APS.fits).
 
-The output files of this module are created in a directory named as the target "CNAME +_+ observation mode (LOWRES, 
-HIGHRES) +_+ OBID" (called targ_dir here for short), created where the WAQAQC package is running. These are:
+The output files of this module are created in a directory named as the target "CNAME _ observation mode (LOWRES, 
+HIGHRES) _ OBID" (called targ_dir here for short), created where the WAQAQC package is running. These are:
 - APS cube: file named as the CNAME + _cube.fits. This is the APS datacube (after merging the blue and the red arm).
 - Vorbin cube: file named as the CNAME + _vorbin_cube.fits. Cube created following the Voronoi binning used at the APS 
 procedure.
