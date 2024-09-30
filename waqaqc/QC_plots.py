@@ -221,6 +221,13 @@ def html_plots(self):
     axis_header['CUNIT1'] = blue_cube[1].header['CUNIT1']
     axis_header['CUNIT2'] = blue_cube[1].header['CUNIT2']
 
+    # creating new cubes
+    n_blue_cube = blue_cube[1].data * np.mean(blue_cube[5].data[:], axis=0)
+    n_blue_cube_err = blue_cube[2].data * np.mean(blue_cube[5].data[:], axis=0)
+
+    n_red_cube = red_cube[1].data * np.mean(red_cube[5].data[:], axis=0)
+    n_red_cube_err = red_cube[2].data * np.mean(red_cube[5].data[:], axis=0)
+
     # doing the plots
 
     print('Doing L0 raw data plots')
@@ -781,6 +788,9 @@ def html_plots(self):
     cbar = Colorbar(ax=cbax, mappable=im)
     cbar.set_label('SNR')
 
+    fits.writeto(gal_dir + 'SNR_map_blue.fits', snr_b, overwrite=True)
+    fits.writeto(gal_dir + 'SNR_map_red.fits', snr_r, overwrite=True)
+
     # ------
 
     ax = plt.subplot(gs[10, 0])
@@ -1207,6 +1217,8 @@ def html_plots(self):
         cbax = plt.subplot(gs[1, 1])
         cbar = Colorbar(ax=cbax, mappable=im)
         cbar.set_label('SNR')
+
+        fits.writeto(gal_dir + 'SNR_map_aps.fits', snr_a, overwrite=True)
 
         # ------
 

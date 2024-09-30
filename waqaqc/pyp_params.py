@@ -15,31 +15,6 @@ def pp(self):
     vel = float(config.get('pyp_params', 'line_vel'))
     line_flux = float(config.get('pyp_params', 'line_flux'))
 
-    # =======
-    # create lines.fit, which runs for every mode
-    f = open("lines.fit", "w+")
-
-    f.write('[rest-frame]\n')
-
-    f.write('4092  4112 !Hdelta\n')
-    f.write('4330  4350 !Hgamma\n')
-    f.write('4353  4373 !OIII4363\n')
-    f.write('4676  4696 !HeII4686\n')
-    f.write('4701  4721 !ArIV4740\n')
-    f.write('4730  4750 !ArIV4740\n')
-    f.write('4851  4871 !Hbeta\n')
-    f.write('4950  4970 !OIII4960\n')
-    f.write('4997  5017 !OIII5007\n')
-    f.write('6290  6310 !OI6300\n')
-    f.write('6354  6374 !OI6364\n')
-    f.write('6538  6558 !NII6548\n')
-    f.write('6553  6573 !Halpha\n')
-    f.write('6573  6593 !NII6583\n')
-    f.write('6707  6727 !SII6717\n')
-    f.write('6720  6740 !SII6730\n')
-
-    f.close()
-
     # =================== running for blue cube ===========================
 
     if int(config.get('pyp_params', 'blue_fit')) == 1:
@@ -62,9 +37,9 @@ def pp(self):
             '!Number of the template spectrum as an inital guess (integer)\n')
         f.write('vel_guess          ' + str(vel) +
                 '                                  !rough velocity guess for the object in km/s as cz (float)\n')
-        f.write('vel_min            ' + str(vel - 200) + '                                  '
+        f.write('vel_min            ' + str(vel - float(config.get('pyp_params', 'vel_range'))) + '                                  '
                                                          '!minimum velocity in km/s (float)\n')
-        f.write('vel_max            ' + str(vel + 200) + '                                  '
+        f.write('vel_max            ' + str(vel + float(config.get('pyp_params', 'vel_range'))) + '                                  '
                                                          '!maximum velocity in km/s (float)\n')
         f.write(
             'disp_min           10.0                                        '
@@ -91,8 +66,10 @@ def pp(self):
             '!Width of running mean in pixels for the normalization (int)\n')
         f.write('start_wave         ' + config.get('pyp_params', 'blue_lam_min') +
                 '                                   !Lower wavelength limit for the stellar population fitting\n')
+        start_wave = float(config.get('pyp_params', 'blue_lam_min'))
         f.write('end_wave           ' + config.get('pyp_params', 'blue_lam_max') +
                 '                                   !Upper wavelength limit for the stellar population fitting\n')
+        end_wave = float(config.get('pyp_params', 'blue_lam_max'))
         f.write('min_x              1                                           !Minimum x dimension (int)\n')
         f.write('max_x              10000                                       !Maximum x dimension (int)\n')
         f.write('min_y              1                                           !Minimum y dimension (int)\n')
@@ -133,7 +110,7 @@ def pp(self):
                 'if no emission lines to be fitted\n')
         f.write(
             'vel_guess		' + str(vel) + '				!rough velocity guess for the object in km/s as cz (float)\n')
-        f.write('line_fit_region	lines.fit				'
+        f.write('line_fit_region	lines_blue.fit				'
                 '!Wavelength regions considered during the fitting '
                 '(string)\n')
         f.write('efit_method		leastsq					!method for line parameter fitting (leastsq/simplex)\n')
@@ -149,31 +126,73 @@ def pp(self):
         f.close()
 
         # =======
-        # create par.lines
+        # create par.lines and lines.fit
+        f = open("lines_blue.fit", "w+")
         g = open("par_blue.lines", "w+")
 
+        f.write('[rest-frame]\n')
 
-        g.write('Gauss: Hbeta\n')
-        g.write('restwave 4861.33\n')
-        g.write('flux ' + str(line_flux) + ' 1\n')
-        g.write('vel ' + str(vel) + ' 1\n')
-        g.write('disp 100 1\n')
-        g.write('\n')
+        if (start_wave < 4851 * (1 + z)) & (end_wave > 4871 * (1 + z)):
+            f.write('4851  4871 !Hb_4861\n')
 
-        g.write('Gauss: OIII5007\n')
-        g.write('restwave 5006.84\n')
-        g.write('flux ' + str(line_flux) + ' 1\n')
-        g.write('vel ' + str(vel) + ' 1\n')
-        g.write('disp 100 1\n')
-        g.write('\n')
+            g.write('Gauss: Hb_4861\n')
+            g.write('restwave 4861.32\n')
+            g.write('flux ' + str(line_flux) + ' 1\n')
+            g.write('vel ' + str(vel) + ' 1\n')
+            g.write('disp 100 1\n')
+            g.write('\n')
 
-        g.write('Gauss: OIII4960\n')
-        g.write('restwave 4958.9\n')
-        g.write('flux OIII5007:0.33\n')
-        g.write('vel OIII5007\n')
-        g.write('disp OIII5007\n')
-        g.write('\n')
+        if (start_wave < 4950 * (1 + z)) & (end_wave > 5017 * (1 + z)):
+            f.write('4950  4970 !OIII_4960\n')
+            f.write('4997  5017 !OIII_5007\n')
 
+            g.write('Gauss: OIII_5007\n')
+            g.write('restwave 5006.77\n')
+            g.write('flux ' + str(line_flux) + ' 1\n')
+            g.write('vel ' + str(vel) + ' 1\n')
+            g.write('disp 100 1\n')
+            g.write('\n')
+
+            g.write('Gauss: OIII_4960\n')
+            g.write('restwave 4958.83\n')
+            g.write('flux OIII_5007:0.35\n')
+            g.write('vel OIII_5007\n')
+            g.write('disp OIII_5007\n')
+            g.write('\n')
+
+        if (start_wave < 3717 * (1 + z)) & (end_wave > 3737 * (1 + z)):
+            f.write('3716  3736 !OII_3726\n')
+            f.write('3718  3738 !OII_3728\n')
+
+            g.write('Gauss: OII_3726\n')
+            g.write('restwave 3726.03\n')
+            g.write('flux ' + str(line_flux) + ' 1\n')
+            g.write('vel ' + str(vel) + ' 1\n')
+            g.write('disp 100 1\n')
+            g.write('\n')
+
+            g.write('Gauss: OII_3728\n')
+            g.write('restwave 3728.73\n')
+            g.write('flux ' + str(line_flux) + ' 1\n')
+            g.write('vel OII_3726\n')
+            g.write('disp OII_3726\n')
+            g.write('\n')
+
+        if (start_wave < 4353 * (1 + z)) & (end_wave > 4373 * (1 + z)):
+            f.write('4353  4373 !OIII_4363\n')
+
+            g.write('Gauss: OIII_4363\n')
+            g.write('restwave 4363.15\n')
+            g.write('flux ' + str(line_flux) + ' 1\n')
+            if (start_wave < 4950 * (1 + z)) & (end_wave > 5017 * (1 + z)):
+                g.write('vel OIII_5007\n')
+                g.write('disp OIII_5007\n')
+            else:
+                g.write('vel ' + str(vel) + ' 1\n')
+                g.write('disp 100 1\n')
+            g.write('\n')
+
+        f.close()
         g.close()
 
         # =======
@@ -286,8 +305,10 @@ def pp(self):
             '!Width of running mean in pixels for the normalization (int)\n')
         f.write('start_wave         ' + config.get('pyp_params', 'red_lam_min') +
                 '                                   !Lower wavelength limit for the stellar population fitting\n')
+        start_wave = float(config.get('pyp_params', 'red_lam_min'))
         f.write('end_wave           ' + config.get('pyp_params', 'red_lam_max') +
                 '                                   !Upper wavelength limit for the stellar population fitting\n')
+        end_wave = float(config.get('pyp_params', 'red_lam_max'))
         f.write('min_x              1                                           !Minimum x dimension (int)\n')
         f.write('max_x              10000                                       !Maximum x dimension (int)\n')
         f.write('min_y              1                                           !Minimum y dimension (int)\n')
@@ -328,7 +349,7 @@ def pp(self):
                 'if no emission lines to be fitted\n')
         f.write(
             'vel_guess		' + str(vel) + '				!rough velocity guess for the object in km/s as cz (float)\n')
-        f.write('line_fit_region	lines.fit				'
+        f.write('line_fit_region	lines_red.fit				'
                 '!Wavelength regions considered during the fitting '
                 '(string)\n')
         f.write('efit_method		leastsq					!method for line parameter fitting (leastsq/simplex)\n')
@@ -344,44 +365,75 @@ def pp(self):
         f.close()
 
         # =======
-        # create par.lines
+        # create par.lines and lines.fit
+        f = open("lines_red.fit", "w+")
         g = open("par_red.lines", "w+")
 
-        g.write('Gauss: Halpha\n')
-        g.write('restwave 6562.80\n')
-        g.write('flux ' + str(line_flux) + ' 1\n')
-        g.write('vel ' + str(vel) + ' 1\n')
-        g.write('disp 100 1\n')
-        g.write('\n')
+        f.write('[rest-frame]\n')
 
-        g.write('Gauss: NII6583\n')
-        g.write('restwave 6583.45\n')
-        g.write('flux ' + str(line_flux) + ' 1\n')
-        g.write('vel Halpha\n')
-        g.write('disp Halpha\n')
-        g.write('\n')
+        if (start_wave < 6538 * (1 + z)) & (end_wave > 6558 * (1 + z)):
+            f.write('6573  6593 !NII_6583\n')
+            f.write('6553  6573 !Ha_6562\n')
+            f.write('6538  6558 !NII_6548\n')
 
-        g.write('Gauss: NII6548\n')
-        g.write('restwave 6548.05\n')
-        g.write('flux NII6583:0.33\n')
-        g.write('vel Halpha\n')
-        g.write('disp Halpha\n')
-        g.write('\n')
+            g.write('Gauss: Ha_6562\n')
+            g.write('restwave 6562.80\n')
+            g.write('flux ' + str(line_flux) + ' 1\n')
+            g.write('vel ' + str(vel) + ' 1\n')
+            g.write('disp 100 1\n')
+            g.write('\n')
 
-        g.write('Gauss: SII6717\n')
-        g.write('restwave 6716.44\n')
-        g.write('flux ' + str(line_flux) + ' 1\n')
-        g.write('vel ' + str(vel) + ' 1\n')
-        g.write('disp 100 1\n')
-        g.write('\n')
+            g.write('Gauss: NII_6583\n')
+            g.write('restwave 6583.34\n')
+            g.write('flux ' + str(line_flux) + ' 1\n')
+            g.write('vel Ha_6562\n')
+            g.write('disp Ha_6562\n')
+            g.write('\n')
 
-        g.write('Gauss: SII6730\n')
-        g.write('restwave 6730.81\n')
-        g.write('flux ' + str(line_flux) + ' 1\n')
-        g.write('vel SII6717\n')
-        g.write('disp SII6717\n')
-        g.write('\n')
+            g.write('Gauss: NII_6548\n')
+            g.write('restwave 6547.96\n')
+            g.write('flux NII_6583:0.33\n')
+            g.write('vel Ha_6562\n')
+            g.write('disp Ha_6562\n')
+            g.write('\n')
 
+        if (start_wave < 6707 * (1 + z)) & (end_wave > 6740 * (1 + z)):
+            f.write('6707  6727 !SII_6716\n')
+            f.write('6720  6740 !SII_6730\n')
+
+            g.write('Gauss: SII_6716\n')
+            g.write('restwave 6716.31\n')
+            g.write('flux ' + str(line_flux) + ' 1\n')
+            g.write('vel ' + str(vel) + ' 1\n')
+            g.write('disp 100 1\n')
+            g.write('\n')
+
+            g.write('Gauss: SII_6730\n')
+            g.write('restwave 6730.68\n')
+            g.write('flux ' + str(line_flux) + ' 1\n')
+            g.write('vel SII_6716\n')
+            g.write('disp SII_6716\n')
+            g.write('\n')
+
+        if (start_wave < 6290 * (1 + z)) & (end_wave > 6374 * (1 + z)):
+            f.write('6290  6310 !OI_6300\n')
+            f.write('6354  6374 !OI_6364\n')
+
+            g.write('Gauss: OI_6300\n')
+            g.write('restwave 6300.20\n')
+            g.write('flux ' + str(line_flux) + ' 1\n')
+            g.write('vel ' + str(vel) + ' 1\n')
+            g.write('disp 100 1\n')
+            g.write('\n')
+
+            g.write('Gauss: OI_6364\n')
+            g.write('restwave 6363.67\n')
+            g.write('flux OI_6300:0.33\n')
+            g.write('vel OI_6300\n')
+            g.write('disp OI_6300\n')
+            g.write('\n')
+
+        f.close()
         g.close()
 
         # =======
@@ -508,8 +560,10 @@ def pp(self):
             '!Width of running mean in pixels for the normalization (int)\n')
         f.write('start_wave         ' + config.get('pyp_params', 'aps_lam_min') +
                 '                                   !Lower wavelength limit for the stellar population fitting\n')
+        start_wave = float(config.get('pyp_params', 'aps_lam_min'))
         f.write('end_wave           ' + config.get('pyp_params', 'aps_lam_max') +
                 '                                   !Upper wavelength limit for the stellar population fitting\n')
+        end_wave = float(config.get('pyp_params', 'aps_lam_max'))
         f.write('min_x              1                                           !Minimum x dimension (int)\n')
         f.write('max_x              10000                                       !Maximum x dimension (int)\n')
         f.write('min_y              1                                           !Minimum y dimension (int)\n')
@@ -550,7 +604,7 @@ def pp(self):
                 'if no emission lines to be fitted\n')
         f.write(
             'vel_guess		' + str(vel) + '				!rough velocity guess for the object in km/s as cz (float)\n')
-        f.write('line_fit_region	lines.fit				'
+        f.write('line_fit_region	lines_aps.fit				'
                 '!Wavelength regions considered during the fitting '
                 '(string)\n')
         f.write('efit_method		leastsq					!method for line parameter fitting (leastsq/simplex)\n')
@@ -566,66 +620,137 @@ def pp(self):
         f.close()
 
         # =======
-        # create par.lines
+        # create par.lines and lines.fit
+        f = open("lines_aps.fit", "w+")
         g = open("par_aps.lines", "w+")
 
-        g.write('Gauss: Halpha\n')
-        g.write('restwave 6562.80\n')
-        g.write('flux ' + str(line_flux) + ' 1\n')
-        g.write('vel ' + str(vel) + ' 1\n')
-        g.write('disp 100 1\n')
-        g.write('\n')
+        f.write('[rest-frame]\n')
 
-        g.write('Gauss: NII6583\n')
-        g.write('restwave 6583.45\n')
-        g.write('flux ' + str(line_flux) + ' 1\n')
-        g.write('vel Halpha\n')
-        g.write('disp Halpha\n')
-        g.write('\n')
+        if (start_wave < 6538) & (end_wave > 6558):
+            f.write('6553  6573 !Ha_6562\n')
+            f.write('6573  6593 !NII_6583\n')
+            f.write('6538  6558 !NII_6548\n')
 
-        g.write('Gauss: NII6548\n')
-        g.write('restwave 6548.05\n')
-        g.write('flux NII6583:0.33\n')
-        g.write('vel Halpha\n')
-        g.write('disp Halpha\n')
-        g.write('\n')
+            g.write('Gauss: Ha_6562\n')
+            g.write('restwave 6562.80\n')
+            g.write('flux ' + str(line_flux) + ' 1\n')
+            g.write('vel ' + str(vel) + ' 1\n')
+            g.write('disp 100 1\n')
+            g.write('\n')
 
-        g.write('Gauss: Hbeta\n')
-        g.write('restwave 4861.33\n')
-        g.write('flux ' + str(line_flux) + ' 1\n')
-        g.write('vel Halpha\n')
-        g.write('disp Halpha\n')
-        g.write('\n')
+            g.write('Gauss: NII_6583\n')
+            g.write('restwave 6583.34\n')
+            g.write('flux ' + str(line_flux) + ' 1\n')
+            g.write('vel Ha_6562\n')
+            g.write('disp Ha_6562\n')
+            g.write('\n')
 
-        g.write('Gauss: OIII5007\n')
-        g.write('restwave 5006.84\n')
-        g.write('flux ' + str(line_flux) + ' 1\n')
-        g.write('vel ' + str(vel) + ' 1\n')
-        g.write('disp 100 1\n')
-        g.write('\n')
+            g.write('Gauss: NII_6548\n')
+            g.write('restwave 6547.96\n')
+            g.write('flux NII6583:0.33\n')
+            g.write('vel Ha_6562\n')
+            g.write('disp Ha_6562\n')
+            g.write('\n')
 
-        g.write('Gauss: OIII4960\n')
-        g.write('restwave 4958.9\n')
-        g.write('flux OIII5007:0.33\n')
-        g.write('vel OIII5007\n')
-        g.write('disp OIII5007\n')
-        g.write('\n')
+        if (start_wave < 4851) & (end_wave > 4871):
+            f.write('4851  4871 !Hb_4861\n')
 
-        g.write('Gauss: SII6717\n')
-        g.write('restwave 6716.44\n')
-        g.write('flux ' + str(line_flux) + ' 1\n')
-        g.write('vel ' + str(vel) + ' 1\n')
-        g.write('disp 100 1\n')
-        g.write('\n')
+            g.write('Gauss: Hb_4861\n')
+            g.write('restwave 4861.32\n')
+            g.write('flux ' + str(line_flux) + ' 1\n')
+            if (start_wave < 6538 * (1 + z)) & (end_wave > 6558 * (1 + z)):
+                g.write('vel Ha_6562\n')
+                g.write('disp Ha_6562\n')
+            else:
+                g.write('vel ' + str(vel) + ' 1\n')
+                g.write('disp 100 1\n')
+            g.write('\n')
 
-        g.write('Gauss: SII6730\n')
-        g.write('restwave 6730.81\n')
-        g.write('flux ' + str(line_flux) + ' 1\n')
-        g.write('vel SII6717\n')
-        g.write('disp SII6717\n')
-        g.write('\n')
+        if (start_wave < 6707) & (end_wave > 6740):
+            f.write('6707  6727 !SII_6716\n')
+            f.write('6720  6740 !SII_6730\n')
 
-        g.close()
+            g.write('Gauss: SII_6716\n')
+            g.write('restwave 6716.31\n')
+            g.write('flux ' + str(line_flux) + ' 1\n')
+            g.write('vel ' + str(vel) + ' 1\n')
+            g.write('disp 100 1\n')
+            g.write('\n')
+
+            g.write('Gauss: SII_6730\n')
+            g.write('restwave 6730.68\n')
+            g.write('flux ' + str(line_flux) + ' 1\n')
+            g.write('disp SII_6716\n')
+            g.write('disp SII_6716\n')
+            g.write('\n')
+
+        if (start_wave < 4950) & (end_wave > 5017):
+            f.write('4950  4970 !OIII_4960\n')
+            f.write('4997  5017 !OIII_5007\n')
+
+            g.write('Gauss: OIII_5007\n')
+            g.write('restwave 5006.77\n')
+            g.write('flux ' + str(line_flux) + ' 1\n')
+            g.write('vel ' + str(vel) + ' 1\n')
+            g.write('disp 100 1\n')
+            g.write('\n')
+
+            g.write('Gauss: OIII_4960\n')
+            g.write('restwave 4958.83\n')
+            g.write('flux OIII_5007:0.35\n')
+            g.write('vel OIII_5007\n')
+            g.write('disp OIII_5007\n')
+            g.write('\n')
+
+        if (start_wave < 3717) & (end_wave > 3737):
+            f.write('3716  3736 !OII_3726\n')
+            f.write('3718  3738 !OII_3728\n')
+
+            g.write('Gauss: OII_3726\n')
+            g.write('restwave 3726.03\n')
+            g.write('flux ' + str(line_flux) + ' 1\n')
+            g.write('vel ' + str(vel) + ' 1\n')
+            g.write('disp 100 1\n')
+            g.write('\n')
+
+            g.write('Gauss: OII_3728\n')
+            g.write('restwave 3728.73\n')
+            g.write('flux ' + str(line_flux) + ' 1\n')
+            g.write('vel OII_3726\n')
+            g.write('disp OII_3726\n')
+            g.write('\n')
+
+        if (start_wave < 6290) & (end_wave > 6374):
+            f.write('6290  6310 !OI_6300\n')
+            f.write('6354  6374 !OI_6364\n')
+
+            g.write('Gauss: OI_6300\n')
+            g.write('restwave 6300.20\n')
+            g.write('flux ' + str(line_flux) + ' 1\n')
+            g.write('vel ' + str(vel) + ' 1\n')
+            g.write('disp 100 1\n')
+            g.write('\n')
+
+            g.write('Gauss: OI_6364\n')
+            g.write('restwave 6363.67\n')
+            g.write('flux OI_6300:0.33\n')
+            g.write('vel OI_6300\n')
+            g.write('disp OI_6300\n')
+            g.write('\n')
+
+        if (start_wave < 4353) & (end_wave > 4373):
+            f.write('4353  4373 !OIII_4363\n')
+
+            g.write('Gauss: OIII_4363\n')
+            g.write('restwave 4363.15\n')
+            g.write('flux ' + str(line_flux) + ' 1\n')
+            if (start_wave < 4950) & (end_wave > 5017):
+                g.write('vel OIII_5007\n')
+                g.write('disp OIII_5007\n')
+            else:
+                g.write('vel ' + str(vel) + ' 1\n')
+                g.write('disp 100 1\n')
+            g.write('\n')
 
         # =======
         # create excl.cont
