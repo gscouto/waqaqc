@@ -15,11 +15,12 @@ from astropy.table import Table
 import requests
 from PIL import Image
 from io import BytesIO
-from paramiko import SSHClient
-from scp import SCPClient
+# from paramiko import SSHClient
+# from scp import SCPClient
 from astropy.coordinates import SkyCoord, FK5
 import multiprocessing as mp
 from scipy.optimize import curve_fit
+import tqdm
 
 
 def getimages(ra, dec, filters="grizy"):
@@ -37,7 +38,7 @@ def getimages(ra, dec, filters="grizy"):
     return table
 
 
-def geturl(ra, dec, size=240, output_size=None, filters="grizy", format="jpg", color=False):
+def geturl(ra, dec, size=240, output_size=None, filters="grizy", im_format="jpg", color=False):
     """Get URL for images in the table
 
     ra, dec = position in degrees
@@ -45,19 +46,19 @@ def geturl(ra, dec, size=240, output_size=None, filters="grizy", format="jpg", c
     output_size = output (display) image size in pixels (default = size).
                   output_size has no effect for fits format images.
     filters = string with filters to include
-    format = data format (options are "jpg", "png" or "fits")
+    im_format = data format (options are "jpg", "png" or "fits")
     color = if True, creates a color image (only for jpg or png format).
             Default is return a list of URLs for single-filter grayscale images.
     Returns a string with the URL
     """
 
-    if color and format == "fits":
+    if color and im_format == "fits":
         raise ValueError("color images are available only for jpg or png formats")
-    if format not in ("jpg", "png", "fits"):
-        raise ValueError("format must be one of jpg, png, fits")
+    if im_format not in ("jpg", "png", "fits"):
+        raise ValueError("im_format must be one of jpg, png, fits")
     table = getimages(ra, dec, filters=filters)
     url = (f"https://ps1images.stsci.edu/cgi-bin/fitscut.cgi?"
-           f"ra={ra}&dec={dec}&size={size}&format={format}")
+           f"ra={ra}&dec={dec}&size={size}&format={im_format}")
     if output_size:
         url = url + "&output_size={}".format(output_size)
     # sort filters from red to blue
@@ -90,8 +91,82 @@ def vorbin_loop(args):
     elif cam == 'APS':
         nbc = np.nanmean(aps_cube_data[:, nb_pixs[1], nb_pixs[0]], axis=1)
         nbc_err = np.nanmean(aps_cube_err[:, nb_pixs[1], nb_pixs[0]], axis=1)
+    else:
+        nbc = np.zeros(np.shape(blue_cube_data)[0])
+        nbc_err = np.zeros(np.shape(blue_cube_data)[0])
 
     return nbc, nbc_err, nb_pixs
+
+
+def fiber_lines(args):
+    # Function to measure WARC and sky spectra lines and return the measured parameters
+    fiber, cen_lam, lamp_spec, lamp_lam, lam_wind, sky_plot_flag, sky_plot_dir, file_cam, gauss = args
+
+    fib_flux = []
+    fib_cen = []
+    fib_sigma = []
+
+    if file_cam == 'WEAVEBLUE':
+        fiber_dir = sky_plot_dir + 'BLUE/' + str(fiber) + '/'
+    else:
+        fiber_dir = sky_plot_dir + 'RED/' + str(fiber) + '/'
+
+    if sky_plot_flag == 1 and fiber % 25 == 0:
+        os.makedirs(fiber_dir, exist_ok=True)
+
+    for i in np.arange(len(cen_lam)):
+        lam_wind_c = np.where(lamp_lam == min(lamp_lam, key=lambda x: abs(x - cen_lam[i])))[0][0]
+        w_lam = lamp_lam[lam_wind_c - lam_wind: lam_wind_c + lam_wind]
+        w_spec = lamp_spec[fiber][lam_wind_c - lam_wind: lam_wind_c + lam_wind]
+
+        # if (all(w_spec < 330000.)) and (w_spec[int(w_spec.size / 2)] / 4 > w_spec[0]) and \
+        #         (w_spec[int(w_spec.size / 2)] / 4 > w_spec[-1]):
+        if (w_spec[int(w_spec.size / 2)] / 4 > w_spec[0]) and (w_spec[int(w_spec.size / 2)] / 4 > w_spec[-1]):
+            try:
+                popt, pcov = curve_fit(gauss, w_lam, w_spec, p0=[0, 0, max(w_spec) / 2, cen_lam[i], 3],
+                                       bounds=([-np.inf, -np.inf, 0, 0, 0],
+                                               [np.inf, np.inf, np.inf, np.inf, np.inf]))
+
+                if (popt[4] * 2.355 > 0.1) & (popt[4] * 2.355 < 5.0):
+                    f_fit = np.sum(gauss(w_lam, *popt)) - np.nanmedian([gauss(w_lam, *popt)[0],
+                                                                        gauss(w_lam, *popt)[-1]])
+                    fib_flux.append(f_fit)
+                    fib_cen.append(popt[3])
+                    fib_sigma.append(popt[4] * 2.355)
+
+                    if sky_plot_flag == 1 and fiber % 25 == 0:
+                        fig_skyline = plt.figure(figsize=(5, 4))
+                        plt.plot(w_lam, w_spec, color='black')
+                        plt.plot(w_lam, gauss(w_lam, *popt), color='red')
+                        plt.xlabel(r'$\lambda$ [$\AA$]')
+                        plt.ylabel(r'flux')
+                        plt.annotate('cenlam = ' + str(round(popt[3], 2)), (0.01, 0.9), xycoords='axes fraction',
+                                     fontsize=10)
+                        plt.annotate('FWHM = ' + str(round(popt[4] * 2.355, 2)), (0.01, 0.85), xycoords='axes fraction',
+                                     fontsize=10)
+                        plt.annotate('flux = ' + str(round(f_fit, 1)), (0.01, 0.8), xycoords='axes fraction',
+                                     fontsize=10)
+                        fig_skyline.savefig(fiber_dir + str(round(popt[3])) + '.pdf')
+                        plt.close(fig_skyline)
+
+            except:
+                fib_flux.append(np.nan)
+                fib_cen.append(np.nan)
+                fib_sigma.append(np.nan)
+
+        else:
+            fib_flux.append(np.nan)
+            fib_cen.append(np.nan)
+            fib_sigma.append(np.nan)
+
+    warc_flux = np.ravel(fib_flux)
+    warc_flux_med = np.nanmedian(np.ravel(fib_flux))
+    warc_cen = np.ravel(fib_cen)
+    warc_cen_med = np.nanmedian(np.ravel(fib_cen))
+    warc_sigma = np.ravel(fib_sigma)
+    warc_sigma_med = np.nanmedian(np.ravel(fib_sigma))
+
+    return warc_flux, warc_flux_med, warc_cen, warc_cen_med, warc_sigma, warc_sigma_med
 
 
 def html_plots(self):
@@ -102,14 +177,7 @@ def html_plots(self):
 
     file_dir = config.get('APS_cube', 'file_dir')
 
-    global blue_cube_data
-    global blue_cube_err
-
-    global red_cube_data
-    global red_cube_err
-
-    global aps_cube_data
-    global aps_cube_err
+    global blue_cube_data, blue_cube_err, red_cube_data, red_cube_err, aps_cube_data, aps_cube_err
 
     blue_cube = fits.open(file_dir + config.get('QC_plots', 'blue_cube'))
     red_cube = fits.open(file_dir + config.get('QC_plots', 'red_cube'))
@@ -126,8 +194,8 @@ def html_plots(self):
     gal_dir = gal_name + '_' + blue_cube[0].header['MODE'] + '_' + str(blue_cube[0].header['OBID']) + '/'
     os.makedirs(gal_dir, exist_ok=True)
 
-    targetSN = np.float(config.get('QC_plots', 'target_SN'))
-    levels = np.array(json.loads(config.get('QC_plots', 'levels'))).astype(np.float)  # SNR levels to display
+    targetSN = float(config.get('QC_plots', 'target_SN'))
+    levels = np.array(json.loads(config.get('QC_plots', 'levels'))).astype(float)  # SNR levels to display
 
     colap_b_map = np.sum(blue_cube[1].data[:], axis=0)
     colap_r_map = np.sum(red_cube[1].data[:], axis=0)
@@ -152,60 +220,61 @@ def html_plots(self):
     mask_bright_b = mean_b_map > mean_b_sky_map
     mask_medium_b = (median_b_map > median_b_sky_map) & (mean_b_map <= mean_b_sky_map)
     mask_faint_b = (mean_b_map > 0) & (median_b_map <= median_b_sky_map)
-    mask_all_b = mean_b_map > 0
 
     mask_bright_r = mean_r_map > mean_r_sky_map
     mask_medium_r = (median_r_map > median_r_sky_map) & (mean_r_map <= mean_r_sky_map)
     mask_faint_r = (mean_r_map > 0) & (median_r_map <= median_r_sky_map)
-    mask_all_r = mean_r_map > 0
 
     int_b_spec_bright = np.sum(blue_cube[1].data * mask_bright_b[np.newaxis, :, :], axis=(1, 2)) * \
-                        np.mean(blue_cube[5].data[:],axis=0) / np.sum(mask_bright_b)
+                        np.mean(blue_cube[5].data[:], axis=0) / np.sum(mask_bright_b)
     int_b_spec_medium = np.sum(blue_cube[1].data * mask_medium_b[np.newaxis, :, :], axis=(1, 2)) * \
-                        np.mean(blue_cube[5].data[:],axis=0) / np.sum(mask_medium_b)
+                        np.mean(blue_cube[5].data[:], axis=0) / np.sum(mask_medium_b)
     int_b_spec_faint = np.sum(blue_cube[1].data * mask_faint_b[np.newaxis, :, :], axis=(1, 2)) * \
-                       np.mean(blue_cube[5].data[:],axis=0) / np.sum(mask_faint_b)
+                       np.mean(blue_cube[5].data[:], axis=0) / np.sum(mask_faint_b)
     int_r_spec_bright = np.sum(red_cube[1].data * mask_bright_r[np.newaxis, :, :], axis=(1, 2)) * \
-                        np.mean(red_cube[5].data[:],axis=0) / np.sum(mask_bright_r)
+                        np.mean(red_cube[5].data[:], axis=0) / np.sum(mask_bright_r)
     int_r_spec_medium = np.sum(red_cube[1].data * mask_medium_r[np.newaxis, :, :], axis=(1, 2)) * \
-                        np.mean(red_cube[5].data[:],axis=0) / np.sum(mask_medium_r)
+                        np.mean(red_cube[5].data[:], axis=0) / np.sum(mask_medium_r)
     int_r_spec_faint = np.sum(red_cube[1].data * mask_faint_r[np.newaxis, :, :], axis=(1, 2)) * \
-                       np.mean(red_cube[5].data[:],axis=0) / np.sum(mask_faint_r)
+                       np.mean(red_cube[5].data[:], axis=0) / np.sum(mask_faint_r)
 
-    int_b_sky_spec = np.sum(blue_cube[3].data - blue_cube[1].data, axis=(1, 2)) * np.mean(blue_cube[5].data[:],axis=0) / np.sum(
+    int_b_sky_spec = np.sum(blue_cube[3].data - blue_cube[1].data, axis=(1, 2)) * np.mean(blue_cube[5].data[:],
+                                                                                          axis=0) / np.sum(
         mask_faint_b)
-    int_r_sky_spec = np.sum(red_cube[3].data - red_cube[1].data, axis=(1, 2)) * np.mean(red_cube[5].data[:],axis=0) / np.sum(
+    int_r_sky_spec = np.sum(red_cube[3].data - red_cube[1].data, axis=(1, 2)) * np.mean(red_cube[5].data[:],
+                                                                                        axis=0) / np.sum(
         mask_faint_r)
-
-    blue_cen_wave = int(config.get('QC_plots', 'blue_wav'))
-    red_cen_wave = int(config.get('QC_plots', 'red_wav'))
 
     lam_r = red_cube[1].header['CRVAL3'] + (np.arange(red_cube[1].header['NAXIS3']) * red_cube[1].header['CD3_3'])
     lam_b = blue_cube[1].header['CRVAL3'] + (np.arange(blue_cube[1].header['NAXIS3']) * blue_cube[1].header['CD3_3'])
 
-    med_b = np.median(blue_cube[1].data[np.where(lam_b == blue_cen_wave)[0][0] -
-                                        100:np.where(lam_b == blue_cen_wave)[0][0] + 100], axis=0)
-    sgn_b = np.mean(blue_cube[1].data[np.where(lam_b == blue_cen_wave)[0][0] -
-                                      100:np.where(lam_b == blue_cen_wave)[0][0] + 100], axis=0)
-    rms_b = np.sqrt(1/np.mean(blue_cube[2].data[np.where(lam_b == blue_cen_wave)[0][0] -
-                                      100:np.where(lam_b == blue_cen_wave)[0][0] + 100], axis=0))
-    # rms_b = np.sqrt(sgn_b)
+    blue_cen_wave = lam_b[(np.abs(lam_b - int(config.get('QC_plots', 'blue_wav')) *
+                                  (1 + float(config.get('pyp_params', 'redshift'))))).argmin()]
+    red_cen_wave = lam_r[(np.abs(lam_r - int(config.get('QC_plots', 'red_wav')) *
+                                 (1 + float(config.get('pyp_params', 'redshift'))))).argmin()]
+
+    if blue_cube[0].header['MODE'] == 'LOWRES':
+        sgn_wind = 100
+    elif blue_cube[0].header['MODE'] == 'HIGHRES':
+        sgn_wind = 500
+    else:
+        sgn_wind = 100
+
+    med_b = np.median(blue_cube[1].data[np.where(lam_b == blue_cen_wave)[0][0] - sgn_wind:
+                                        np.where(lam_b == blue_cen_wave)[0][0] + sgn_wind], axis=0)
+    sgn_b = np.mean(blue_cube[1].data[np.where(lam_b == blue_cen_wave)[0][0] - sgn_wind:
+                                      np.where(lam_b == blue_cen_wave)[0][0] + sgn_wind], axis=0)
+    rms_b = np.sqrt(1 / np.mean(blue_cube[2].data[np.where(lam_b == blue_cen_wave)[0][0] - sgn_wind:
+                                                  np.where(lam_b == blue_cen_wave)[0][0] + sgn_wind], axis=0))
     snr_b = sgn_b / rms_b
 
-    med_r = np.median(red_cube[1].data[np.where(lam_r == red_cen_wave)[0][0] -
-                                       100:np.where(lam_r == red_cen_wave)[0][0] + 100], axis=0)
-    sgn_r = np.mean(red_cube[1].data[np.where(lam_r == red_cen_wave)[0][0] -
-                                     100:np.where(lam_r == red_cen_wave)[0][0] + 100], axis=0)
-    rms_r = np.sqrt(1/np.mean(red_cube[2].data[np.where(lam_r == red_cen_wave)[0][0] -
-                                     100:np.where(lam_r == red_cen_wave)[0][0] + 100], axis=0))
-    # rms_r = np.sqrt(sgn_r)
+    med_r = np.median(red_cube[1].data[np.where(lam_r == red_cen_wave)[0][0] - sgn_wind:
+                                       np.where(lam_r == red_cen_wave)[0][0] + sgn_wind], axis=0)
+    sgn_r = np.mean(red_cube[1].data[np.where(lam_r == red_cen_wave)[0][0] - sgn_wind:
+                                     np.where(lam_r == red_cen_wave)[0][0] + sgn_wind], axis=0)
+    rms_r = np.sqrt(1 / np.mean(red_cube[2].data[np.where(lam_r == red_cen_wave)[0][0] - sgn_wind:
+                                                 np.where(lam_r == red_cen_wave)[0][0] + sgn_wind], axis=0))
     snr_r = sgn_r / rms_r
-
-    nsc = SkyCoord(ra=blue_cube[1].header['CRVAL1'], dec=blue_cube[1].header['CRVAL2'], unit='deg', frame=FK5)
-
-    url = geturl(nsc.ra.value, nsc.dec.value, size=480, filters="grizy", output_size=None, format="jpg", color=True)
-    r = requests.get(url)
-    im = Image.open(BytesIO(r.content))
 
     axis_header = fits.Header()
     axis_header['NAXIS1'] = blue_cube[1].header['NAXIS1']
@@ -221,30 +290,23 @@ def html_plots(self):
     axis_header['CUNIT1'] = blue_cube[1].header['CUNIT1']
     axis_header['CUNIT2'] = blue_cube[1].header['CUNIT2']
 
-    # creating new cubes
-    n_blue_cube = blue_cube[1].data * np.mean(blue_cube[5].data[:], axis=0)
-    n_blue_cube_err = blue_cube[2].data * np.mean(blue_cube[5].data[:], axis=0)
-
-    n_red_cube = red_cube[1].data * np.mean(red_cube[5].data[:], axis=0)
-    n_red_cube_err = red_cube[2].data * np.mean(red_cube[5].data[:], axis=0)
-
-    # doing the plots
-
+    # Start doing the L0 plots
     print('Doing L0 raw data plots')
 
-    file_list = [x for x in os.listdir(file_dir) if ("APS" not in x) & ('single' in x)]
-    warc_list = [x for x in os.listdir(file_dir) if ('warc' in x)]
-
-    rows = len(file_list)
-
-    fig = plt.figure(figsize=(14, 5*rows))
+    fig = plt.figure(figsize=(14, 30))
 
     fig.suptitle('L0 QC plots', size=22, weight='bold')
 
-    gs = gridspec.GridSpec(1+rows, 3, height_ratios=np.concatenate((np.array([1]), np.zeros(rows)+0.5)),
+    gs = gridspec.GridSpec(7, 3, height_ratios=np.concatenate((np.array([1]), np.zeros(6) + 0.5)),
                            width_ratios=[1, 1, 1])
-    gs.update(left=0.07, right=0.9, bottom=0.05, top=0.95, wspace=0.3, hspace=0.25)
-    props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+    gs.update(left=0.07, right=0.95, bottom=0.05, top=0.92, wspace=0.3, hspace=0.25)
+
+    # Creating PanSTARRS composite image
+    nsc = SkyCoord(ra=blue_cube[1].header['CRVAL1'], dec=blue_cube[1].header['CRVAL2'], unit='deg', frame=FK5)
+
+    url = geturl(nsc.ra.value, nsc.dec.value, size=480, filters="grizy", output_size=None, im_format="jpg", color=True)
+    r = requests.get(url)
+    im = Image.open(BytesIO(r.content))
 
     cdelt1 = 0.25
     cdelt2 = 0.25
@@ -280,88 +342,113 @@ def html_plots(self):
     def polinom(x, a, b, c):
         return a + b * x + c * (x ** 2)
 
-    if blue_cube[0].header['MODE'] == 'LOWRES':
-        lam_wind = 10
+    file_list = [x for x in os.listdir(file_dir) if ("APS" not in x) & ('single' in x)]  # single files list
+    warc_list = [x for x in os.listdir(file_dir) if ('warc' in x)]  # WARC files list
+
+    sky_plot_flag = int(config.get('QC_plots', 'sky_plot_flag'))
+
+    sky_plot_dir = gal_dir + 'sky_fit_plots/'
+    warc_plot_dir = gal_dir + 'warc_fit_plots/'
+    if sky_plot_flag == 1:
+        try:
+            os.system('rm -r ' + sky_plot_dir)
+        except:
+            pass
+        os.makedirs(sky_plot_dir, exist_ok=True)
+        try:
+            os.system('rm -r ' + warc_plot_dir)
+        except:
+            pass
+        os.makedirs(warc_plot_dir, exist_ok=True)
+
+    lam_wind = 10
     if blue_cube[0].header['MODE'] == 'HIGHRES':
-        lam_wind = 30
+        lam_wind = 50
 
-    if len(warc_list) > 0:
-        warc_cen_blue = []
-        warc_sigma_blue = []
-        warc_cen_med_blue = []
-        warc_sigma_med_blue = []
+    warc_cen_blue = []
+    warc_sigma_blue = []
+    warc_cen_med_blue = []
+    warc_sigma_med_blue = []
 
-        warc_cen_red = []
-        warc_sigma_red = []
-        warc_cen_med_red = []
-        warc_sigma_med_red = []
+    warc_cen_red = []
+    warc_sigma_red = []
+    warc_cen_med_red = []
+    warc_sigma_med_red = []
 
-        for i in np.arange(2):
+    # Measuring WARC files lines
+    for j in np.arange(len(warc_list)):
 
-            warc_name = warc_list[i][:-4]
-            warc_file = fits.open(file_dir + warc_name + '.fit')
+        print('     LSF plots: Measuring WARC fibers (WARC file ' + str(j + 1) + '/' + str(len(warc_list)) + '):')
 
-            lamp_lam = (np.arange(warc_file[1].header['NAXIS1']) * warc_file[1].header['CD1_1']) + warc_file[1].header[
-                'CRVAL1']
-            lamp_spec = warc_file[1].data
+        warc_name = warc_list[j][:-4]
+        warc_file = fits.open(file_dir + warc_name + '.fit')
 
-            for fiber in np.arange(len(lamp_spec)):
+        file_cam = warc_file[0].header['CAMERA']
 
-                print('     LSF plots: Measuring WARC fibers: ' + str(round(100. * fiber / len(lamp_spec), 1)) + '%',
-                      end='\r')
+        lamp_lam = (np.arange(warc_file[1].header['NAXIS1']) * warc_file[1].header['CD1_1']) + warc_file[1].header[
+            'CRVAL1']
+        lamp_spec = warc_file[1].data
 
-                cen_lam = lamp_lam[lam_wind+1:-(lam_wind+2)][np.diff(lamp_spec[fiber])[lam_wind+1:-(lam_wind+1)] < -1500]
+        if blue_cube[0].header['MODE'] == 'LOWRES':
+            # cen_lam = lamp_lam[lam_wind + 1:-(lam_wind + 2)][
+            #     np.diff(lamp_spec[300])[lam_wind + 1:-(lam_wind + 1)] < -1500]
+            if file_cam == 'WEAVEBLUE':
+                cen_lam = np.array([3606., 3738., 3850., 3995., 4104., 4132., 4290., 4400., 4511., 4545., 4579., 4609.,
+                                    4765., 4806., 4965., 5187., 5410.])
+            else:
+                cen_lam = np.array([7724., 7948., 8103., 8115., 8264., 8408., 8424., 8521., 8668., 9123., 9224., ])
+        else:
+            cen_lam = lamp_lam[lam_wind + 1:-(lam_wind + 2)][
+                np.diff(lamp_spec[300])[lam_wind + 1:-(lam_wind + 1)] < -1500]
 
-                fib_cen = []
-                fib_sigma = []
-
-                old_cen = 0
-
-                for i in np.arange(len(cen_lam) - 1):
-                    lam_wind_c = np.where(lamp_lam == min(lamp_lam, key=lambda x: abs(x - cen_lam[i])))[0][0]
-                    w_lam = lamp_lam[lam_wind_c - lam_wind: lam_wind_c + lam_wind]
-                    w_spec = lamp_spec[fiber][lam_wind_c - lam_wind: lam_wind_c + lam_wind]
-                    if (abs(cen_lam[i] - old_cen) > 5) and (all(w_spec < 330000.)) and (
-                            w_spec[int(w_spec.size / 2)] / 4 > w_spec[0]) and (
-                            w_spec[int(w_spec.size / 2)] / 4 > w_spec[-1]):
-                        try:
-                            popt, pcov = curve_fit(gauss, w_lam, w_spec, p0=[0, 0, max(w_spec) / 2, cen_lam[i], 3],
-                                                   bounds=([-np.inf, -np.inf, 0, 0, 0],
-                                                           [np.inf, np.inf, np.inf, np.inf, np.inf]))
-
-                            if (popt[4] * 2.355 > 0.1) & (popt[4] * 2.355 < 5.0):
-                                fib_cen.append(popt[3])
-                                fib_sigma.append(popt[4] * 2.355)
-
-                                old_cen = cen_lam[i]
-
-                        except:
-                            pass
-
-                if warc_file[0].header['CAMERA'] == 'WEAVEBLUE':
-                    warc_cen_blue.extend(np.ravel(fib_cen))
-                    warc_sigma_blue.extend(np.ravel(fib_sigma))
-                    warc_cen_med_blue.append(np.nanmedian(np.ravel(fib_cen)))
-                    warc_sigma_med_blue.append(np.nanmedian(np.ravel(fib_sigma)))
-
-                if warc_file[0].header['CAMERA'] == 'WEAVERED':
-                    warc_cen_red.extend(np.ravel(fib_cen))
-                    warc_sigma_red.extend(np.ravel(fib_sigma))
-                    warc_cen_med_red.append(np.nanmedian(np.ravel(fib_cen)))
-                    warc_sigma_med_red.append(np.nanmedian(np.ravel(fib_sigma)))
-
+        with mp.Pool(int(config.get('APS_cube', 'n_proc'))) as pool:
+            warc_stats = pool.starmap(fiber_lines,
+                                      tqdm.tqdm(zip((fiber, cen_lam, lamp_spec, lamp_lam, lam_wind, sky_plot_flag,
+                                                     warc_plot_dir, file_cam, gauss)
+                                                    for fiber in np.arange(len(lamp_spec))), total=len(lamp_spec)))
         print('')
 
-        warc_cen_blue = np.ravel(warc_cen_blue)
-        warc_sigma_blue = np.ravel(warc_sigma_blue)
+        if file_cam == 'WEAVEBLUE':
+            for i in np.arange(len(warc_stats)):
+                warc_cen_blue.extend(warc_stats[i][2])
+                warc_cen_med_blue.append(warc_stats[i][3])
+                warc_sigma_blue.extend(warc_stats[i][4])
+                warc_sigma_med_blue.append(warc_stats[i][5])
 
-        warc_cen_red = np.ravel(warc_cen_red)
-        warc_sigma_red = np.ravel(warc_sigma_red)
+        if file_cam == 'WEAVERED':
+            for i in np.arange(len(warc_stats)):
+                warc_cen_red.extend(warc_stats[i][2])
+                warc_cen_med_red.append(warc_stats[i][3])
+                warc_sigma_red.extend(warc_stats[i][4])
+                warc_sigma_med_red.append(warc_stats[i][5])
 
+    warc_cen_blue = np.ravel(warc_cen_blue)
+    warc_sigma_blue = np.ravel(warc_sigma_blue)
+
+    warc_cen_red = np.ravel(warc_cen_red)
+    warc_sigma_red = np.ravel(warc_sigma_red)
+
+    # Measuring skylines
+    b_cont = 0
+    r_cont = 0
+    single_file_list = []
     for k in np.arange(len(file_list)):
+        single_file = fits.open(file_dir + file_list[k])
+        if (single_file[0].header['CAMERA'] == 'WEAVEBLUE') & (b_cont == 0):
+            single_file_list.append(k)
+            b_cont += 1
+        if (single_file[0].header['CAMERA'] == 'WEAVERED') & (r_cont == 0):
+            single_file_list.append(k)
+            r_cont += 1
 
-        single_file = fits.open(file_dir+file_list[k])
+    for k in np.arange(len(single_file_list)):
+        print(
+            '     LSF plots: Measuring sky fibers (Single file ' + str(k + 1) + '/' + str(len(single_file_list)) + '):')
+
+        single_file = fits.open(file_dir + file_list[k])
         single_name = single_file[1].name[:-5] + file_list[k][6:-4]
+
+        file_cam = single_file[0].header['CAMERA']
 
         sky_lam = (np.arange(single_file[1].header['NAXIS1']) * single_file[1].header['CD1_1']) + \
                   single_file[1].header['CRVAL1']
@@ -369,58 +456,45 @@ def html_plots(self):
 
         resol = single_file[6].data['RESOL']
 
-        sky_cen = []
-        sky_sigma = []
-        sky_cen_med = []
+        sky_flux = []
+        sky_flux_med = []
         sky_sigma_med = []
 
-        for fiber in np.arange(len(sky_spec)):
+        if blue_cube[0].header['MODE'] == 'LOWRES':
+            # cen_lam = sky_lam[lam_wind + 1:-(lam_wind + 2)][
+            #     np.diff(sky_spec[300])[lam_wind + 1:-(lam_wind + 1)] < -0.2]
+            if file_cam == 'WEAVEBLUE':
+                cen_lam = np.array([5577.])
+            else:
+                cen_lam = np.array([6864., 6923., 6949., 6978., 7316., 7341., 7370., 7402., 7750., 7794., 7821., 7890.,
+                                    7931., 7993., 8062., 8399., 8430., 8465., 8505., 8886., 8920., 8959., 9002., 9338.,
+                                    9376., 9440.])
+        else:
+            cen_lam = sky_lam[lam_wind + 1:-(lam_wind + 2)][
+                np.diff(sky_spec[300])[lam_wind + 1:-(lam_wind + 1)] < -0.03]
 
-            print('     LSF plots (' + str(k) + '/' + str(len(file_list)) + '): Measuring sky fibers: ' +
-                  str(round(100. * fiber / len(sky_spec),1)) + '%', end='\r')
-
-            if blue_cube[0].header['MODE'] == 'LOWRES':
-                cen_lam = sky_lam[lam_wind+1:-(lam_wind+2)][np.diff(sky_spec[fiber])[lam_wind+1:-(lam_wind+1)] < -0.2]
-            if blue_cube[0].header['MODE'] == 'HIGHRES':
-                cen_lam = sky_lam[lam_wind+1:-(lam_wind+2)][np.diff(sky_spec[fiber])[lam_wind+1:-(lam_wind+1)] < -0.03]
-
-            old_cen = 0
-
-            fib_cen = []
-            fib_sigma = []
-
-            for i in np.arange(len(cen_lam) - 1):
-                lam_wind_c = np.where(sky_lam == min(sky_lam, key=lambda x: abs(x - cen_lam[i])))[0][0]
-                w_lam = sky_lam[lam_wind_c - lam_wind: lam_wind_c + lam_wind]
-                w_spec = sky_spec[fiber][lam_wind_c - lam_wind: lam_wind_c + lam_wind]
-                if (abs(cen_lam[i] - old_cen) > 5) and (w_spec[int(w_spec.size / 2)] / 4 > w_spec[0]) and (
-                        w_spec[int(w_spec.size / 2)] / 4 > w_spec[-1]):
-                    try:
-                        popt, pcov = curve_fit(gauss, w_lam, w_spec, p0=[0, 0, max(w_spec) / 2, cen_lam[i], 3],
-                                               bounds=([-np.inf,-np.inf,0,0,0],[np.inf,np.inf,np.inf,np.inf,np.inf]))
-
-                        if (popt[4] * 2.355 > 0.1) & (popt[4] * 2.355 < 5.0):
-                            fib_cen.append(popt[3])
-                            fib_sigma.append(popt[4] * 2.355)
-
-                            old_cen = cen_lam[i]
-
-                    except:
-                        pass
-
-            sky_cen.extend(np.ravel(fib_cen))
-            sky_sigma.extend(np.ravel(fib_sigma))
-
-            sky_cen_med.append(np.median(np.ravel(fib_cen)))
-            sky_sigma_med.append(np.median(np.ravel(fib_sigma)))
-
-        sky_cen = np.ravel(sky_cen)
-        sky_sigma = np.ravel(sky_sigma)
-
+        with mp.Pool(int(config.get('APS_cube', 'n_proc'))) as pool:
+            warc_stats = pool.starmap(fiber_lines,
+                                      tqdm.tqdm(zip((fiber, cen_lam, sky_spec, sky_lam, lam_wind, sky_plot_flag,
+                                                     sky_plot_dir, file_cam, gauss)
+                                                    for fiber in np.arange(len(sky_spec))), total=len(sky_spec)))
         print('')
 
+        sky_cen = np.zeros((len(warc_stats), len(cen_lam)))
+        sky_sigma = np.zeros((len(warc_stats), len(cen_lam)))
+
+        for i in np.arange(len(warc_stats)):
+            sky_flux.extend(warc_stats[i][0])
+            sky_flux_med.append(warc_stats[i][1])
+            sky_sigma_med.append(warc_stats[i][5])
+            for l in np.arange(len(cen_lam)):
+                sky_cen[i, l] = warc_stats[i][2][l]
+                sky_sigma[i, l] = warc_stats[i][4][l]
+
         if (single_file[1].name[:-5] == 'RED') & (blue_cube[0].header['MODE'] == 'LOWRES'):
-            popt, pcov = curve_fit(polinom, sky_cen, sky_sigma, maxfev=5000)
+            fit_sky_cen = np.ravel(sky_cen[np.isfinite(sky_cen)])
+            fit_sky_sigma = np.ravel(sky_sigma[np.isfinite(sky_sigma)])
+            popt, pcov = curve_fit(polinom, fit_sky_cen, fit_sky_sigma, maxfev=5000)
 
         sky_diff_m = []
         sky_cen_diff_m = []
@@ -429,86 +503,86 @@ def html_plots(self):
             sky_diff_m.append(np.median((np.ravel(sky_sigma_med) - resol)[i * 100:(i + 1) * 100]))
             sky_cen_diff_m.append(np.mean([i * 100, (i + 1) * 100]))
 
-        if len(warc_list) > 0:
-            warc_diff_m_blue = []
-            warc_cen_diff_m_blue = []
-            warc_diff_m_red = []
-            warc_cen_diff_m_red = []
+        # ------- plotting the sky resolution
 
-            for i in np.arange(6):
-                warc_diff_m_blue.append(np.median((np.ravel(warc_sigma_med_blue) - resol)[i * 100:(i + 1) * 100]))
-                warc_cen_diff_m_blue.append(np.mean([i * 100, (i + 1) * 100]))
-
-                warc_diff_m_red.append(np.median((np.ravel(warc_sigma_med_red) - resol)[i * 100:(i + 1) * 100]))
-                warc_cen_diff_m_red.append(np.mean([i * 100, (i + 1) * 100]))
-
-            warc_diff_m_blue = np.ravel(warc_diff_m_blue)
-            warc_diff_m_red = np.ravel(warc_diff_m_red)
-
-        sky_diff_m = np.ravel(sky_diff_m)
-
-        ax = plt.subplot(gs[1+k, 0])
-        ax.plot(np.arange(len(resol)), np.ravel(sky_sigma_med), '.', color = single_file[1].name[:-5], alpha=0.5, zorder=-1,
+        ax = plt.subplot(gs[1 + (3 * k), 0])
+        ax.plot(np.arange(len(resol)), np.ravel(sky_sigma_med), '.', color=single_file[1].name[:-5], alpha=0.5,
+                zorder=-1,
                 label='sky fits')
         if len(warc_list) > 0:
             if single_file[0].header['CAMERA'] == 'WEAVEBLUE':
-                ax.plot(np.arange(len(resol)), np.ravel(warc_sigma_med_blue), '.', color = 'orange', alpha=0.5, zorder=-1,
-                    label='warc fits')
+                ax.plot(np.arange(len(resol)), np.ravel(warc_sigma_med_blue), '.', color='orange', alpha=0.5, zorder=-1,
+                        label='warc fits')
             if single_file[0].header['CAMERA'] == 'WEAVERED':
-                ax.plot(np.arange(len(resol)), np.ravel(warc_sigma_med_red), '.', color = 'orange', alpha=0.5, zorder=-1,
-                    label='warc fits')
-        ax.plot(np.arange(len(resol)), resol, 's', color='dimgray', markersize=3, alpha=0.5, zorder=-1, label='reduc info')
+                ax.plot(np.arange(len(resol)), np.ravel(warc_sigma_med_red), '.', color='orange', alpha=0.5, zorder=-1,
+                        label='warc fits')
+        ax.plot(np.arange(len(resol)), resol, 's', color='dimgray', markersize=3, alpha=0.5, zorder=-1,
+                label='reduc info')
         ax.set_xlabel('fiber #')
         ax.set_ylabel('FWHM [A]')
         ax.legend()
 
-        ax = plt.subplot(gs[1+k, 1])
-        ax.plot(np.arange(len(resol)), np.ravel(sky_sigma_med) - resol, '.', color = single_file[1].name[:-5], alpha=0.5,
-                zorder=-1, label='sky fits')
-        ax.scatter(sky_cen_diff_m, sky_diff_m, marker='*', color='black', zorder=3)
+        ax = plt.subplot(gs[1 + (3 * k), 1])
+        ax.plot(sky_cen, sky_sigma, '.', color=single_file[1].name[:-5], alpha=0.1, zorder=-1)
         if len(warc_list) > 0:
             if single_file[0].header['CAMERA'] == 'WEAVEBLUE':
-                ax.plot(np.arange(len(resol)), np.ravel(warc_sigma_med_blue) - resol, '.', color = 'orange', alpha=0.5, zorder=-1, label='warc fits')
-                ax.scatter(warc_cen_diff_m_blue, warc_diff_m_blue, marker='*', color='black', zorder=3)
-                ax.set_title(single_name + '  ' + warc_list[1][:-4])
+                ax.plot(warc_cen_blue, warc_sigma_blue, '.', color='orange', alpha=0.1, zorder=-2)
+                ax.set_title(single_name + '  ' + warc_list[1][:-4] + ' / spectral resolution')
             if single_file[0].header['CAMERA'] == 'WEAVERED':
-                ax.plot(np.arange(len(resol)), np.ravel(warc_sigma_med_red) - resol, '.', color = 'orange', alpha=0.5, zorder=-1, label='warc fits')
-                ax.scatter(warc_cen_diff_m_red, warc_diff_m_red, marker='*', color='black', zorder=3)
-                ax.set_title(single_name + '  ' + warc_list[0][:-4])
+                ax.plot(warc_cen_red, warc_sigma_red, '.', color='orange', alpha=0.1, zorder=-2)
+                ax.set_title(single_name + '  ' + warc_list[0][:-4] + ' / spectral resolution')
         else:
-            ax.set_title(single_name)
-        ax.set_xlabel('fiber #')
-        ax.set_ylabel(r'$\Delta$ FWMH [A]')
-        ax.axhline(y=0, color='black', linestyle='--')
-
-        ax = plt.subplot(gs[1+k, 2])
-        ax.plot(sky_cen, sky_sigma, '.', color = single_file[1].name[:-5], alpha=0.1, zorder=-1)
-        if len(warc_list) > 0:
-            if single_file[0].header['CAMERA'] == 'WEAVEBLUE':
-                ax.plot(warc_cen_blue, warc_sigma_blue, '.', color = 'orange', alpha=0.1, zorder=-2)
-            if single_file[0].header['CAMERA'] == 'WEAVERED':
-                ax.plot(warc_cen_red, warc_sigma_red, '.', color = 'orange', alpha=0.1, zorder=-2)
+            ax.set_title(single_name + ' / spectral resolution')
         if (single_file[1].name[:-5] == 'RED') & (blue_cube[0].header['MODE'] == 'LOWRES'):
             ax.plot(sky_lam, polinom(sky_lam, *popt), linestyle='--', color='gray')
             ax.annotate(r'FWHM = ' + ('%.2g' % popt[0]) + ' + ' + ('%.2g' % popt[1]) + '$\lambda$ + ' + (
-                        '%.2g' % popt[2]) + '$\lambda^2$', (0.02, 0.95), xycoords='axes fraction')
-        else:
-            ax.axhline(y=np.median(sky_sigma), color = single_file[1].name[:-5])
-            ax.annotate(r'median FWHM = ' + str(round(np.median(sky_sigma), 2)), (0.02, 0.95), xycoords='axes fraction')
+                    '%.2g' % popt[2]) + '$\lambda^2$', (0.02, 0.95), xycoords='axes fraction')
+        ax.set_xlabel('fiber #')
         ax.set_ylabel('FWHM [A]')
-        print('')
+
+        ax = plt.subplot(gs[1 + (3 * k), 2])
+        ax.plot(sky_cen, sky_cen / sky_sigma, '.', color=single_file[1].name[:-5], alpha=0.1, zorder=-1)
+        if len(warc_list) > 0:
+            if single_file[0].header['CAMERA'] == 'WEAVEBLUE':
+                ax.plot(warc_cen_blue, warc_cen_blue / warc_sigma_blue, '.', color='orange', alpha=0.1, zorder=-2)
+            if single_file[0].header['CAMERA'] == 'WEAVERED':
+                ax.plot(warc_cen_red, warc_cen_red / warc_sigma_red, '.', color='orange', alpha=0.1, zorder=-2)
+        ax.set_ylabel(r'R [$\lambda$ / FWHM]')
+        ax.set_xlabel('fiber #')
 
         if (single_file[1].name[:-5] == 'RED') & (blue_cube[0].header['MODE'] == 'LOWRES'):
-            np.savetxt(gal_dir+'/resol_table_'+single_name+'.txt', np.column_stack([sky_lam, polinom(sky_lam, *popt)]),
-                       fmt=['%.1f','%.2f'])
+            np.savetxt(gal_dir + '/resol_table_' + single_name + '.txt',
+                       np.column_stack([sky_lam, polinom(sky_lam, *popt)]),
+                       fmt=['%.1f', '%.2f'])
         else:
-            np.savetxt(gal_dir+'/resol_table_'+single_name+'.txt',
-                       np.column_stack([sky_lam, (sky_lam*0)+ np.median(sky_sigma)]), fmt=['%.1f','%.2f'])
+            np.savetxt(gal_dir + '/resol_table_' + single_name + '.txt',
+                       np.column_stack([sky_lam, (sky_lam * 0) + np.median(sky_sigma)]), fmt=['%.1f', '%.2f'])
 
         if single_file[0].header['CAMERA'] == 'WEAVEBLUE':
             resol_fibinfo_blue = np.nanmedian(resol)
         if single_file[0].header['CAMERA'] == 'WEAVERED':
             resol_fibinfo_red = np.nanmedian(resol)
+
+        # ------- plotting the fiber throughput
+
+        ax = plt.subplot(gs[2 + (3 * k), :])
+        ax.plot(sky_flux_med / np.median(sky_flux_med), color=single_file[1].name[:-5], alpha=0.5)
+        ax.set_xlabel('fiber #')
+        ax.set_ylabel('relative median sky lines flux')
+        ax.set_ylim([0.7, 1.3])
+        ax.set_title('fiber throughput')
+        ax.grid()
+
+        # ------- plotting the wavelength solution
+
+        ax = plt.subplot(gs[3 + (3 * k), :])
+        ax.plot(np.nanmedian(sky_cen - np.nanmedian(sky_cen, axis=0), axis=1), color=single_file[1].name[:-5],
+                alpha=0.5)
+        ax.set_xlabel('fiber #')
+        ax.set_ylabel(r'relative sky line offsets [$\AA$]')
+        ax.set_ylim([-0.5, 0.5])
+        ax.set_title('wavelength calibration')
+        ax.grid()
 
     # ------
 
@@ -524,24 +598,25 @@ def html_plots(self):
     file_list_b = [x for x in os.listdir(gal_dir) if ("BLUE" in x) & ('resol' in x)]
     file_list_r = [x for x in os.listdir(gal_dir) if ("RED" in x) & ('resol' in x)]
 
-    lam_b_res = Table.read(gal_dir+file_list_b[0], format='ascii')['col1'].data
-    lam_b_res = np.around(np.arange(2500, max(lam_b_res), lam_b_res[1]-lam_b_res[0]),1) # workaround # a weird interpolation thing from pyparadise
-    lam_r_res = np.around(Table.read(gal_dir+file_list_r[0], format='ascii')['col1'].data,1)
-    lam_aps_res = np.around(np.arange(min(lam_b_res), max(lam_r_res), lam_b_res[1]-lam_b_res[0]),1)
+    lam_b_res = Table.read(gal_dir + file_list_b[0], format='ascii')['col1'].data
+    lam_b_res = np.around(np.arange(2500, max(lam_b_res), lam_b_res[1] - lam_b_res[0]),
+                          1)  # workaround # a weird interpolation thing from pyparadise
+    lam_r_res = np.around(Table.read(gal_dir + file_list_r[0], format='ascii')['col1'].data, 1)
+    lam_aps_res = np.around(np.arange(min(lam_b_res), max(lam_r_res), lam_b_res[1] - lam_b_res[0]), 1)
 
-    resol_blue = lam_b_res*0
-    resol_red = lam_r_res*0
+    resol_blue = lam_b_res * 0
+    resol_red = lam_r_res * 0
 
     for i in file_list_b:
-        resol_blue = resol_blue + Table.read(gal_dir+i, format='ascii')['col2'].data[0]
+        resol_blue = resol_blue + Table.read(gal_dir + i, format='ascii')['col2'].data[0]
     for i in file_list_r:
-        resol_red = resol_red + Table.read(gal_dir+i, format='ascii')['col2'].data
+        resol_red = resol_red + Table.read(gal_dir + i, format='ascii')['col2'].data
 
     resol_blue = resol_blue / len(file_list_b)
     resol_red = resol_red / len(file_list_b)
     resol_blue[~np.isfinite(resol_blue)] = resol_fibinfo_blue
     resol_red[~np.isfinite(resol_red)] = resol_fibinfo_red
-    resol_aps = lam_aps_res*0
+    resol_aps = lam_aps_res * 0
 
     for i in lam_aps_res:
         if (i >= min(lam_b_res)) & (i <= max(lam_b_res)):
@@ -553,7 +628,7 @@ def html_plots(self):
         if (i >= max(lam_b_res)) & (i <= min(lam_r_res)):
             resol_aps[lam_aps_res == i] = (resol_blue[-1] + resol_red[0]) / 2
 
-    lam_aps_res = lam_aps_res/(1+np.float(config.get('pyp_params', 'redshift')))
+    lam_aps_res = lam_aps_res / (1 + float(config.get('pyp_params', 'redshift')))
 
     np.savetxt(gal_dir + '/resol_table_blue.txt', np.column_stack([lam_b_res, np.around(resol_blue, 2)]),
                fmt=['%.1f', '%.2f'])
@@ -561,7 +636,7 @@ def html_plots(self):
                fmt=['%.1f', '%.2f'])
     np.savetxt(gal_dir + '/resol_table_aps.txt', np.column_stack([lam_aps_res, np.around(resol_aps, 2)]),
                fmt=['%.1f', '%.2f'])
-    modes = np.array(['blue','red','aps'])
+    modes = np.array(['blue', 'red', 'aps'])
     avs = np.array([np.round(np.mean(resol_blue), 2), np.round(np.mean(resol_red), 2), np.round(np.mean(resol_aps), 2)])
     np.savetxt(gal_dir + '/resol_table_mean.txt', np.column_stack((modes, avs)), fmt='%s')
 
@@ -574,7 +649,7 @@ def html_plots(self):
 
     fig = plt.figure(figsize=(14, 68))
 
-    fig.suptitle('L1 QC plots', size=22, weight='bold')
+    fig.suptitle('L1 QC plots / CASUVERS = ' + blue_cube[0].header['CASUVERS'], size=22, weight='bold')
 
     gs = gridspec.GridSpec(15, 5, height_ratios=[1, 0.6, 0.6, 1, 1, 1, 1, 0.6, 0.6, 1, 0.6, 0.6, 1, 0.6, 0.6],
                            width_ratios=[1, 0.06, 0.3, 1, 0.06])
@@ -857,22 +932,38 @@ def html_plots(self):
     sgn_tt_b = sgn_t_b[sgn_t_b / rms_t_b > 1]
     rms_tt_b = rms_t_b[sgn_t_b / rms_t_b > 1]
 
-    #binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_b, y_t_b, sgn_tt_b, rms_tt_b,
-                                                                              # targetSN,
-                                                                              # pixelsize=pixelsize, plot=0, quiet=1)
+    # binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_b, y_t_b, sgn_tt_b, rms_tt_b,
+    # targetSN,
+    # pixelsize=pixelsize, plot=0, quiet=1)
 
     def sn_func_blue(index, signal, noise):
 
         factor = 1 + 1.53 * np.log10(index.size) ** 1.19
 
-        sn = np.sum(signal[index]) / np.sqrt(np.sum((noise[index] * factor) ** 2))
+        sn_cov = np.sum(signal[index]) / np.sqrt(np.sum((noise[index] * factor) ** 2))
 
-        return  sn
-    
-    binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_b, y_t_b, sgn_tt_b, rms_tt_b,
-                                                                              targetSN, pixelsize=pixelsize, plot=0,
-                                                                              quiet=0, sn_func=sn_func_blue)
+        return sn_cov
 
+    if int(config.get('QC_plots', 'cov_flag')) == 1:
+        try:
+            binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_b, y_t_b, sgn_tt_b, rms_tt_b,
+                                                                                      targetSN, pixelsize=pixelsize,
+                                                                                      plot=0,
+                                                                                      quiet=0, sn_func=sn_func_blue)
+        except:
+            binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_b, y_t_b, sgn_tt_b, rms_tt_b,
+                                                                                      10, pixelsize=pixelsize, plot=0,
+                                                                                      quiet=0, sn_func=sn_func_blue)
+    else:
+        try:
+            binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_b, y_t_b, sgn_tt_b, rms_tt_b,
+                                                                                      targetSN, pixelsize=pixelsize,
+                                                                                      plot=0,
+                                                                                      quiet=0)
+        except:
+            binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_b, y_t_b, sgn_tt_b, rms_tt_b,
+                                                                                      10, pixelsize=pixelsize, plot=0,
+                                                                                      quiet=0)
     ax = plt.subplot(gs[12, 0])
 
     xmin, xmax = 0, sgn_b.shape[1] - 1
@@ -896,14 +987,14 @@ def html_plots(self):
     ax = plt.subplot(gs[13, 0])
 
     rad = np.sqrt((xBar - xpmax_b[0]) ** 2 + (yBar - ypmax_b[0]) ** 2)  # Use centroids, NOT generators
-    plt.plot(np.sqrt((x_t_b - xpmax_b[0]) ** 2 + (y_t_b - ypmax_b[0]) ** 2), sgn_tt_b / rms_tt_b, ',k')
-    plt.plot(rad[nPixels < 2], sn[nPixels < 2], 'xb', label='Not binned')
-    plt.plot(rad[nPixels > 1], sn[nPixels > 1], 'or', label='Voronoi bins')
-    plt.xlabel('R [pixels]')
-    plt.ylabel('Bin S/N')
-    plt.axis([np.min(rad), np.max(rad), 0, np.max(sn) * 1.05])  # x0, x1, y0, y1
-    plt.axhline(targetSN)
-    plt.legend()
+    ax.plot(np.sqrt((x_t_b - xpmax_b[0]) ** 2 + (y_t_b - ypmax_b[0]) ** 2), sgn_tt_b / rms_tt_b, ',k')
+    ax.plot(rad[nPixels < 2], sn[nPixels < 2], 'xb', label='Not binned')
+    ax.plot(rad[nPixels > 1], sn[nPixels > 1], 'or', label='Voronoi bins')
+    ax.set_xlabel('R [pixels]')
+    ax.set_ylabel('Bin S/N')
+    ax.axis([np.min(rad), np.max(rad), 0, np.max(sn) * 1.05])  # x0, x1, y0, y1
+    ax.axhline(targetSN)
+    ax.legend()
 
     fits.writeto(gal_dir + 'vorbin_map_blue.fits', np.flip(np.rot90(img), axis=0), overwrite=True)
 
@@ -918,8 +1009,10 @@ def html_plots(self):
 
     for i in np.arange(int(np.nanmax(vorbin_map)) + 1):
         for j in np.arange(len(nb_cube[i][2][0])):
-            nb_cube_data[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][0] * np.mean(blue_cube[5].data[:],axis=0)
-            nb_cube_err[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][1] * np.mean(blue_cube[5].data[:],axis=0)
+            nb_cube_data[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][0] * np.mean(blue_cube[5].data[:],
+                                                                                                axis=0)
+            nb_cube_err[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][1] * np.mean(blue_cube[5].data[:],
+                                                                                               axis=0)
 
     cube_head = fits.Header()
     cube_head['SIMPLE'] = True
@@ -974,13 +1067,30 @@ def html_plots(self):
         # factor = 1 + 1.77 * np.log10(index.size) ** 1.54  # this would be the correct function, but it does not work
         factor = 1 + 1.53 * np.log10(index.size) ** 1.19
 
-        sn = np.sum(signal[index]) / np.sqrt(np.sum((noise[index] * factor) ** 2))
+        sn_cov = np.sum(signal[index]) / np.sqrt(np.sum((noise[index] * factor) ** 2))
 
-        return sn
+        return sn_cov
 
-    binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_r, y_t_r, sgn_tt_r, rms_tt_r,
-                                                                              targetSN, pixelsize=pixelsize, plot=0,
-                                                                              quiet=1, sn_func=sn_func_red)
+    if int(config.get('QC_plots', 'cov_flag')) == 1:
+        try:
+            binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_r, y_t_r, sgn_tt_r, rms_tt_r,
+                                                                                      targetSN, pixelsize=pixelsize,
+                                                                                      plot=0,
+                                                                                      quiet=1, sn_func=sn_func_red)
+        except:
+            binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_r, y_t_r, sgn_tt_r, rms_tt_r,
+                                                                                      10, pixelsize=pixelsize, plot=0,
+                                                                                      quiet=1, sn_func=sn_func_red)
+    else:
+        try:
+            binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_r, y_t_r, sgn_tt_r, rms_tt_r,
+                                                                                      targetSN, pixelsize=pixelsize,
+                                                                                      plot=0,
+                                                                                      quiet=1)
+        except:
+            binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_r, y_t_r, sgn_tt_r, rms_tt_r,
+                                                                                      10, pixelsize=pixelsize, plot=0,
+                                                                                      quiet=1)
 
     ax = plt.subplot(gs[12, 3])
 
@@ -1005,14 +1115,14 @@ def html_plots(self):
     ax = plt.subplot(gs[13, 3])
 
     rad = np.sqrt((xBar - xpmax_r[0]) ** 2 + (yBar - ypmax_r[0]) ** 2)  # Use centroids, NOT generators
-    plt.plot(np.sqrt((x_t_b - xpmax_r[0]) ** 2 + (y_t_b - ypmax_r[0]) ** 2), sgn_tt_b / rms_tt_b, ',k')
-    plt.plot(rad[nPixels < 2], sn[nPixels < 2], 'xb', label='Not binned')
-    plt.plot(rad[nPixels > 1], sn[nPixels > 1], 'or', label='Voronoi bins')
-    plt.xlabel('R [pixels]')
-    plt.ylabel('Bin S/N')
-    plt.axis([np.min(rad), np.max(rad), 0, np.max(sn) * 1.05])  # x0, x1, y0, y1
-    plt.axhline(targetSN)
-    plt.legend()
+    ax.plot(np.sqrt((x_t_b - xpmax_r[0]) ** 2 + (y_t_b - ypmax_r[0]) ** 2), sgn_tt_b / rms_tt_b, ',k')
+    ax.plot(rad[nPixels < 2], sn[nPixels < 2], 'xb', label='Not binned')
+    ax.plot(rad[nPixels > 1], sn[nPixels > 1], 'or', label='Voronoi bins')
+    ax.set_xlabel('R [pixels]')
+    ax.set_ylabel('Bin S/N')
+    ax.axis([np.min(rad), np.max(rad), 0, np.max(sn) * 1.05])  # x0, x1, y0, y1
+    ax.axhline(targetSN)
+    ax.legend()
 
     fits.writeto(gal_dir + 'vorbin_map_red.fits', np.flip(np.rot90(img), axis=0), overwrite=True)
 
@@ -1027,8 +1137,10 @@ def html_plots(self):
 
     for i in np.arange(int(np.nanmax(vorbin_map)) + 1):
         for j in np.arange(len(nb_cube[i][2][0])):
-            nb_cube_data[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][0] * np.mean(red_cube[5].data[:],axis=0)
-            nb_cube_err[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][1] * np.mean(red_cube[5].data[:],axis=0)
+            nb_cube_data[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][0] * np.mean(red_cube[5].data[:],
+                                                                                                axis=0)
+            nb_cube_err[:, nb_cube[i][2][1][j], nb_cube[i][2][0][j]] = nb_cube[i][1] * np.mean(red_cube[5].data[:],
+                                                                                               axis=0)
 
     cube_head = fits.Header()
     cube_head['SIMPLE'] = True
@@ -1115,7 +1227,7 @@ def html_plots(self):
     ax.set_ylabel(r'X and Y center')
     ax.set_title('Peak flux spaxel (Red)')
 
-    fig_l1 = date + '_' + gal_name + '_' + blue_cube[0].header['MODE'] + '_' + str(blue_cube[0].header['OBID'])\
+    fig_l1 = date + '_' + gal_name + '_' + blue_cube[0].header['MODE'] + '_' + str(blue_cube[0].header['OBID']) \
              + '_L1.png'
 
     fig.savefig(fig_l1)
@@ -1134,8 +1246,8 @@ def html_plots(self):
         aps_cube_data = aps_cube[0].data
         aps_cube_err = aps_cube[1].data
 
-        targetSN = np.float(config.get('QC_plots', 'target_SN'))
-        levels = np.array(json.loads(config.get('QC_plots', 'levels'))).astype(np.float)  # SNR levels to display
+        targetSN = float(config.get('QC_plots', 'target_SN'))
+        levels = np.array(json.loads(config.get('QC_plots', 'levels'))).astype(float)  # SNR levels to display
 
         aps_cen_wave = int(config.get('QC_plots', 'aps_wav'))
 
@@ -1143,9 +1255,9 @@ def html_plots(self):
 
         lam_a = aps_cube[0].header['CRVAL3'] + (np.arange(aps_cube[0].header['NAXIS3']) * aps_cube[0].header['CDELT3'])
 
-        sgn_a = np.mean(aps_cube[0].data[np.where(lam_a == min(lam_a, key=lambda x: abs(x - aps_cen_wave)))[0][0] - 100:
-                                         np.where(lam_a == min(lam_a, key=lambda x: abs(x - aps_cen_wave)))[0][0] + 100]
-                        , axis=0)
+        sgn_lam = min(lam_a, key=lambda x: abs(x - aps_cen_wave))
+        sgn_a = np.mean(aps_cube[0].data[np.where(lam_a == sgn_lam)[0][0] - 100:
+                                         np.where(lam_a == sgn_lam)[0][0] + 100], axis=0)
         rms_a = np.sqrt(sgn_a)
         snr_a = sgn_a / rms_a
 
@@ -1169,7 +1281,7 @@ def html_plots(self):
 
         fig = plt.figure(figsize=(16, 20))
 
-        fig.suptitle('L2/APS QC plots', size=22, weight='bold')
+        fig.suptitle('L2/APS QC plots / APSVERS = ' + aps_cube[0].header['APSVERS'], size=22, weight='bold')
 
         gs = gridspec.GridSpec(4, 5, height_ratios=[1, 1, 1, 1], width_ratios=[1, 0.06, 0.4, 1, 1])
         gs.update(left=0.07, right=0.9, bottom=0.05, top=0.92, wspace=0.0, hspace=0.25)
@@ -1283,14 +1395,14 @@ def html_plots(self):
         ax = plt.subplot(gs[2, 3:5])
 
         rad = np.sqrt((xBar - xpmax_a[0]) ** 2 + (yBar - ypmax_a[0]) ** 2)  # Use centroids, NOT generators
-        plt.plot(np.sqrt((x_t_a - xpmax_a[0]) ** 2 + (y_t_a - ypmax_a[0]) ** 2), sgn_tt_a / rms_tt_a, ',k')
-        plt.plot(rad[nPixels < 2], sn[nPixels < 2], 'xb', label='Not binned')
-        plt.plot(rad[nPixels > 1], sn[nPixels > 1], 'or', label='Voronoi bins')
-        plt.xlabel('R [pixels]')
-        plt.ylabel('Bin S/N')
-        plt.axis([np.min(rad), np.max(rad), 0, np.max(sn) * 1.05])  # x0, x1, y0, y1
-        plt.axhline(targetSN)
-        plt.legend()
+        ax.plot(np.sqrt((x_t_a - xpmax_a[0]) ** 2 + (y_t_a - ypmax_a[0]) ** 2), sgn_tt_a / rms_tt_a, ',k')
+        ax.plot(rad[nPixels < 2], sn[nPixels < 2], 'xb', label='Not binned')
+        ax.plot(rad[nPixels > 1], sn[nPixels > 1], 'or', label='Voronoi bins')
+        ax.set_xlabel('R [pixels]')
+        ax.set_ylabel('Bin S/N')
+        ax.axis([np.min(rad), np.max(rad), 0, np.max(sn) * 1.05])  # x0, x1, y0, y1
+        ax.axhline(targetSN)
+        ax.legend()
 
         # saving voronoi datacube
         vorbin_map = img
@@ -1391,15 +1503,15 @@ def html_plots(self):
 
     f.close()
 
-    ssh = SSHClient()
-    ssh.load_system_host_keys()
-    ssh.connect(hostname='minos.aip.de', username='gcouto', password=open('minos_pass', 'r').read().splitlines()[0])
-
-    scp = SCPClient(ssh.get_transport())
-
-    if int(config.get('QC_plots', 'aps_flag')) == 1:
-        scp.put([date + '_' + gal_name + '_' + blue_cube[0].header['MODE'] + '_' + str(blue_cube[0].header['OBID']) +
-                 '.html', fig_l0, fig_l1, fig_l2], '/store/weave/apertif/')
-    else:
-        scp.put([date + '_' + gal_name + '_' + blue_cube[0].header['MODE'] + '_' + str(blue_cube[0].header['OBID']) +
-                 '.html', fig_l0, fig_l1], '/store/weave/apertif/')
+    # ssh = SSHClient()
+    # ssh.load_system_host_keys()
+    # ssh.connect(hostname='minos.aip.de', username='gcouto', password=open('minos_pass', 'r').read().splitlines()[0])
+    # 
+    # scp = SCPClient(ssh.get_transport())
+    # 
+    # if int(config.get('QC_plots', 'aps_flag')) == 1:
+    #     scp.put([date + '_' + gal_name + '_' + blue_cube[0].header['MODE'] + '_' + str(blue_cube[0].header['OBID']) +
+    #              '.html', fig_l0, fig_l1, fig_l2], '/store/weave/apertif/')
+    # else:
+    #     scp.put([date + '_' + gal_name + '_' + blue_cube[0].header['MODE'] + '_' + str(blue_cube[0].header['OBID']) +
+    #              '.html', fig_l0, fig_l1], '/store/weave/apertif/')

@@ -14,8 +14,9 @@ def specs(self):
     blue_cube = fits.open(file_dir + config.get('QC_plots', 'blue_cube'))
 
     gal = blue_cube[0].header['CCNAME1']
-    
-    gal_dir = blue_cube[0].header['CCNAME1'] + '_' + blue_cube[0].header['MODE'] + '_' + str(blue_cube[0].header['OBID'])
+
+    gal_dir = blue_cube[0].header['CCNAME1'] + '_' + blue_cube[0].header['MODE'] + '_' + str(
+        blue_cube[0].header['OBID'])
 
     # =================== running for red cube ===========================
 
@@ -39,15 +40,15 @@ def specs(self):
         rss_data = np.zeros((len(np.unique(vorbin_map[vorbin_map >= 0])), len(wave)), dtype=np.float32)
         rss_err = np.zeros((len(np.unique(vorbin_map[vorbin_map >= 0])), len(wave)), dtype=np.float32)
 
-        for i in np.unique(vorbin_map[vorbin_map >= 0]):
-            rss_data[int(i)] = c[1].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]]
-            rss_err[int(i)] = c[2].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]]
+        for i in np.unique(vorbin_map[vorbin_map >= 0]).astype(int):
+            rss_data[i] = c[1].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]]
+            rss_err[i] = c[2].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]]
             if int(config.get('spec_fit', 'cosm_flag')) == 1:
-                diff = np.diff(rss_data[int(i)])
+                diff = np.diff(rss_data[i])
                 limit = int(config.get('spec_fit', 'cosm_limit')) * np.nanstd(diff)
                 for j in np.where(diff > limit)[0]:
-                    rss_data[int(i)][j - 4:j + 5] = (np.nanmedian(rss_data[int(i)][j - 10:j - 5]) +
-                                                     np.nanmedian(rss_data[int(i)][j + 5:j + 10])) / 2.
+                    rss_data[i][j - 4:j + 5] = (np.nanmedian(rss_data[i][j - 10:j - 5]) +
+                                                     np.nanmedian(rss_data[i][j + 5:j + 10])) / 2.
 
         rss_head = fits.Header()
         rss_head['SIMPLE'] = True
@@ -108,8 +109,7 @@ def specs(self):
             rss_data = blue_cube[1].data.reshape(blue_cube[1].data.shape[2] * blue_cube[1].data.shape[1],
                                                  blue_cube[1].data.shape[0]) * np.mean(blue_cube[5].data[:], axis=0)
             rss_err = blue_cube[2].data.reshape(blue_cube[1].data.shape[2] * blue_cube[1].data.shape[1],
-                                                 blue_cube[1].data.shape[0]) * np.mean(blue_cube[5].data[:], axis=0)
-
+                                                blue_cube[1].data.shape[0]) * np.mean(blue_cube[5].data[:], axis=0)
 
         if int(config.get('spec_fit', 'resol_flag')) == 1:
             fwhm_str = gal_dir + '/resol_table_blue.txt'
@@ -119,15 +119,15 @@ def specs(self):
         # create RSS file
 
         if int(config.get('spec_fit', 'vorbin_flag')) == 1:
-            for i in np.unique(vorbin_map[vorbin_map >= 0]):
-                rss_data[int(i)] = c[1].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]]
-                rss_err[int(i)] = c[2].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]]
+            for i in np.unique(vorbin_map[vorbin_map >= 0]).astype(int):
+                rss_data[i] = c[1].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]]
+                rss_err[i] = c[2].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]]
                 if int(config.get('spec_fit', 'cosm_flag')) == 1:
-                    diff = np.diff(rss_data[int(i)])
+                    diff = np.diff(rss_data[i])
                     limit = int(config.get('spec_fit', 'cosm_limit')) * np.nanstd(diff)
                     for j in np.where(diff > limit)[0]:
-                        rss_data[int(i)][j - 4:j + 5] = (np.nanmedian(rss_data[int(i)][j - 10:j - 5]) +
-                                                         np.nanmedian(rss_data[int(i)][j + 5:j + 10])) / 2.
+                        rss_data[i][j - 4:j + 5] = (np.nanmedian(rss_data[i][j - 10:j - 5]) +
+                                                         np.nanmedian(rss_data[i][j + 5:j + 10])) / 2.
 
         if int(config.get('spec_fit', 'vorbin_flag')) == 0:
             for i in np.arange(len(rss_data)):
@@ -136,7 +136,7 @@ def specs(self):
                     limit = int(config.get('spec_fit', 'cosm_limit')) * np.nanstd(diff)
                     for j in np.where(diff > limit)[0]:
                         rss_data[i][j - 4:j + 5] = (np.nanmedian(rss_data[i][j - 10:j - 5]) +
-                                                         np.nanmedian(rss_data[i][j + 5:j + 10])) / 2.
+                                                    np.nanmedian(rss_data[i][j + 5:j + 10])) / 2.
 
         rss_head = fits.Header()
         rss_head['SIMPLE'] = True
@@ -162,25 +162,26 @@ def specs(self):
         if int(config.get('spec_fit', 'vorbin_flag')) == 0:
             fname = 'blue'
 
-        rss_ima.writeto(gal + '_'+fname+'_RSS.fits', overwrite=True)
+        rss_ima.writeto(gal + '_' + fname + '_RSS.fits', overwrite=True)
 
         print('')
         print('Running PyParadise best fit')
 
         if int(config.get('spec_fit', 'EL_flag')):
-            os.system('ParadiseApp.py ' + gal + '_'+fname+'_RSS.fits ' + gal + '_'+fname+' ' +
+            os.system('ParadiseApp.py ' + gal + '_' + fname + '_RSS.fits ' + gal + '_' + fname + ' ' +
                       fwhm_str + ' --SSP_par parameters_stellar_blue --line_par parameters_eline_blue --parallel ' +
                       config.get('APS_cube', 'n_proc') + ' --verbose')
         else:
-            os.system('ParadiseApp.py ' + gal + '_'+fname+'_RSS.fits ' + gal + '_'+fname+' ' + fwhm_str +
-                      ' --SSP_par parameters_stellar_blue --parallel ' + config.get('APS_cube', 'n_proc') + ' --verbose')
+            os.system('ParadiseApp.py ' + gal + '_' + fname + '_RSS.fits ' + gal + '_' + fname + ' ' + fwhm_str +
+                      ' --SSP_par parameters_stellar_blue --parallel ' + config.get('APS_cube',
+                                                                                    'n_proc') + ' --verbose')
 
         if int(config.get('spec_fit', 'boots_flag')):
             print('')
             print('Running bootstrap models')
 
             os.system(
-                'ParadiseApp.py ' + gal + '_'+fname+'_RSS.fits ' + gal + '_'+fname+' ' + fwhm_str +
+                'ParadiseApp.py ' + gal + '_' + fname + '_RSS.fits ' + gal + '_' + fname + ' ' + fwhm_str +
                 ' --SSP_par parameters_stellar_blue --line_par parameters_eline_blue --bootstraps 100 --modkeep 80 '
                 '--parallel ' + config.get('APS_cube', 'n_proc') + ' --verbose')
 
@@ -195,11 +196,11 @@ def specs(self):
         res_dir = gal_dir + '/' + 'pyp_results/APS_' + datetime.now().strftime('%Y-%m-%d_%H.%M.%S')
         os.makedirs(res_dir, exist_ok=True)
 
-        # c = fits.open(gal + '/APS_cube_vorbin.fits')
-        # vorbin_map = fits.getdata(gal + '/vorbin_map_aps.fits')
+        c = fits.open(gal_dir + '/aps_cube_vorbin.fits')
+        vorbin_map = fits.getdata(gal_dir + '/vorbin_map_aps.fits')
 
-        c = fits.open(gal_dir + '/' + gal + '_vorbin_cube.fits')
-        vorbin_map = fits.getdata(gal_dir + '/vorbin_map.fits')
+        # c = fits.open(gal_dir + '/' + gal + '_vorbin_cube.fits')
+        # vorbin_map = fits.getdata(gal_dir + '/vorbin_map.fits')
 
         if int(config.get('spec_fit', 'resol_flag')) == 1:
             fwhm_str = gal_dir + '/resol_table_aps.txt'
@@ -208,20 +209,20 @@ def specs(self):
 
         # create RSS file
 
-        wave = c[0].header['CRVAL3'] + (c[0].header['CDELT3'] * np.arange(c[0].header['NAXIS3']))
+        wave = c[1].header['CRVAL3'] + (c[1].header['CDELT3'] * np.arange(c[1].header['NAXIS3']))
 
         rss_data = np.zeros((len(np.unique(vorbin_map[vorbin_map >= 0])), len(wave)), dtype=np.float32)
         rss_err = np.zeros((len(np.unique(vorbin_map[vorbin_map >= 0])), len(wave)), dtype=np.float32)
 
-        for i in np.unique(vorbin_map[vorbin_map >= 0]):
-            rss_data[int(i)] = c[0].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]]
-            rss_err[int(i)] = c[1].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]]
+        for i in np.unique(vorbin_map[vorbin_map >= 0]).astype(int):
+            rss_data[i] = c[1].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]]
+            rss_err[i] = c[2].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]]
             if int(config.get('spec_fit', 'cosm_flag')) == 1:
-                diff = np.diff(rss_data[int(i)])
+                diff = np.diff(rss_data[i])
                 limit = int(config.get('spec_fit', 'cosm_limit')) * np.nanstd(diff)
                 for j in np.where(diff > limit)[0]:
-                    rss_data[int(i)][j - 4:j + 5] = (np.nanmedian(rss_data[int(i)][j - 10:j - 5]) +
-                                                     np.nanmedian(rss_data[int(i)][j + 5:j + 10])) / 2.
+                    rss_data[i][j - 4:j + 5] = (np.nanmedian(rss_data[i][j - 10:j - 5]) +
+                                                     np.nanmedian(rss_data[i][j + 5:j + 10])) / 2.
 
         rss_head = fits.Header()
         rss_head['SIMPLE'] = True

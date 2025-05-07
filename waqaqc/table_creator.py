@@ -24,20 +24,25 @@ def tab_cre(self):
                                                        if ('BLUE' in x)])[-1] + '/'
 
         wcs_c = fits.open(gal_dir + '/blue_cube_vorbin.fits')
-        rss_file = fits.open(res_dir + gal + '_blue_vorbin_RSS.fits')
+        # rss_file = fits.open(res_dir + gal + '_blue_vorbin_RSS.fits')
+
+        if int(config.get('spec_fit', 'vorbin_flag')) == 1:
+            file_n = '_blue_vorbin'
+        if int(config.get('spec_fit', 'vorbin_flag')) == 0:
+            file_n = '_blue'
 
         if int(config.get('spec_fit', 'EL_flag')) == 1:
-            elinm_file = fits.open(res_dir + gal + '_blue_vorbin.eline_model.fits')
-            elinr_file = fits.open(res_dir + gal + '_blue_vorbin.eline_res.fits')
+            elinm_file = fits.open(res_dir + gal + file_n + '.eline_model.fits')
+            elinr_file = fits.open(res_dir + gal + file_n + '.eline_res.fits')
 
-            elint_file = fits.open(res_dir + gal + '_blue_vorbin.eline_table.fits')
+            elint_file = fits.open(res_dir + gal + file_n + '.eline_table.fits')
 
             elint_t = Table(elint_file[1].data)
 
-        contm_file = fits.open(res_dir + gal + '_blue_vorbin.cont_model.fits')
-        contr_file = fits.open(res_dir + gal + '_blue_vorbin.cont_res.fits')
+        contm_file = fits.open(res_dir + gal + file_n + '.cont_model.fits')
+        contr_file = fits.open(res_dir + gal + file_n + '.cont_res.fits')
 
-        stelt_file = fits.open(res_dir + gal + '_blue_vorbin.stellar_table.fits')
+        stelt_file = fits.open(res_dir + gal + file_n + '.stellar_table.fits')
 
         vorbin_map = fits.getdata(gal_dir + '/vorbin_map_blue.fits')
 
@@ -82,30 +87,43 @@ def tab_cre(self):
 
         stel_template = fits.open(config.get('table_creator', 'template_dir') + lines[1].split()[1])
 
-        contm_data = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
-        contm_err = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
-        contm_badp = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
-        contm_norm = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
-        contr_data = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
-            elinm_data = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
-            elinr_data = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
-
-        cnt = 0
-        for i in np.unique(vorbin_map[np.isfinite(vorbin_map)]).astype(int):
-            contm_data.T[vorbin_map.T == i] = contm_file[0].data[i]
-            contm_err.T[vorbin_map.T == i] = contm_file[1].data[i]
-            contm_badp.T[vorbin_map.T == i] = contm_file[2].data[i]
-            contm_norm.T[vorbin_map.T == i] = contm_file[3].data[i]
-            contr_data.T[vorbin_map.T == i] = contr_file[0].data[i]
+        if int(config.get('spec_fit', 'vorbin_flag')) == 1:
+            n_shape = (contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2])
+            contm_data = np.zeros(n_shape)
+            contm_err = np.zeros(n_shape)
+            contm_badp = np.zeros(n_shape)
+            contm_norm = np.zeros(n_shape)
+            contr_data = np.zeros(n_shape)
             if int(config.get('spec_fit', 'EL_flag')) == 1:
-                elinm_data.T[vorbin_map.T == i] = elinm_file[0].data[i]
-                elinr_data.T[vorbin_map.T == i] = elinr_file[0].data[i]
-            print('Rearranging into datacube formats: ' + str(
-                round(100. * cnt / np.unique(vorbin_map[np.isfinite(vorbin_map)]).shape[0], 2)) + '%', end='\r')
-            cnt += 1
+                elinm_data = np.zeros(n_shape)
+                elinr_data = np.zeros(n_shape)
 
-        print('')
+            cnt = 0
+            for i in np.unique(vorbin_map[np.isfinite(vorbin_map)]).astype(int):
+                contm_data.T[vorbin_map.T == i] = contm_file[0].data[i]
+                contm_err.T[vorbin_map.T == i] = contm_file[1].data[i]
+                contm_badp.T[vorbin_map.T == i] = contm_file[2].data[i]
+                contm_norm.T[vorbin_map.T == i] = contm_file[3].data[i]
+                contr_data.T[vorbin_map.T == i] = contr_file[0].data[i]
+                if int(config.get('spec_fit', 'EL_flag')) == 1:
+                    elinm_data.T[vorbin_map.T == i] = elinm_file[0].data[i]
+                    elinr_data.T[vorbin_map.T == i] = elinr_file[0].data[i]
+                print('Rearranging into datacube formats: ' + str(
+                    round(100. * cnt / np.unique(vorbin_map[np.isfinite(vorbin_map)]).shape[0], 2)) + '%', end='\r')
+                cnt += 1
+
+            print('')
+
+        if int(config.get('spec_fit', 'vorbin_flag')) == 0:
+            n_shape = (wcs_c[1].data.shape[2], wcs_c[1].data.shape[1], contm_file[0].data.shape[1])
+            contm_data = contm_file[0].data.reshape(n_shape).T
+            contm_err = contm_file[1].data.reshape(n_shape).T
+            contm_badp = contm_file[2].data.reshape(n_shape).T
+            contm_norm = contm_file[3].data.reshape(n_shape).T
+            contr_data = contr_file[0].data.reshape(n_shape).T
+            if int(config.get('spec_fit', 'EL_flag')) == 1:
+                elinm_data = elinm_file[0].data.reshape(n_shape).T
+                elinr_data = elinr_file[0].data.reshape(n_shape).T
 
         tab_st = stelt_t.copy()
 
@@ -542,9 +560,9 @@ def tab_cre(self):
                                                        if ('APS' in x)])[-1] + '/'
 
         wcs_c = fits.open(gal_dir + '/' + gal + '_cube.fits')
-        # c = fits.open(gal + '/APS_cube_vorbin.fits')
-        c = fits.open(gal_dir + '/' + gal + '_vorbin_cube.fits')
-        rss_file = fits.open(res_dir + gal + '_APS_vorbin_RSS.fits')
+        c = fits.open(gal_dir + '/aps_cube_vorbin.fits')
+        # c = fits.open(gal_dir + '/' + gal + '_vorbin_cube.fits')
+        # rss_file = fits.open(res_dir + gal + '_APS_vorbin_RSS.fits')
 
         contm_file = fits.open(res_dir + gal + '_APS_vorbin.cont_model.fits')
         contr_file = fits.open(res_dir + gal + '_APS_vorbin.cont_res.fits')
@@ -559,7 +577,7 @@ def tab_cre(self):
 
             elint_t = Table(elint_file[1].data)
 
-        vorbin_map = fits.getdata(gal_dir + '/vorbin_map.fits')
+        vorbin_map = fits.getdata(gal_dir + '/vorbin_map_aps.fits')
 
         params_stel = open(res_dir + '/parameters_stellar_aps', 'r')
         lines = params_stel.readlines()

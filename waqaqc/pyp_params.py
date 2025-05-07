@@ -2,10 +2,11 @@ import configparser
 from astropy import constants as const
 from astropy.io import fits
 
+
 def pp(self):
     config = configparser.ConfigParser()
     config.read(self)
-    
+
     blue_cube = fits.open(config.get('APS_cube', 'file_dir') + config.get('QC_plots', 'blue_cube'))
 
     # =======
@@ -21,7 +22,7 @@ def pp(self):
 
         # =======
         # create stellar parameters file
-        
+
         vel = round(vel + (const.c.to('km/s').value * z), 1)
 
         f = open("parameters_stellar_blue", "w+")
@@ -37,10 +38,12 @@ def pp(self):
             '!Number of the template spectrum as an inital guess (integer)\n')
         f.write('vel_guess          ' + str(vel) +
                 '                                  !rough velocity guess for the object in km/s as cz (float)\n')
-        f.write('vel_min            ' + str(vel - float(config.get('pyp_params', 'vel_range'))) + '                                  '
-                                                         '!minimum velocity in km/s (float)\n')
-        f.write('vel_max            ' + str(vel + float(config.get('pyp_params', 'vel_range'))) + '                                  '
-                                                         '!maximum velocity in km/s (float)\n')
+        f.write('vel_min            ' + str(
+            vel - float(config.get('pyp_params', 'vel_range'))) + '                                  '
+                                                                  '!minimum velocity in km/s (float)\n')
+        f.write('vel_max            ' + str(
+            vel + float(config.get('pyp_params', 'vel_range'))) + '                                  '
+                                                                  '!maximum velocity in km/s (float)\n')
         f.write(
             'disp_min           10.0                                        '
             '!minimum velocity dispersion in km/s (float)\n')
@@ -109,7 +112,8 @@ def pp(self):
         f.write('eCompFile		par_blue.lines				!name of the line parameter file, None '
                 'if no emission lines to be fitted\n')
         f.write(
-            'vel_guess		' + str(vel) + '				!rough velocity guess for the object in km/s as cz (float)\n')
+            'vel_guess		' + str(
+                vel) + '				!rough velocity guess for the object in km/s as cz (float)\n')
         f.write('line_fit_region	lines_blue.fit				'
                 '!Wavelength regions considered during the fitting '
                 '(string)\n')
@@ -209,7 +213,7 @@ def pp(self):
         if z < 1.392:
             h.write('4320  4375\n')
         # if z < 1.307:
-            # h.write('4600  4750\n')
+        # h.write('4600  4750\n')
         if z < 1.242:
             h.write('4840  4880\n')
         if z < 1.217:
@@ -225,7 +229,7 @@ def pp(self):
             h.write('5470 5590    ! weave (blue gap + red part)\n')
         if blue_cube[0].header['MODE'] == 'HIGHRES':
             h.write('4690 4730    ! weave (blue border)\n')
-            h.write('5330 5350    ! weave (blue gap)\n') # should be 5300-5320
+            h.write('5330 5350    ! weave (blue gap)\n')  # should be 5300-5320
             h.write('5500 5510    ! weave (red border)\n')
         h.close()
 
@@ -250,7 +254,7 @@ def pp(self):
             f.write('5470 5590    ! weave (blue gap + red part)\n')
         if blue_cube[0].header['MODE'] == 'HIGHRES':
             f.write('4690 4730    ! weave (blue border)\n')
-            f.write('5330 5350    ! weave (blue gap)\n') # should be 5300-5320
+            f.write('5330 5350    ! weave (blue gap)\n')  # should be 5300-5320
             f.write('5500 5510    ! weave (red border)\n')
         f.close()
 
@@ -348,7 +352,8 @@ def pp(self):
         f.write('eCompFile		par_red.lines				!name of the line parameter file, None '
                 'if no emission lines to be fitted\n')
         f.write(
-            'vel_guess		' + str(vel) + '				!rough velocity guess for the object in km/s as cz (float)\n')
+            'vel_guess		' + str(
+                vel) + '				!rough velocity guess for the object in km/s as cz (float)\n')
         f.write('line_fit_region	lines_red.fit				'
                 '!Wavelength regions considered during the fitting '
                 '(string)\n')
@@ -603,7 +608,8 @@ def pp(self):
         f.write('eCompFile		par_aps.lines				!name of the line parameter file, None '
                 'if no emission lines to be fitted\n')
         f.write(
-            'vel_guess		' + str(vel) + '				!rough velocity guess for the object in km/s as cz (float)\n')
+            'vel_guess		' + str(
+                vel) + '				!rough velocity guess for the object in km/s as cz (float)\n')
         f.write('line_fit_region	lines_aps.fit				'
                 '!Wavelength regions considered during the fitting '
                 '(string)\n')
@@ -647,7 +653,7 @@ def pp(self):
 
             g.write('Gauss: NII_6548\n')
             g.write('restwave 6547.96\n')
-            g.write('flux NII6583:0.33\n')
+            g.write('flux NII_6583:0.33\n')
             g.write('vel Ha_6562\n')
             g.write('disp Ha_6562\n')
             g.write('\n')
@@ -680,7 +686,7 @@ def pp(self):
             g.write('Gauss: SII_6730\n')
             g.write('restwave 6730.68\n')
             g.write('flux ' + str(line_flux) + ' 1\n')
-            g.write('disp SII_6716\n')
+            g.write('vel SII_6716\n')
             g.write('disp SII_6716\n')
             g.write('\n')
 
@@ -790,9 +796,11 @@ def pp(self):
 
         h.write('[observed-frame]\n')
         if blue_cube[0].header['MODE'] == 'LOWRES':
-            h.write(str(round(5470. / (1 + z))) + ' ' + str(round(5590. / (1 + z))) + '    ! weave (blue gap + red part)\n')
+            h.write(
+                str(round(5470. / (1 + z))) + ' ' + str(round(5590. / (1 + z))) + '    ! weave (blue gap + red part)\n')
         if blue_cube[0].header['MODE'] == 'HIGHRES':
-            h.write(str(round(5330. / (1 + z))) + ' ' + str(round(5350. / (1 + z))) + '    ! weave (blue gap)\n')  # should be 5300-5320
+            h.write(str(round(5330. / (1 + z))) + ' ' + str(
+                round(5350. / (1 + z))) + '    ! weave (blue gap)\n')  # should be 5300-5320
         h.write(str(round(6860. / (1 + z))) + ' ' + str(round(6890. / (1 + z))) + '    ! telluric lines\n')
         if blue_cube[0].header['MODE'] == 'LOWRES':
             h.write(str(round(7560. / (1 + z))) + ' ' + str(round(7710. / (1 + z))) + '    ! weave (red gap)\n')
@@ -826,9 +834,11 @@ def pp(self):
         f.write('\n')
         f.write('[observed-frame]\n')
         if blue_cube[0].header['MODE'] == 'LOWRES':
-            f.write(str(round(5470. / (1 + z))) + ' ' + str(round(5590. / (1 + z))) + '    ! weave (blue gap + red part)\n')
+            f.write(
+                str(round(5470. / (1 + z))) + ' ' + str(round(5590. / (1 + z))) + '    ! weave (blue gap + red part)\n')
         if blue_cube[0].header['MODE'] == 'HIGHRES':
-            f.write(str(round(5330. / (1 + z))) + ' ' + str(round(5350. / (1 + z))) + '    ! weave (blue gap)\n')  # should be 5300-5320
+            f.write(str(round(5330. / (1 + z))) + ' ' + str(
+                round(5350. / (1 + z))) + '    ! weave (blue gap)\n')  # should be 5300-5320
         f.write(str(round(6860. / (1 + z))) + ' ' + str(round(6890. / (1 + z))) + '    ! telluric lines\n')
         if blue_cube[0].header['MODE'] == 'LOWRES':
             f.write(str(round(7560. / (1 + z))) + ' ' + str(round(7710. / (1 + z))) + '    ! weave (red gap)\n')
