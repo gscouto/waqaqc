@@ -6,15 +6,28 @@ import multiprocessing as mp
 import gc
 import configparser
 from astropy.wcs import WCS
+import tqdm
+
+_wave = None
+_n_wave = None
+
+
+def init_globals(wave, n_wave):
+    global _wave, _n_wave
+    _wave = wave
+    _n_wave = n_wave
 
 
 def forloop(args):
-    i, n_wave, wave, c_spec, c_espec = args
+    i, c_spec, c_espec = args
 
-    n_flux, n_err = spectres.spectres(n_wave, wave, c_spec, c_espec)
+    n_flux, n_err = spectres.spectres(_n_wave, _wave, c_spec, c_espec)
 
-    if (i / 500.).is_integer():
-        print(i)
+    n_flux = np.array(n_flux, dtype=np.float32)
+    n_err = np.array(n_err, dtype=np.float32)
+
+    ## if (i / 500.).is_integer():
+    ##     print(i)
 
     return n_flux, n_err
 
@@ -39,9 +52,9 @@ def cube_creator(self):
 
     wave = np.exp(c[1].data['LOGLAM'][0])
     if wcs_c[0].header['MODE'] == 'HIGHRES':
-        n_wave = np.arange(min(wave)+0.1, max(wave), 0.1)
+        n_wave = np.arange(min(wave) + 0.1, max(wave), 0.1)
     elif wcs_c[0].header['MODE'] == 'LOWRES':
-        n_wave = np.arange(min(wave)+0.5, max(wave), 0.5)
+        n_wave = np.arange(min(wave) + 0.5, max(wave), 0.5)
 
     axis_header = fits.Header()
     axis_header['NAXIS1'] = wcs_c[1].header['NAXIS1']
@@ -74,24 +87,18 @@ def cube_creator(self):
 
     x_pix, y_pix = pix_map.T.astype(int)
 
-    rss_data = np.zeros((c[1].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
-    rss_err = np.zeros((c[1].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
-    vorbin_cube_data = np.zeros((c[3].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
-    vorbin_cube_err = np.zeros((c[3].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
-
-    apsid_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
-    vorbin_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
-    stel_vel_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
-    aps_maps = np.zeros((len(c[4].data.names) - 1, np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
-
     print('')
     print('Recreating original datacube from APS file. This may take a few minutes...')
     ext = 1
 
-    with mp.Pool(int(config.get('APS_cube', 'n_proc'))) as pool:
-        rss = pool.starmap(forloop, zip((i, n_wave, wave, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
-                                        for i in np.arange(c[ext].data['SPEC'].shape[0])))
+    with mp.Pool(int(config.get('APS_cube', 'n_proc')), initializer=init_globals, initargs=(wave, n_wave)) as pool:
+        rss = pool.starmap(forloop, tqdm.tqdm(zip((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
+                                                  for i in np.arange(c[ext].data['SPEC'].shape[0])),
+                                              total=c[ext].data['SPEC'].shape[0]))
 
+    rss_data = np.empty((c[1].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
+    rss_err = np.empty((c[1].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
+    
     for i in np.arange(c[ext].data['SPEC'].shape[0]):
         rss_data[i] = rss[i][0]
         rss_err[i] = rss[i][1]
@@ -99,12 +106,22 @@ def cube_creator(self):
     del rss
     gc.collect()
 
+    vorbin_cube_data = np.zeros((c[3].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
+    vorbin_cube_err = np.zeros((c[3].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
+
+    apsid_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
+    vorbin_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
+    stel_vel_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
+    aps_maps = np.zeros(
+        (len(c[4].data.names) - 1, np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
+
     print('')
     print('Recreating Voronoi binning datacube from APS file. This may take a few minutes...')
     ext = 3
-    with mp.Pool(int(config.get('APS_cube', 'n_proc'))) as pool:
-        vorbin = pool.starmap(forloop, zip((i, n_wave, wave, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
-                                           for i in np.arange(c[ext].data['SPEC'].shape[0])))
+    with mp.Pool(int(config.get('APS_cube', 'n_proc')), initializer=init_globals, initargs=(wave, n_wave)) as pool:
+        vorbin = pool.starmap(forloop, tqdm.tqdm(zip((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
+                                           for i in np.arange(c[ext].data['SPEC'].shape[0])),
+                                              total=c[ext].data['SPEC'].shape[0]))
 
     for i in np.arange(c[ext].data['SPEC'].shape[0]):
         vorbin_cube_data[i] = vorbin[i][0]
@@ -113,17 +130,17 @@ def cube_creator(self):
     del vorbin
     gc.collect()
 
-    cube_data = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1))
-    cube_err = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1))
-    vorbin_data = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1))
-    vorbin_err = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1))
+    cube_data = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1), dtype=np.float32)
+    cube_err = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1), dtype=np.float32)
+    vorbin_data = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1), dtype=np.float32)
+    vorbin_err = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1), dtype=np.float32)
 
     aps_maps_names = []
 
     cnt = 0
     #
     for j in np.arange(len(c[4].data.names) - 1):
-        aps_maps_names.append(c[4].data.names[j+1])
+        aps_maps_names.append(c[4].data.names[j + 1])
     for i in pix_mapt:
         apsid_map[i[1], i[0]] = aps_id[cnt]
         vorbin_map[i[1], i[0]] = bin_id[cnt]
@@ -138,11 +155,11 @@ def cube_creator(self):
             vorbin_data[:, i[1], i[0]] = vorbin_cube_data[r_bin_id == vorbin_map[i[1], i[0]]][0] / \
                                          len(np.where(vorbin_map == vorbin_map[i[1], i[0]])[0])
             vorbin_err[:, i[1], i[0]] = vorbin_cube_err[r_bin_id == vorbin_map[i[1], i[0]]][0] / \
-                                         len(np.where(vorbin_map == vorbin_map[i[1], i[0]])[0])
+                                        len(np.where(vorbin_map == vorbin_map[i[1], i[0]])[0])
             stel_vel_map[i[1], i[0]] = c[4].data['V'][r_bin_id == bin_id[cnt]]
             for j in np.arange(len(c[4].data.names) - 1):
-                if len(c[4].data[c[4].data.names[j+1]][r_bin_id == bin_id[cnt]].shape) == 1:
-                    aps_maps[j, i[1], i[0]] = c[4].data[c[4].data.names[j+1]][r_bin_id == bin_id[cnt]]
+                if len(c[4].data[c[4].data.names[j + 1]][r_bin_id == bin_id[cnt]].shape) == 1:
+                    aps_maps[j, i[1], i[0]] = c[4].data[c[4].data.names[j + 1]][r_bin_id == bin_id[cnt]]
                 else:
                     np.delete(aps_maps, j, axis=0)
         print('Rearranging into datacube formats: ' + str(
@@ -209,9 +226,11 @@ def cube_creator(self):
     map_head['CUNIT1'] = 'deg'
     map_head['CUNIT2'] = 'deg'
 
-    n_cube = fits.HDUList([fits.PrimaryHDU(data=cube_data, header=cube_head),
+    n_cube = fits.HDUList([fits.PrimaryHDU(),
+                           fits.ImageHDU(data=cube_data, header=cube_head, name='DATA'),
                            fits.ImageHDU(data=cube_err, header=cube_head, name='ERROR')])
-    n_vorbin = fits.HDUList([fits.PrimaryHDU(data=vorbin_data, header=cube_head),
+    n_vorbin = fits.HDUList([fits.PrimaryHDU(),
+                             fits.ImageHDU(data=vorbin_data, header=cube_head, name='DATA'),
                              fits.ImageHDU(data=vorbin_err, header=cube_head, name='ERROR')])
     maps_HDU = fits.HDUList([fits.PrimaryHDU()])
     for i in np.arange(len(aps_maps)):
