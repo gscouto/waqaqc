@@ -26,9 +26,6 @@ def forloop(args):
     n_flux = np.array(n_flux, dtype=np.float32)
     n_err = np.array(n_err, dtype=np.float32)
 
-    ## if (i / 500.).is_integer():
-    ##     print(i)
-
     return n_flux, n_err
 
 
@@ -123,9 +120,13 @@ def cube_creator(self):
                                            for i in np.arange(c[ext].data['SPEC'].shape[0])),
                                               total=c[ext].data['SPEC'].shape[0]))
 
+    print('oi0')
+
     for i in np.arange(c[ext].data['SPEC'].shape[0]):
         vorbin_cube_data[i] = vorbin[i][0]
         vorbin_cube_err[i] = vorbin[i][1]
+
+    print ('oi1')
 
     del vorbin
     gc.collect()
@@ -146,6 +147,8 @@ def cube_creator(self):
         vorbin_map[i[1], i[0]] = bin_id[cnt]
         cnt += 1
 
+    print('oi2')
+
     cnt = 0
     for i in pix_mapt:
         if apsid_map[i[1], i[0]] >= 0:
@@ -165,6 +168,8 @@ def cube_creator(self):
         print('Rearranging into datacube formats: ' + str(
             round(100. * cnt / pix_mapt.shape[0], 2)) + '%', end='\r')
         cnt += 1
+
+    print('oi3')
 
     del rss_data, rss_err, vorbin_cube_data, vorbin_cube_err
     gc.collect()
