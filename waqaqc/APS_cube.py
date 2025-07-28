@@ -119,9 +119,13 @@ def cube_creator(self):
     print('Recreating Voronoi binning datacube from APS file. This may take a few minutes...')
     ext = 3
     with mp.Pool(int(config.get('APS_cube', 'n_proc')), initializer=init_globals, initargs=(wave, n_wave)) as pool:
-        vorbin = pool.starmap(forloop, tqdm.tqdm(zip((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
-                                                     for i in np.arange(c[ext].data['SPEC'].shape[0])),
-                                                 total=c[ext].data['SPEC'].shape[0]))
+        # vorbin = pool.starmap(forloop, tqdm.tqdm(zip((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
+        #                                              for i in np.arange(c[ext].data['SPEC'].shape[0])),
+        #                                          total=c[ext].data['SPEC'].shape[0]))
+        vorbin = list(tqdm.tqdm(pool.imap_unordered(forloop,
+                                                    ((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
+                                                     for i in range(c[ext].data['SPEC'].shape[0]))),
+                                total=c[ext].data['SPEC'].shape[0]))
 
     print('oi0')
 
