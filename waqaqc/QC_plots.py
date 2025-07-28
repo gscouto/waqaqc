@@ -1188,20 +1188,25 @@ def html_plots(self):
                                                                                       targetSN, pixelsize=pixelsize,
                                                                                       plot=0,
                                                                                       quiet=1, sn_func=sn_func_blue)
+            vorbin_sn = targetSN
         except:
             binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_b, y_t_b, sgn_tt_b, rms_tt_b,
                                                                                       10, pixelsize=pixelsize, plot=0,
                                                                                       quiet=1, sn_func=sn_func_blue)
+            vorbin_sn = 10.
     else:
         try:
             binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_b, y_t_b, sgn_tt_b, rms_tt_b,
                                                                                       targetSN, pixelsize=pixelsize,
                                                                                       plot=0,
                                                                                       quiet=1)
+            vorbin_sn = targetSN
         except:
             binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_b, y_t_b, sgn_tt_b, rms_tt_b,
                                                                                       10, pixelsize=pixelsize, plot=0,
                                                                                       quiet=1)
+            vorbin_sn = 10.
+
     ax = plt.subplot(gs[17, 0])
 
     xmin, xmax = 0, sgn_b.shape[1] - 1
@@ -1220,7 +1225,7 @@ def html_plots(self):
     ax.set_xlim(ims_xlims)
     ax.set_ylim(ims_ylims)
     ax.imshow(snr_b * 0., zorder=-1, cmap='Greys', interpolation='nearest')
-    ax.set_title(r'Voronoi binning / Target SNR = ' + str(targetSN))
+    ax.set_title(r'Voronoi binning / Target SNR = ' + str(vorbin_sn))
 
     ax = plt.subplot(gs[18, 0])
 
@@ -1231,7 +1236,7 @@ def html_plots(self):
     ax.set_xlabel('R [pixels]')
     ax.set_ylabel('Bin S/N')
     ax.axis([np.min(rad), np.max(rad), 0, np.max(sn) * 1.05])  # x0, x1, y0, y1
-    ax.axhline(targetSN)
+    ax.axhline(vorbin_sn)
     ax.legend()
 
     fits.writeto(gal_dir + 'vorbin_map_blue.fits', np.flip(np.rot90(img), axis=0), overwrite=True)
@@ -1298,20 +1303,24 @@ def html_plots(self):
                                                                                       targetSN, pixelsize=pixelsize,
                                                                                       plot=0,
                                                                                       quiet=1, sn_func=sn_func_red)
+            vorbin_sn = targetSN
         except:
             binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_r, y_t_r, sgn_tt_r, rms_tt_r,
                                                                                       10, pixelsize=pixelsize, plot=0,
                                                                                       quiet=1, sn_func=sn_func_red)
+            vorbin_sn = 10.
     else:
         try:
             binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_r, y_t_r, sgn_tt_r, rms_tt_r,
                                                                                       targetSN, pixelsize=pixelsize,
                                                                                       plot=0,
                                                                                       quiet=1)
+            vorbin_sn = targetSN
         except:
             binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_r, y_t_r, sgn_tt_r, rms_tt_r,
                                                                                       10, pixelsize=pixelsize, plot=0,
                                                                                       quiet=1)
+            vorbin_sn = 10.
 
     ax = plt.subplot(gs[17, 1])
 
@@ -1331,7 +1340,7 @@ def html_plots(self):
     ax.set_xlim(ims_xlims)
     ax.set_ylim(ims_ylims)
     ax.imshow(snr_r * 0., zorder=-1, cmap='Greys', interpolation='nearest')
-    ax.set_title(r'Voronoi binning / Target SNR = ' + str(targetSN))
+    ax.set_title(r'Voronoi binning / Target SNR = ' + str(vorbin_sn))
 
     ax = plt.subplot(gs[18, 1])
 
@@ -1342,7 +1351,7 @@ def html_plots(self):
     ax.set_xlabel('R [pixels]')
     ax.set_ylabel('Bin S/N')
     ax.axis([np.min(rad), np.max(rad), 0, np.max(sn) * 1.05])  # x0, x1, y0, y1
-    ax.axhline(targetSN)
+    ax.axhline(vorbin_sn)
     ax.legend()
 
     fits.writeto(gal_dir + 'vorbin_map_red.fits', np.flip(np.rot90(img), axis=0), overwrite=True)
@@ -1567,12 +1576,14 @@ def html_plots(self):
                                                                                           targetSN, pixelsize=pixelsize,
                                                                                           plot=0,
                                                                                           quiet=1, sn_func=sn_func_aps)
+                vorbin_sn = targetSN
             except:
                 binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_a, y_t_a, sgn_tt_a,
                                                                                           rms_tt_a,
                                                                                           10, pixelsize=pixelsize,
                                                                                           plot=0,
                                                                                           quiet=1, sn_func=sn_func_aps)
+                vorbin_sn = 10.
         else:
             try:
                 binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_a, y_t_a, sgn_tt_a,
@@ -1580,12 +1591,14 @@ def html_plots(self):
                                                                                           targetSN, pixelsize=pixelsize,
                                                                                           plot=0,
                                                                                           quiet=1)
+                vorbin_sn = targetSN
             except:
                 binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_a, y_t_a, sgn_tt_a,
                                                                                           rms_tt_a,
                                                                                           10, pixelsize=pixelsize,
                                                                                           plot=0,
                                                                                           quiet=1)
+                vorbin_sn = 10.
 
         ax = plt.subplot(gs[2, 0])
 
@@ -1604,7 +1617,7 @@ def html_plots(self):
         ax.plot(xNode, yNode, '+w', scalex=False, scaley=False)  # do not rescale after imshow()
         ax.set_xlabel('X [px]')
         ax.set_ylabel('Y [px]')
-        ax.set_title(r'Voronoi binning / Target SNR = ' + str(targetSN))
+        ax.set_title(r'Voronoi binning / Target SNR = ' + str(vorbin_sn))
 
         fits.writeto(gal_dir + 'vorbin_map_aps.fits', np.flip(np.rot90(img), axis=0), overwrite=True)
 
@@ -1617,7 +1630,7 @@ def html_plots(self):
         ax.set_xlabel('R [pixels]')
         ax.set_ylabel('Bin S/N')
         ax.axis([np.min(rad), np.max(rad), 0, np.max(sn) * 1.05])  # x0, x1, y0, y1
-        ax.axhline(targetSN)
+        ax.axhline(vorbin_sn)
         ax.legend()
 
         # saving voronoi datacube

@@ -125,7 +125,7 @@ def cube_creator(self):
         vorbin = list(tqdm.tqdm(pool.imap_unordered(forloop,
                                                     ((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
                                                      for i in range(c[ext].data['SPEC'].shape[0]))),
-                                total=c[ext].data['SPEC'].shape[0]))
+                                total=c[ext].data['SPEC'].shape[0], chunksize=1))
 
     print('oi0')
 
