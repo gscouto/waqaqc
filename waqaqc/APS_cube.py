@@ -21,6 +21,9 @@ def init_globals(wave, n_wave):
 def forloop(args):
     i, c_spec, c_espec = args
 
+    if i % 100 == 0:
+        print(f"Processing spectrum {i}")
+
     n_flux, n_err = spectres.spectres(_n_wave, _wave, c_spec, c_espec)
 
     n_flux = np.array(n_flux, dtype=np.float32)
@@ -95,7 +98,7 @@ def cube_creator(self):
 
     rss_data = np.empty((c[1].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
     rss_err = np.empty((c[1].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
-    
+
     for i in np.arange(c[ext].data['SPEC'].shape[0]):
         rss_data[i] = rss[i][0]
         rss_err[i] = rss[i][1]
@@ -117,8 +120,8 @@ def cube_creator(self):
     ext = 3
     with mp.Pool(int(config.get('APS_cube', 'n_proc')), initializer=init_globals, initargs=(wave, n_wave)) as pool:
         vorbin = pool.starmap(forloop, tqdm.tqdm(zip((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
-                                           for i in np.arange(c[ext].data['SPEC'].shape[0])),
-                                              total=c[ext].data['SPEC'].shape[0]))
+                                                     for i in np.arange(c[ext].data['SPEC'].shape[0])),
+                                                 total=c[ext].data['SPEC'].shape[0]))
 
     print('oi0')
 
@@ -126,15 +129,19 @@ def cube_creator(self):
         vorbin_cube_data[i] = vorbin[i][0]
         vorbin_cube_err[i] = vorbin[i][1]
 
-    print ('oi1')
+    print('oi1')
 
     del vorbin
     gc.collect()
 
-    cube_data = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1), dtype=np.float32)
-    cube_err = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1), dtype=np.float32)
-    vorbin_data = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1), dtype=np.float32)
-    vorbin_err = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1), dtype=np.float32)
+    cube_data = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1),
+                         dtype=np.float32)
+    cube_err = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1),
+                        dtype=np.float32)
+    vorbin_data = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1),
+                           dtype=np.float32)
+    vorbin_err = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1),
+                          dtype=np.float32)
 
     aps_maps_names = []
 
