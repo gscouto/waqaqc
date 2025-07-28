@@ -4,9 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="562a2c0d-57fa-4579-a39d-519034de1ccf" name="Changes" comment="Several changes in the QC plots.">
+    <list default="true" id="562a2c0d-57fa-4579-a39d-519034de1ccf" name="Changes" comment="Update on APS cube to test it in lustre.">
+      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/waqaqc/APS_cube.py" beforeDir="false" afterPath="$PROJECT_DIR$/waqaqc/APS_cube.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -46,7 +46,14 @@
       <option name="project" value="LOCAL" />
       <updated>1753698000584</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Update on APS cube to test it in lustre.">
+      <created>1753698252808</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1753698252808</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -62,6 +69,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Several changes in the QC plots." />
-    <option name="LAST_COMMIT_MESSAGE" value="Several changes in the QC plots." />
+    <MESSAGE value="Update on APS cube to test it in lustre." />
+    <option name="LAST_COMMIT_MESSAGE" value="Update on APS cube to test it in lustre." />
   </component>
 </project>
