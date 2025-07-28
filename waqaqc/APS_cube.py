@@ -21,9 +21,6 @@ def init_globals(wave, n_wave):
 def forloop(args):
     i, c_spec, c_espec = args
 
-    if i % 100 == 0:
-        print(f"Processing spectrum {i}")
-
     n_flux, n_err = spectres.spectres(_n_wave, _wave, c_spec, c_espec)
 
     n_flux = np.array(n_flux, dtype=np.float32)
