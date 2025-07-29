@@ -106,6 +106,8 @@ def cube_creator(self):
     # vorbin_cube_data = np.zeros((c[3].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
     # vorbin_cube_err = np.zeros((c[3].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
 
+    ext = 3
+
     vorbin_cube_data = np.memmap('tmp_vorbin_data.dat', dtype=np.float32, mode='w+',
                                  shape=(c[ext].data['SPEC'].shape[0], len(n_wave)))
     vorbin_cube_err = np.memmap('tmp_vorbin_err.dat', dtype=np.float32, mode='w+',
@@ -119,7 +121,7 @@ def cube_creator(self):
 
     print('')
     print('Recreating Voronoi binning datacube from APS file. This may take a few minutes...')
-    ext = 3
+
     with mp.Pool(int(config.get('APS_cube', 'n_proc')), initializer=init_globals, initargs=(wave, n_wave)) as pool:
         # vorbin = pool.starmap(forloop, tqdm.tqdm(zip((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
         #                                              for i in np.arange(c[ext].data['SPEC'].shape[0])),
@@ -145,6 +147,9 @@ def cube_creator(self):
     # for i in np.arange(c[ext].data['SPEC'].shape[0]):
     #     vorbin_cube_data[i] = vorbin[i][0]
     #     vorbin_cube_err[i] = vorbin[i][1]
+
+    os.remove("tmp_vorbin_data.dat")
+    os.remove("tmp_vorbin_err.dat")
 
     gc.collect()
 
