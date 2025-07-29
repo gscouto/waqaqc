@@ -103,8 +103,8 @@ def cube_creator(self):
     del rss
     gc.collect()
 
-    vorbin_cube_data = np.zeros((c[3].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
-    vorbin_cube_err = np.zeros((c[3].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
+    # vorbin_cube_data = np.zeros((c[3].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
+    # vorbin_cube_err = np.zeros((c[3].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
 
     apsid_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
     vorbin_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
@@ -119,16 +119,27 @@ def cube_creator(self):
         # vorbin = pool.starmap(forloop, tqdm.tqdm(zip((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
         #                                              for i in np.arange(c[ext].data['SPEC'].shape[0])),
         #                                          total=c[ext].data['SPEC'].shape[0]))
-        vorbin = list(tqdm.tqdm(pool.imap_unordered(forloop,
-                                                    ((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
-                                                     for i in range(100))),
-                                total=100))
+        # vorbin = list(tqdm.tqdm(pool.imap_unordered(forloop,
+        #                                             ((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
+        #                                              for i in range(c[ext].data['SPEC'].shape[0]))),
+        #                         total=c[ext].data['SPEC'].shape[0]))
+        vorbin_cube_data = np.memmap('tmp_vorbin_data.dat', dtype=np.float32, mode='w+',
+                                     shape=(c[ext].data['SPEC'].shape[0], len(n_wave)))
+        vorbin_cube_err = np.memmap('tmp_vorbin_err.dat', dtype=np.float32, mode='w+',
+                                    shape=(c[ext].data['SPEC'].shape[0], len(n_wave)))
+        for i, (f_resampled, e_resampled) in enumerate(
+                tqdm.tqdm(pool.imap_unordered(forloop,
+                                              ((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
+                                               for i in range(c[ext].data['SPEC'].shape[0])),
+                                              chunksize=1))):
+            vorbin_cube_data[i] = f_resampled
+            vorbin_cube_err[i] = e_resampled
 
     print('oi0')
 
-    for i in np.arange(c[ext].data['SPEC'].shape[0]):
-        vorbin_cube_data[i] = vorbin[i][0]
-        vorbin_cube_err[i] = vorbin[i][1]
+    # for i in np.arange(c[ext].data['SPEC'].shape[0]):
+    #     vorbin_cube_data[i] = vorbin[i][0]
+    #     vorbin_cube_err[i] = vorbin[i][1]
 
     print('oi1')
 
