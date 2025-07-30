@@ -7,6 +7,7 @@ import gc
 import configparser
 from astropy.wcs import WCS
 import tqdm
+import time
 
 _wave = None
 _n_wave = None
@@ -122,6 +123,8 @@ def cube_creator(self):
     print('')
     print('Recreating Voronoi binning datacube from APS file. This may take a few minutes...')
 
+    start = time.time()
+
     with mp.Pool(int(config.get('APS_cube', 'n_proc')), initializer=init_globals, initargs=(wave, n_wave)) as pool:
         # vorbin = pool.starmap(forloop, tqdm.tqdm(zip((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
         #                                              for i in np.arange(c[ext].data['SPEC'].shape[0])),
@@ -130,30 +133,29 @@ def cube_creator(self):
         #                                             ((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
         #                                              for i in range(c[ext].data['SPEC'].shape[0]))),
         #                         total=c[ext].data['SPEC'].shape[0]))
-        for i, (f_resampled, e_resampled) in enumerate(
-                tqdm.tqdm(pool.imap_unordered(forloop,
-                                              ((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
-                                               for i in range(c[ext].data['SPEC'].shape[0])),
-                                              chunksize=1))):
-
-        # for i, (f_resampled, e_resampled) in tqdm.tqdm(
-        #         enumerate(pool.imap_unordered(forloop,
+        # for i, (f_resampled, e_resampled) in enumerate(
+        #         tqdm.tqdm(pool.imap_unordered(forloop,
         #                                       ((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
         #                                        for i in range(c[ext].data['SPEC'].shape[0])),
-        #                                       chunksize=1)), total=c[ext].data['SPEC'].shape[0]):
+        #                                       chunksize=1))):
+
+        for i, (f_resampled, e_resampled) in tqdm.tqdm(
+                enumerate(pool.imap_unordered(forloop,
+                                              ((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
+                                               for i in range(c[ext].data['SPEC'].shape[0])),
+                                              chunksize=1)), total=c[ext].data['SPEC'].shape[0]):
             vorbin_cube_data[i] = f_resampled
             vorbin_cube_err[i] = e_resampled
 
+    vorbin_cube_data.flush()
+    vorbin_cube_err.flush()
+
+    print("Finished imap + flush:", time.time() - start)
     print('oi')
 
     # for i in np.arange(c[ext].data['SPEC'].shape[0]):
     #     vorbin_cube_data[i] = vorbin[i][0]
     #     vorbin_cube_err[i] = vorbin[i][1]
-
-    os.remove("tmp_vorbin_data.dat")
-    os.remove("tmp_vorbin_err.dat")
-
-    gc.collect()
 
     cube_data = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1),
                          dtype=np.float32)
@@ -196,6 +198,9 @@ def cube_creator(self):
         cnt += 1
 
     del rss_data, rss_err, vorbin_cube_data, vorbin_cube_err
+    os.remove("tmp_vorbin_data.dat")
+    os.remove("tmp_vorbin_err.dat")
+
     gc.collect()
 
     print('')
