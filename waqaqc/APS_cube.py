@@ -144,6 +144,8 @@ def cube_creator(self):
             vorbin_cube_data[i] = f_resampled
             vorbin_cube_err[i] = e_resampled
 
+    print('oi')
+
     # for i in np.arange(c[ext].data['SPEC'].shape[0]):
     #     vorbin_cube_data[i] = vorbin[i][0]
     #     vorbin_cube_err[i] = vorbin[i][1]
