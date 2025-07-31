@@ -7,6 +7,7 @@ import gc
 import configparser
 from astropy.wcs import WCS
 import tqdm
+from collections import defaultdict
 import time
 
 _wave = None
@@ -28,6 +29,28 @@ def forloop(args):
     n_err = np.array(n_err, dtype=np.float32)
 
     return n_flux, n_err
+
+
+def process_vorbin_pixel(idx_i, pix, vorbin_map, r_bin_id, bin_id,
+                         vorbin_cube_data, vorbin_cube_err, data4_V, bin_pixel_counts):
+    y, x = pix[1], pix[0]
+    bin_val = vorbin_map[y, x]
+
+    if bin_val < 0:
+        return None  # skip spaxel
+
+    try:
+        bin_mask = (r_bin_id == bin_val)
+        factor = bin_pixel_counts.get(bin_val, 1)  # avoid division by 0
+
+        data_slice = vorbin_cube_data[bin_mask][0] / factor
+        err_slice = vorbin_cube_err[bin_mask][0] / factor
+        vel_val = data4_V[r_bin_id == bin_id[idx_i]][0]
+
+        return x, y, data_slice, err_slice, vel_val
+
+    except Exception:
+        return None
 
 
 def cube_creator(self):
@@ -160,17 +183,40 @@ def cube_creator(self):
     vorbin_cube_data.flush()
     vorbin_cube_err.flush()
 
-    cnt = 0
-    for i in pix_mapt:
-        if vorbin_map[i[1], i[0]] >= 0:
-            vorbin_data[:, i[1], i[0]] = vorbin_cube_data[r_bin_id == vorbin_map[i[1], i[0]]][0] / \
-                                         len(np.where(vorbin_map == vorbin_map[i[1], i[0]])[0])
-            vorbin_err[:, i[1], i[0]] = vorbin_cube_err[r_bin_id == vorbin_map[i[1], i[0]]][0] / \
-                                        len(np.where(vorbin_map == vorbin_map[i[1], i[0]])[0])
-            stel_vel_map[i[1], i[0]] = c[4].data['V'][r_bin_id == bin_id[cnt]]
-        print('Rearranging into datacube formats: ' + str(
-            round(100. * cnt / pix_mapt.shape[0], 2)) + '%', end='\r')
-        cnt += 1
+    # cnt = 0
+    # for i in pix_mapt:
+    #     if vorbin_map[i[1], i[0]] >= 0:
+    #         vorbin_data[:, i[1], i[0]] = vorbin_cube_data[r_bin_id == vorbin_map[i[1], i[0]]][0] / \
+    #                                      len(np.where(vorbin_map == vorbin_map[i[1], i[0]])[0])
+    #         vorbin_err[:, i[1], i[0]] = vorbin_cube_err[r_bin_id == vorbin_map[i[1], i[0]]][0] / \
+    #                                     len(np.where(vorbin_map == vorbin_map[i[1], i[0]])[0])
+    #         stel_vel_map[i[1], i[0]] = c[4].data['V'][r_bin_id == bin_id[cnt]]
+    #     print('Rearranging into datacube formats: ' + str(
+    #         round(100. * cnt / pix_mapt.shape[0], 2)) + '%', end='\r')
+    #     cnt += 1
+
+    # Count how many times each bin ID appears in vorbin_map
+    bin_pixel_counts = defaultdict(int)
+    unique_bins = np.unique(vorbin_map[vorbin_map >= 0])
+    for bin_val in unique_bins:
+        bin_pixel_counts[bin_val] = np.count_nonzero(vorbin_map == bin_val)
+
+    args = [
+        (i, pix_mapt[i], vorbin_map, r_bin_id, bin_id,
+         vorbin_cube_data, vorbin_cube_err, c[4].data['V'], bin_pixel_counts)
+        for i in range(len(pix_mapt))
+    ]
+
+    results = []
+    with Pool(processes=int(config.get('APS_cube', 'n_proc'))) as pool:
+        for res in tqdm.tqdm(pool.starmap(process_vorbin_pixel, args), total=len(args)):
+            if res is not None:
+                results.append(res)
+
+    for x, y, data_slice, err_slice, vel_val in results:
+        vorbin_data[:, y, x] = data_slice
+        vorbin_err[:, y, x] = err_slice
+        stel_vel_map[y, x] = vel_val
 
     del vorbin_cube_data, vorbin_cube_err
 
