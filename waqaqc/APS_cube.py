@@ -141,30 +141,6 @@ def cube_creator(self):
     print('')
     print('Recreating Voronoi binning datacube from APS file. This may take a few minutes...')
 
-    start = time.time()
-
-    # with mp.Pool(int(config.get('APS_cube', 'n_proc')), initializer=init_globals, initargs=(wave, n_wave)) as pool:
-    #     # vorbin = pool.starmap(forloop, tqdm.tqdm(zip((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
-    #     #                                              for i in np.arange(c[ext].data['SPEC'].shape[0])),
-    #     #                                          total=c[ext].data['SPEC'].shape[0]))
-    #     # vorbin = list(tqdm.tqdm(pool.imap_unordered(forloop,
-    #     #                                             ((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
-    #     #                                              for i in range(c[ext].data['SPEC'].shape[0]))),
-    #     #                         total=c[ext].data['SPEC'].shape[0]))
-    #     # for i, (f_resampled, e_resampled) in enumerate(
-    #     #         tqdm.tqdm(pool.imap_unordered(forloop,
-    #     #                                       ((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
-    #     #                                        for i in range(c[ext].data['SPEC'].shape[0])),
-    #     #                                       chunksize=1))):
-    #
-    #     for i, (f_resampled, e_resampled) in tqdm.tqdm(
-    #             enumerate(pool.imap_unordered(forloop,
-    #                                           ((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
-    #                                            for i in range(c[ext].data['SPEC'].shape[0])),
-    #                                           chunksize=1)), total=c[ext].data['SPEC'].shape[0]):
-    #         vorbin_cube_data[i] = f_resampled
-    #         vorbin_cube_err[i] = e_resampled
-
     pool = mp.Pool(processes=int(config.get('APS_cube', 'n_proc')),
                    initializer=init_globals,
                    initargs=(wave, n_wave),
@@ -181,13 +157,8 @@ def cube_creator(self):
     pool.close()
     pool.join()
 
-    print("POOL CLOSED AND JOINED", flush=True)
-
     vorbin_cube_data.flush()
     vorbin_cube_err.flush()
-
-    print("Finished imap + flush:", time.time() - start)
-    print('oi')
 
     cnt = 0
     for i in pix_mapt:
@@ -201,13 +172,7 @@ def cube_creator(self):
             round(100. * cnt / pix_mapt.shape[0], 2)) + '%', end='\r')
         cnt += 1
 
-    # for i in np.arange(c[ext].data['SPEC'].shape[0]):
-    #     vorbin_cube_data[i] = vorbin[i][0]
-    #     vorbin_cube_err[i] = vorbin[i][1]
-
     del vorbin_cube_data, vorbin_cube_err
-    os.remove("tmp_vorbin_data.dat")
-    os.remove("tmp_vorbin_err.dat")
 
     gc.collect()
 
