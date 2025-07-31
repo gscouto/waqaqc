@@ -171,8 +171,10 @@ def cube_creator(self):
                    maxtasksperchild=10)
 
     for i, (f_resampled, e_resampled) in tqdm.tqdm(
-            enumerate(pool.imap_unordered(...)),
-            total=...):
+            enumerate(pool.imap_unordered(forloop,
+                                          ((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
+                                           for i in range(c[ext].data['SPEC'].shape[0])),
+                                          chunksize=1)), total=c[ext].data['SPEC'].shape[0]):
         vorbin_cube_data[i] = f_resampled
         vorbin_cube_err[i] = e_resampled
 
