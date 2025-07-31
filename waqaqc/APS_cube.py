@@ -143,27 +143,43 @@ def cube_creator(self):
 
     start = time.time()
 
-    with mp.Pool(int(config.get('APS_cube', 'n_proc')), initializer=init_globals, initargs=(wave, n_wave)) as pool:
-        # vorbin = pool.starmap(forloop, tqdm.tqdm(zip((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
-        #                                              for i in np.arange(c[ext].data['SPEC'].shape[0])),
-        #                                          total=c[ext].data['SPEC'].shape[0]))
-        # vorbin = list(tqdm.tqdm(pool.imap_unordered(forloop,
-        #                                             ((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
-        #                                              for i in range(c[ext].data['SPEC'].shape[0]))),
-        #                         total=c[ext].data['SPEC'].shape[0]))
-        # for i, (f_resampled, e_resampled) in enumerate(
-        #         tqdm.tqdm(pool.imap_unordered(forloop,
-        #                                       ((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
-        #                                        for i in range(c[ext].data['SPEC'].shape[0])),
-        #                                       chunksize=1))):
+    # with mp.Pool(int(config.get('APS_cube', 'n_proc')), initializer=init_globals, initargs=(wave, n_wave)) as pool:
+    #     # vorbin = pool.starmap(forloop, tqdm.tqdm(zip((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
+    #     #                                              for i in np.arange(c[ext].data['SPEC'].shape[0])),
+    #     #                                          total=c[ext].data['SPEC'].shape[0]))
+    #     # vorbin = list(tqdm.tqdm(pool.imap_unordered(forloop,
+    #     #                                             ((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
+    #     #                                              for i in range(c[ext].data['SPEC'].shape[0]))),
+    #     #                         total=c[ext].data['SPEC'].shape[0]))
+    #     # for i, (f_resampled, e_resampled) in enumerate(
+    #     #         tqdm.tqdm(pool.imap_unordered(forloop,
+    #     #                                       ((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
+    #     #                                        for i in range(c[ext].data['SPEC'].shape[0])),
+    #     #                                       chunksize=1))):
+    #
+    #     for i, (f_resampled, e_resampled) in tqdm.tqdm(
+    #             enumerate(pool.imap_unordered(forloop,
+    #                                           ((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
+    #                                            for i in range(c[ext].data['SPEC'].shape[0])),
+    #                                           chunksize=1)), total=c[ext].data['SPEC'].shape[0]):
+    #         vorbin_cube_data[i] = f_resampled
+    #         vorbin_cube_err[i] = e_resampled
 
-        for i, (f_resampled, e_resampled) in tqdm.tqdm(
-                enumerate(pool.imap_unordered(forloop,
-                                              ((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
-                                               for i in range(c[ext].data['SPEC'].shape[0])),
-                                              chunksize=1)), total=c[ext].data['SPEC'].shape[0]):
-            vorbin_cube_data[i] = f_resampled
-            vorbin_cube_err[i] = e_resampled
+    pool = mp.Pool(processes=int(config.get('APS_cube', 'n_proc')),
+                   initializer=init_globals,
+                   initargs=(wave, n_wave),
+                   maxtasksperchild=10)
+
+    for i, (f_resampled, e_resampled) in tqdm.tqdm(
+            enumerate(pool.imap_unordered(...)),
+            total=...):
+        vorbin_cube_data[i] = f_resampled
+        vorbin_cube_err[i] = e_resampled
+
+    pool.close()
+    pool.join()
+
+    print("POOL CLOSED AND JOINED", flush=True)
 
     vorbin_cube_data.flush()
     vorbin_cube_err.flush()
