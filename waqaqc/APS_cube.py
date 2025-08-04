@@ -8,7 +8,6 @@ import configparser
 from astropy.wcs import WCS
 import tqdm
 from collections import defaultdict
-import time
 
 _wave = None
 _n_wave = None
@@ -160,13 +159,20 @@ def cube_creator(self):
     vorbin_err = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1),
                           dtype=np.float32)
 
+    cnt = 0
+    #
+    for i in pix_mapt:
+        apsid_map[i[1], i[0]] = aps_id[cnt]
+        vorbin_map[i[1], i[0]] = bin_id[cnt]
+        cnt += 1
+
     print('')
     print('Recreating original datacube from APS file. This may take a few minutes...')
     ext = 1
 
     with mp.Pool(int(config.get('APS_cube', 'n_proc')), initializer=init_globals, initargs=(wave, n_wave)) as pool:
-        rss = pool.starmap(forloop, tqdm.tqdm(zip((c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
-                                                  for i in np.arange(c[ext].data['SPEC'].shape[0])),
+        rss = pool.starmap(forloop, tqdm.tqdm(((c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
+                                               for i in np.arange(c[ext].data['SPEC'].shape[0])),
                                               total=c[ext].data['SPEC'].shape[0]))
 
     rss_data = np.empty((c[1].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
@@ -267,13 +273,6 @@ def cube_creator(self):
 
     aps_maps_names = list(c[4].data.names[1:])
 
-    cnt = 0
-    #
-    for i in pix_mapt:
-        apsid_map[i[1], i[0]] = aps_id[cnt]
-        vorbin_map[i[1], i[0]] = bin_id[cnt]
-        cnt += 1
-
     ###
 
     # cnt = 0
@@ -297,7 +296,10 @@ def cube_creator(self):
     #         round(100. * cnt / pix_mapt.shape[0], 2)) + '%', end='\r')
     #     cnt += 1
 
-###
+    ###
+
+    print('')
+    print('Rearranging APS maps into datacube format:')
 
     # map_names = c[4].data.names[1:]  # exclude 'BIN_ID'
     args = [(cnt, pix_mapt[cnt], vorbin_map, bin_id, r_bin_id, c[4].data, aps_maps_names)
@@ -310,7 +312,7 @@ def cube_creator(self):
     for j, y, x, val in flat_results:
         aps_maps[j, y, x] = val
 
-###
+    ###
 
     gc.collect()
 
