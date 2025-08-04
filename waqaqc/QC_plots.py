@@ -1693,8 +1693,7 @@ def html_plots(self):
         # ------
 
         ax = plt.subplot(gs[4, 0])
-        im = ax.imshow(aps_maps['V'].data, origin='lower', cmap='bwr', vmin=-np.nanmax(abs(aps_maps['V'].data)),
-                       vmax=np.nanmax(abs(aps_maps['V'].data)))
+        im = ax.imshow(aps_maps['V'].data, origin='lower', cmap='bwr', vmin=-400, vmax=400)
 
         ax.set_title(r'APS V')
         ax.set_xlabel('X [px]')
@@ -1702,7 +1701,7 @@ def html_plots(self):
         plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'V')
 
         ax = plt.subplot(gs[4, 1])
-        im = ax.imshow(aps_maps['sigma'].data, origin='lower')
+        im = ax.imshow(aps_maps['sigma'].data, origin='lower', vmin=0, vmax=400)
 
         ax.set_title(r'APS sigma')
         ax.set_xlabel('X [px]')
@@ -1720,9 +1719,7 @@ def html_plots(self):
         plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'flux')
 
         ax = plt.subplot(gs[5, 1])
-        im = ax.imshow(aps_maps['V_[OIII]_5006.77'].data, origin='lower', cmap='bwr',
-                       vmin=-np.nanmax(abs(aps_maps['V_[OIII]_5006.77'].data)),
-                       vmax=np.nanmax(abs(aps_maps['V_[OIII]_5006.77'].data)))
+        im = ax.imshow(aps_maps['V_[OIII]_5006.77'].data, origin='lower', cmap='bwr', vmin=-400, vmax=400)
 
         ax.set_title(r'APS V([OIII]5007)')
         ax.set_xlabel('X [px]')
@@ -1730,7 +1727,7 @@ def html_plots(self):
         plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'V')
 
         ax = plt.subplot(gs[5, 2])
-        im = ax.imshow(aps_maps['SIGMA_[OIII]_5006.77'].data, origin='lower')
+        im = ax.imshow(aps_maps['SIGMA_[OIII]_5006.77'].data, origin='lower', vmin=0, vmax=400)
 
         ax.set_title(r'APS SIGMA([OIII]5007)')
         ax.set_xlabel('X [px]')
@@ -1748,9 +1745,7 @@ def html_plots(self):
         plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'flux')
 
         ax = plt.subplot(gs[6, 1])
-        im = ax.imshow(aps_maps['V_HA_6562.80'].data, origin='lower', cmap='bwr',
-                       vmin=-np.nanmax(abs(aps_maps['V_HA_6562.80'].data)),
-                       vmax=np.nanmax(abs(aps_maps['V_HA_6562.80'].data)))
+        im = ax.imshow(aps_maps['V_HA_6562.80'].data, origin='lower', cmap='bwr', vmin=-400, vmax=400)
 
         ax.set_title(r'APS V(HA)')
         ax.set_xlabel('X [px]')
@@ -1758,7 +1753,7 @@ def html_plots(self):
         plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'V')
 
         ax = plt.subplot(gs[6, 2])
-        im = ax.imshow(aps_maps['SIGMA_HA_6562.80'].data, origin='lower')
+        im = ax.imshow(aps_maps['SIGMA_HA_6562.80'].data, origin='lower', vmin=0, vmax=400)
 
         ax.set_title(r'APS SIGMA(HA)')
         ax.set_xlabel('X [px]')
