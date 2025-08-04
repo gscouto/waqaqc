@@ -20,15 +20,32 @@ def init_globals(wave, n_wave):
     _n_wave = n_wave
 
 
-def forloop(args):
-    i, c_spec, c_espec = args
-
+def forloop(c_spec, c_espec):
     n_flux, n_err = spectres.spectres(_n_wave, _wave, c_spec, c_espec)
 
     n_flux = np.array(n_flux, dtype=np.float32)
     n_err = np.array(n_err, dtype=np.float32)
 
     return n_flux, n_err
+
+
+def process_aps_pixel(pix, apsid_map, aps_id, rss_data, rss_err):
+    y, x = pix[1], pix[0]
+    aps_val = apsid_map[y, x]
+
+    if aps_val < 0:
+        return None
+
+    idx = np.where(aps_id == aps_val)[0]
+    if len(idx) == 0:
+        return None
+
+    try:
+        data_slice = rss_data[idx[0]]
+        err_slice = rss_err[idx[0]]
+        return x, y, data_slice, err_slice
+    except Exception:
+        return None
 
 
 def process_vorbin_pixel(idx_i, pix, vorbin_map, r_bin_id, bin_id,
@@ -51,6 +68,26 @@ def process_vorbin_pixel(idx_i, pix, vorbin_map, r_bin_id, bin_id,
 
     except Exception:
         return None
+
+
+def process_aps_maps_pixel(idx, pix, vorbin_map, bin_id, r_bin_id, data4, map_names):
+    y, x = pix[1], pix[0]
+    bin_val = vorbin_map[y, x]
+    if bin_val < 0:
+        return []  # skip this spaxel
+
+    results = []
+    bin_mask = (r_bin_id == bin_id[idx])
+
+    for j, name in enumerate(map_names):
+        try:
+            data = data4[name][bin_mask]
+            if data.ndim == 1:
+                results.append((j, y, x, data[0]))
+        except Exception:
+            continue  # silently skip problematic values
+
+    return results
 
 
 def cube_creator(self):
@@ -128,7 +165,7 @@ def cube_creator(self):
     ext = 1
 
     with mp.Pool(int(config.get('APS_cube', 'n_proc')), initializer=init_globals, initargs=(wave, n_wave)) as pool:
-        rss = pool.starmap(forloop, tqdm.tqdm(zip((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
+        rss = pool.starmap(forloop, tqdm.tqdm(zip((c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
                                                   for i in np.arange(c[ext].data['SPEC'].shape[0])),
                                               total=c[ext].data['SPEC'].shape[0]))
 
@@ -139,27 +176,36 @@ def cube_creator(self):
         rss_data[i] = rss[i][0]
         rss_err[i] = rss[i][1]
 
-    cnt = 0
-    for i in pix_mapt:
-        if apsid_map[i[1], i[0]] >= 0:
-            cube_data[:, i[1], i[0]] = rss_data[aps_id == apsid_map[i[1], i[0]]][0]
-            cube_err[:, i[1], i[0]] = rss_err[aps_id == apsid_map[i[1], i[0]]][0]
-        print('Rearranging into datacube formats: ' + str(
-            round(100. * cnt / pix_mapt.shape[0], 2)) + '%', end='\r')
-        cnt += 1
+    # cnt = 0
+    # for i in pix_mapt:
+    #     if apsid_map[i[1], i[0]] >= 0:
+    #         cube_data[:, i[1], i[0]] = rss_data[aps_id == apsid_map[i[1], i[0]]][0]
+    #         cube_err[:, i[1], i[0]] = rss_err[aps_id == apsid_map[i[1], i[0]]][0]
+    #     print('Rearranging into datacube formats: ' + str(
+    #         round(100. * cnt / pix_mapt.shape[0], 2)) + '%', end='\r')
+    #     cnt += 1
+
+    args = [(pix_mapt[i], apsid_map, aps_id, rss_data, rss_err)
+            for i in range(len(pix_mapt))]
+
+    print('')
+    print('Rearranging into datacube formats:')
+
+    with mp.Pool(processes=int(config.get('APS_cube', 'n_proc'))) as pool:
+        results = pool.starmap(process_aps_pixel, tqdm.tqdm(args, total=len(args)))
+
+    valid_results = [r for r in results if r is not None]
+    for x, y, data_slice, err_slice in valid_results:
+        cube_data[:, y, x] = data_slice
+        cube_err[:, y, x] = err_slice
 
     del rss, rss_data, rss_err
     gc.collect()
 
-    # vorbin_cube_data = np.zeros((c[3].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
-    # vorbin_cube_err = np.zeros((c[3].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
+    vorbin_cube_data = np.zeros((c[3].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
+    vorbin_cube_err = np.zeros((c[3].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
 
     ext = 3
-
-    vorbin_cube_data = np.memmap('tmp_vorbin_data.dat', dtype=np.float32, mode='w+',
-                                 shape=(c[ext].data['SPEC'].shape[0], len(n_wave)))
-    vorbin_cube_err = np.memmap('tmp_vorbin_err.dat', dtype=np.float32, mode='w+',
-                                shape=(c[ext].data['SPEC'].shape[0], len(n_wave)))
 
     print('')
     print('Recreating Voronoi binning datacube from APS file. This may take a few minutes...')
@@ -170,18 +216,14 @@ def cube_creator(self):
                    maxtasksperchild=10)
 
     for i, (f_resampled, e_resampled) in tqdm.tqdm(
-            enumerate(pool.imap_unordered(forloop,
-                                          ((i, c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
-                                           for i in range(c[ext].data['SPEC'].shape[0])),
-                                          chunksize=1)), total=c[ext].data['SPEC'].shape[0]):
+            enumerate(pool.starmap(forloop, ((c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
+                                             for i in range(c[ext].data['SPEC'].shape[0])),
+                                   chunksize=1)), total=c[ext].data['SPEC'].shape[0]):
         vorbin_cube_data[i] = f_resampled
         vorbin_cube_err[i] = e_resampled
 
     pool.close()
     pool.join()
-
-    vorbin_cube_data.flush()
-    vorbin_cube_err.flush()
 
     # cnt = 0
     # for i in pix_mapt:
@@ -195,6 +237,9 @@ def cube_creator(self):
     #         round(100. * cnt / pix_mapt.shape[0], 2)) + '%', end='\r')
     #     cnt += 1
 
+    print('')
+    print('Rearranging into datacube formats:')
+
     # Count how many times each bin ID appears in vorbin_map
     bin_pixel_counts = defaultdict(int)
     unique_bins = np.unique(vorbin_map[vorbin_map >= 0])
@@ -207,13 +252,11 @@ def cube_creator(self):
         for i in range(len(pix_mapt))
     ]
 
-    results = []
-    with Pool(processes=int(config.get('APS_cube', 'n_proc'))) as pool:
-        for res in tqdm.tqdm(pool.starmap(process_vorbin_pixel, args), total=len(args)):
-            if res is not None:
-                results.append(res)
+    with mp.Pool(processes=int(config.get('APS_cube', 'n_proc'))) as pool:
+        results = pool.starmap(process_vorbin_pixel, tqdm.tqdm(args, total=len(args)))
 
-    for x, y, data_slice, err_slice, vel_val in results:
+    valid_results = [r for r in results if r is not None]
+    for x, y, data_slice, err_slice, vel_val in valid_results:
         vorbin_data[:, y, x] = data_slice
         vorbin_err[:, y, x] = err_slice
         stel_vel_map[y, x] = vel_val
@@ -222,40 +265,52 @@ def cube_creator(self):
 
     gc.collect()
 
-    aps_maps_names = []
+    aps_maps_names = list(c[4].data.names[1:])
 
     cnt = 0
     #
-    for j in np.arange(len(c[4].data.names) - 1):
-        aps_maps_names.append(c[4].data.names[j + 1])
     for i in pix_mapt:
         apsid_map[i[1], i[0]] = aps_id[cnt]
         vorbin_map[i[1], i[0]] = bin_id[cnt]
         cnt += 1
 
-    cnt = 0
-    for i in pix_mapt:
-        # if apsid_map[i[1], i[0]] >= 0:
-        #     cube_data[:, i[1], i[0]] = rss_data[aps_id == apsid_map[i[1], i[0]]][0]
-        #     cube_err[:, i[1], i[0]] = rss_err[aps_id == apsid_map[i[1], i[0]]][0]
-        # if vorbin_map[i[1], i[0]] >= 0:
-        #     vorbin_data[:, i[1], i[0]] = vorbin_cube_data[r_bin_id == vorbin_map[i[1], i[0]]][0] / \
-        #                                  len(np.where(vorbin_map == vorbin_map[i[1], i[0]])[0])
-        #     vorbin_err[:, i[1], i[0]] = vorbin_cube_err[r_bin_id == vorbin_map[i[1], i[0]]][0] / \
-        #                                 len(np.where(vorbin_map == vorbin_map[i[1], i[0]])[0])
-        #     stel_vel_map[i[1], i[0]] = c[4].data['V'][r_bin_id == bin_id[cnt]]
-        if vorbin_map[i[1], i[0]] >= 0:
-            for j in np.arange(len(c[4].data.names) - 1):
-                if len(c[4].data[c[4].data.names[j + 1]][r_bin_id == bin_id[cnt]].shape) == 1:
-                    aps_maps[j, i[1], i[0]] = c[4].data[c[4].data.names[j + 1]][r_bin_id == bin_id[cnt]]
-                else:
-                    np.delete(aps_maps, j, axis=0)
-        print('Rearranging into datacube formats: ' + str(
-            round(100. * cnt / pix_mapt.shape[0], 2)) + '%', end='\r')
-        cnt += 1
+    ###
 
-    os.remove("tmp_vorbin_data.dat")
-    os.remove("tmp_vorbin_err.dat")
+    # cnt = 0
+    # for i in pix_mapt:
+    #     # if apsid_map[i[1], i[0]] >= 0:
+    #     #     cube_data[:, i[1], i[0]] = rss_data[aps_id == apsid_map[i[1], i[0]]][0]
+    #     #     cube_err[:, i[1], i[0]] = rss_err[aps_id == apsid_map[i[1], i[0]]][0]
+    #     # if vorbin_map[i[1], i[0]] >= 0:
+    #     #     vorbin_data[:, i[1], i[0]] = vorbin_cube_data[r_bin_id == vorbin_map[i[1], i[0]]][0] / \
+    #     #                                  len(np.where(vorbin_map == vorbin_map[i[1], i[0]])[0])
+    #     #     vorbin_err[:, i[1], i[0]] = vorbin_cube_err[r_bin_id == vorbin_map[i[1], i[0]]][0] / \
+    #     #                                 len(np.where(vorbin_map == vorbin_map[i[1], i[0]])[0])
+    #     #     stel_vel_map[i[1], i[0]] = c[4].data['V'][r_bin_id == bin_id[cnt]]
+    #     if vorbin_map[i[1], i[0]] >= 0:
+    #         for j in np.arange(len(c[4].data.names) - 1):
+    #             if len(c[4].data[c[4].data.names[j + 1]][r_bin_id == bin_id[cnt]].shape) == 1:
+    #                 aps_maps[j, i[1], i[0]] = c[4].data[c[4].data.names[j + 1]][r_bin_id == bin_id[cnt]]
+    #             else:
+    #                 np.delete(aps_maps, j, axis=0)
+    #     print('Rearranging into datacube formats: ' + str(
+    #         round(100. * cnt / pix_mapt.shape[0], 2)) + '%', end='\r')
+    #     cnt += 1
+
+###
+
+    # map_names = c[4].data.names[1:]  # exclude 'BIN_ID'
+    args = [(cnt, pix_mapt[cnt], vorbin_map, bin_id, r_bin_id, c[4].data, aps_maps_names)
+            for cnt in range(len(pix_mapt))]
+
+    with mp.Pool(processes=int(config.get('APS_cube', 'n_proc'))) as pool:
+        results = pool.starmap(process_aps_maps_pixel, tqdm.tqdm(args, total=len(args)))
+
+    flat_results = [item for sublist in results for item in sublist]
+    for j, y, x, val in flat_results:
+        aps_maps[j, y, x] = val
+
+###
 
     gc.collect()
 
