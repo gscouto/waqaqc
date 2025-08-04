@@ -18,8 +18,6 @@ import warnings
 import requests
 from PIL import Image
 from io import BytesIO
-# from paramiko import SSHClient
-# from scp import SCPClient
 import multiprocessing as mp
 from scipy.optimize import curve_fit
 import tqdm
@@ -470,8 +468,6 @@ def html_plots(self):
         lamp_spec = warc_file[1].data
 
         if blue_cube[0].header['MODE'] == 'LOWRES':
-            # cen_lam = lamp_lam[lam_wind + 1:-(lam_wind + 2)][
-            #     np.diff(lamp_spec[300])[lam_wind + 1:-(lam_wind + 1)] < -1500]
             if file_cam == 'WEAVEBLUE':
                 cen_lam = np.array([3606., 3738., 3850., 3995., 4104., 4132., 4290., 4400., 4511., 4545., 4579., 4609.,
                                     4765., 4806., 4965., 5187., 5410.])
@@ -541,8 +537,6 @@ def html_plots(self):
         sky_sigma_med = []
 
         if blue_cube[0].header['MODE'] == 'LOWRES':
-            # cen_lam = sky_lam[lam_wind + 1:-(lam_wind + 2)][
-            #     np.diff(sky_spec[300])[lam_wind + 1:-(lam_wind + 1)] < -0.2]
             if file_cam == 'WEAVEBLUE':
                 cen_lam = np.array([5577.])
             else:
@@ -1693,7 +1687,7 @@ def html_plots(self):
         # ------
 
         ax = plt.subplot(gs[4, 0])
-        im = ax.imshow(aps_maps['V'].data, origin='lower', cmap='bwr', vmin=-400, vmax=400)
+        im = ax.imshow(aps_maps['V'].data, origin='lower', cmap='bwr', vmin=-300, vmax=300)
 
         ax.set_title(r'APS V')
         ax.set_xlabel('X [px]')
@@ -1701,7 +1695,7 @@ def html_plots(self):
         plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'V')
 
         ax = plt.subplot(gs[4, 1])
-        im = ax.imshow(aps_maps['sigma'].data, origin='lower', vmin=0, vmax=400)
+        im = ax.imshow(aps_maps['sigma'].data, origin='lower', vmin=0, vmax=300)
 
         ax.set_title(r'APS sigma')
         ax.set_xlabel('X [px]')
@@ -1719,7 +1713,7 @@ def html_plots(self):
         plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'flux')
 
         ax = plt.subplot(gs[5, 1])
-        im = ax.imshow(aps_maps['V_[OIII]_5006.77'].data, origin='lower', cmap='bwr', vmin=-400, vmax=400)
+        im = ax.imshow(aps_maps['V_[OIII]_5006.77'].data, origin='lower', cmap='bwr', vmin=-300, vmax=300)
 
         ax.set_title(r'APS V([OIII]5007)')
         ax.set_xlabel('X [px]')
@@ -1727,7 +1721,7 @@ def html_plots(self):
         plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'V')
 
         ax = plt.subplot(gs[5, 2])
-        im = ax.imshow(aps_maps['SIGMA_[OIII]_5006.77'].data, origin='lower', vmin=0, vmax=400)
+        im = ax.imshow(aps_maps['SIGMA_[OIII]_5006.77'].data, origin='lower', vmin=0, vmax=300)
 
         ax.set_title(r'APS SIGMA([OIII]5007)')
         ax.set_xlabel('X [px]')
@@ -1745,7 +1739,7 @@ def html_plots(self):
         plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'flux')
 
         ax = plt.subplot(gs[6, 1])
-        im = ax.imshow(aps_maps['V_HA_6562.80'].data, origin='lower', cmap='bwr', vmin=-400, vmax=400)
+        im = ax.imshow(aps_maps['V_HA_6562.80'].data, origin='lower', cmap='bwr', vmin=-300, vmax=300)
 
         ax.set_title(r'APS V(HA)')
         ax.set_xlabel('X [px]')
@@ -1753,7 +1747,7 @@ def html_plots(self):
         plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'V')
 
         ax = plt.subplot(gs[6, 2])
-        im = ax.imshow(aps_maps['SIGMA_HA_6562.80'].data, origin='lower', vmin=0, vmax=400)
+        im = ax.imshow(aps_maps['SIGMA_HA_6562.80'].data, origin='lower', vmin=0, vmax=300)
 
         ax.set_title(r'APS SIGMA(HA)')
         ax.set_xlabel('X [px]')

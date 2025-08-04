@@ -182,15 +182,6 @@ def cube_creator(self):
         rss_data[i] = rss[i][0]
         rss_err[i] = rss[i][1]
 
-    # cnt = 0
-    # for i in pix_mapt:
-    #     if apsid_map[i[1], i[0]] >= 0:
-    #         cube_data[:, i[1], i[0]] = rss_data[aps_id == apsid_map[i[1], i[0]]][0]
-    #         cube_err[:, i[1], i[0]] = rss_err[aps_id == apsid_map[i[1], i[0]]][0]
-    #     print('Rearranging into datacube formats: ' + str(
-    #         round(100. * cnt / pix_mapt.shape[0], 2)) + '%', end='\r')
-    #     cnt += 1
-
     args = [(pix_mapt[i], apsid_map, aps_id, rss_data, rss_err)
             for i in range(len(pix_mapt))]
 
@@ -231,18 +222,6 @@ def cube_creator(self):
     pool.close()
     pool.join()
 
-    # cnt = 0
-    # for i in pix_mapt:
-    #     if vorbin_map[i[1], i[0]] >= 0:
-    #         vorbin_data[:, i[1], i[0]] = vorbin_cube_data[r_bin_id == vorbin_map[i[1], i[0]]][0] / \
-    #                                      len(np.where(vorbin_map == vorbin_map[i[1], i[0]])[0])
-    #         vorbin_err[:, i[1], i[0]] = vorbin_cube_err[r_bin_id == vorbin_map[i[1], i[0]]][0] / \
-    #                                     len(np.where(vorbin_map == vorbin_map[i[1], i[0]])[0])
-    #         stel_vel_map[i[1], i[0]] = c[4].data['V'][r_bin_id == bin_id[cnt]]
-    #     print('Rearranging into datacube formats: ' + str(
-    #         round(100. * cnt / pix_mapt.shape[0], 2)) + '%', end='\r')
-    #     cnt += 1
-
     print('')
     print('Rearranging into datacube formats:')
 
@@ -273,35 +252,9 @@ def cube_creator(self):
 
     aps_maps_names = list(c[4].data.names[1:])
 
-    ###
-
-    # cnt = 0
-    # for i in pix_mapt:
-    #     # if apsid_map[i[1], i[0]] >= 0:
-    #     #     cube_data[:, i[1], i[0]] = rss_data[aps_id == apsid_map[i[1], i[0]]][0]
-    #     #     cube_err[:, i[1], i[0]] = rss_err[aps_id == apsid_map[i[1], i[0]]][0]
-    #     # if vorbin_map[i[1], i[0]] >= 0:
-    #     #     vorbin_data[:, i[1], i[0]] = vorbin_cube_data[r_bin_id == vorbin_map[i[1], i[0]]][0] / \
-    #     #                                  len(np.where(vorbin_map == vorbin_map[i[1], i[0]])[0])
-    #     #     vorbin_err[:, i[1], i[0]] = vorbin_cube_err[r_bin_id == vorbin_map[i[1], i[0]]][0] / \
-    #     #                                 len(np.where(vorbin_map == vorbin_map[i[1], i[0]])[0])
-    #     #     stel_vel_map[i[1], i[0]] = c[4].data['V'][r_bin_id == bin_id[cnt]]
-    #     if vorbin_map[i[1], i[0]] >= 0:
-    #         for j in np.arange(len(c[4].data.names) - 1):
-    #             if len(c[4].data[c[4].data.names[j + 1]][r_bin_id == bin_id[cnt]].shape) == 1:
-    #                 aps_maps[j, i[1], i[0]] = c[4].data[c[4].data.names[j + 1]][r_bin_id == bin_id[cnt]]
-    #             else:
-    #                 np.delete(aps_maps, j, axis=0)
-    #     print('Rearranging into datacube formats: ' + str(
-    #         round(100. * cnt / pix_mapt.shape[0], 2)) + '%', end='\r')
-    #     cnt += 1
-
-    ###
-
     print('')
     print('Rearranging APS maps into datacube format:')
 
-    # map_names = c[4].data.names[1:]  # exclude 'BIN_ID'
     args = [(cnt, pix_mapt[cnt], vorbin_map, bin_id, r_bin_id, c[4].data, aps_maps_names)
             for cnt in range(len(pix_mapt))]
 
