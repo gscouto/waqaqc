@@ -1708,8 +1708,8 @@ def html_plots(self):
         # ------
 
         ax = plt.subplot(gs[5, 0])
-        im = ax.imshow(aps_maps['FLUX_[OIII]_5006.77'].data, norm=LogNorm(), origin='lower', vmin=0.1,
-                       vmax=np.nanpercentile(aps_maps['FLUX_[OIII]_5006.77'].data, 80))
+        im = ax.imshow(aps_maps['FLUX_[OIII]_5006.77'].data, norm=LogNorm(vmin=0.1,
+                       vmax=np.nanpercentile(aps_maps['FLUX_[OIII]_5006.77'].data, 80)), origin='lower')
         ax.set_title(r'APS F([OIII]5007)')
         ax.set_xlabel('X [px]')
         ax.set_ylabel('Y [px]')
@@ -1739,8 +1739,8 @@ def html_plots(self):
         # ------
 
         ax = plt.subplot(gs[6, 0])
-        im = ax.imshow(aps_maps['FLUX_HA_6562.80'].data, norm=LogNorm(), origin='lower', vmin=0.1,
-                       vmax=np.nanpercentile(aps_maps['FLUX_HA_6562.80'].data, 80))
+        im = ax.imshow(aps_maps['FLUX_HA_6562.80'].data, norm=LogNorm(vmin=0.1,
+                       vmax=np.nanpercentile(aps_maps['FLUX_HA_6562.80'].data, 80)), origin='lower')
         ax.set_title(r'APS F(HA)')
         ax.set_xlabel('X [px]')
         ax.set_ylabel('Y [px]')
