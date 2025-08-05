@@ -1687,71 +1687,84 @@ def html_plots(self):
         # ------
 
         ax = plt.subplot(gs[4, 0])
-        im = ax.imshow(aps_maps['V'].data, origin='lower', cmap='bwr', vmin=-300, vmax=300)
-
+        im = ax.imshow(aps_maps['V'].data, origin='lower', cmap='bwr', vmin=np.nanpercentile(aps_maps['V'].data, 20),
+                       vmax=np.nanpercentile(aps_maps['V'].data, 80))
         ax.set_title(r'APS V')
         ax.set_xlabel('X [px]')
         ax.set_ylabel('Y [px]')
+        ax.contour(aps_maps['V'].data, levels=[-300, -200, -100, 0, 100, 200, 300], colors=['b'], linestyle='--',
+                   alpha=0.5)
         plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'V')
 
         ax = plt.subplot(gs[4, 1])
-        im = ax.imshow(aps_maps['sigma'].data, origin='lower', vmin=0, vmax=300)
-
+        im = ax.imshow(aps_maps['sigma'].data, origin='lower', vmin=0,
+                       vmax=np.nanpercentile(aps_maps['sigma'].data, 80))
         ax.set_title(r'APS sigma')
         ax.set_xlabel('X [px]')
         ax.set_ylabel('Y [px]')
+        ax.contour(aps_maps['sigma'].data, levels=[0, 100, 200, 300], colors=['b'], linestyle='--', alpha=0.5)
         plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'sigma')
 
         # ------
 
         ax = plt.subplot(gs[5, 0])
-        im = ax.imshow(aps_maps['FLUX_[OIII]_5006.77'].data, origin='lower')
-
+        im = ax.imshow(aps_maps['FLUX_[OIII]_5006.77'].data, norm=LogNorm(), origin='lower', vmin=0.1,
+                       vmax=np.nanpercentile(aps_maps['FLUX_[OIII]_5006.77'].data, 80))
         ax.set_title(r'APS F([OIII]5007)')
         ax.set_xlabel('X [px]')
         ax.set_ylabel('Y [px]')
         plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'flux')
 
         ax = plt.subplot(gs[5, 1])
-        im = ax.imshow(aps_maps['V_[OIII]_5006.77'].data, origin='lower', cmap='bwr', vmin=-300, vmax=300)
-
+        im = ax.imshow(aps_maps['V_[OIII]_5006.77'].data, origin='lower', cmap='bwr',
+                       vmin=np.nanpercentile(aps_maps['V_[OIII]_5006.77'].data, 20),
+                       vmax=np.nanpercentile(aps_maps['V_[OIII]_5006.77'].data, 80))
         ax.set_title(r'APS V([OIII]5007)')
         ax.set_xlabel('X [px]')
         ax.set_ylabel('Y [px]')
+        ax.contour(aps_maps['V_[OIII]_5006.77'].data, levels=[-300, -200, -100, 0, 100, 200, 300], colors=['b'],
+                   linestyle='--', alpha=0.5)
         plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'V')
 
         ax = plt.subplot(gs[5, 2])
-        im = ax.imshow(aps_maps['SIGMA_[OIII]_5006.77'].data, origin='lower', vmin=0, vmax=300)
-
+        im = ax.imshow(aps_maps['SIGMA_[OIII]_5006.77'].data, origin='lower', vmin=0,
+                       vmax=np.nanpercentile(aps_maps['SIGMA_[OIII]_5006.77'].data, 80))
         ax.set_title(r'APS SIGMA([OIII]5007)')
         ax.set_xlabel('X [px]')
         ax.set_ylabel('Y [px]')
+        ax.contour(aps_maps['SIGMA_[OIII]_5006.77'].data, levels=[0, 100, 200, 300], colors=['b'], linestyle='--',
+                   alpha=0.5)
         plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'sigma')
 
         # ------
 
         ax = plt.subplot(gs[6, 0])
-        im = ax.imshow(aps_maps['FLUX_HA_6562.80'].data, origin='lower')
-
+        im = ax.imshow(aps_maps['FLUX_HA_6562.80'].data, norm=LogNorm(), origin='lower', vmin=0.1,
+                       vmax=np.nanpercentile(aps_maps['FLUX_HA_6562.80'].data, 80))
         ax.set_title(r'APS F(HA)')
         ax.set_xlabel('X [px]')
         ax.set_ylabel('Y [px]')
         plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'flux')
 
         ax = plt.subplot(gs[6, 1])
-        im = ax.imshow(aps_maps['V_HA_6562.80'].data, origin='lower', cmap='bwr', vmin=-300, vmax=300)
-
+        im = ax.imshow(aps_maps['V_HA_6562.80'].data, origin='lower', cmap='bwr',
+                       vmin=np.nanpercentile(aps_maps['V_HA_6562.80'].data, 20),
+                       vmax=np.nanpercentile(aps_maps['V_HA_6562.80'].data, 80))
         ax.set_title(r'APS V(HA)')
         ax.set_xlabel('X [px]')
         ax.set_ylabel('Y [px]')
+        ax.contour(aps_maps['V_HA_6562.80'].data, levels=[-300, -200, -100, 0, 100, 200, 300], colors=['b'],
+                   linestyle='--', alpha=0.5)
         plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'V')
 
         ax = plt.subplot(gs[6, 2])
-        im = ax.imshow(aps_maps['SIGMA_HA_6562.80'].data, origin='lower', vmin=0, vmax=300)
-
+        im = ax.imshow(aps_maps['SIGMA_HA_6562.80'].data, origin='lower', vmin=0,
+                       vmax=np.nanpercentile(aps_maps['SIGMA_HA_6562.80'].data, 80))
         ax.set_title(r'APS SIGMA(HA)')
         ax.set_xlabel('X [px]')
         ax.set_ylabel('Y [px]')
+        ax.contour(aps_maps['SIGMA_HA_6562.80'].data, levels=[0, 100, 200, 300], colors=['b'], linestyle='--',
+                   alpha=0.5)
         plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'sigma')
 
         # ------
