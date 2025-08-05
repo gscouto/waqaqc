@@ -1706,14 +1706,14 @@ def html_plots(self):
 
         # ------
 
-        ax = plt.subplot(gs[5, 0])
-        im = ax.imshow(aps_maps['FLUX_[OIII]_5006.77'].data,
-                       norm=LogNorm(vmin=0.1, vmax=np.nanpercentile(aps_maps['FLUX_[OIII]_5006.77'].data, 90)),
-                       origin='lower')
-        ax.set_title(r'APS F([OIII]5007)')
-        ax.set_xlabel('X [px]')
-        ax.set_ylabel('Y [px]')
         if np.nanmax(aps_maps['FLUX_[OIII]_5006.77'].data) > 0:
+            ax = plt.subplot(gs[5, 0])
+            im = ax.imshow(aps_maps['FLUX_[OIII]_5006.77'].data,
+                           norm=LogNorm(vmin=0.1, vmax=np.nanpercentile(aps_maps['FLUX_[OIII]_5006.77'].data, 90)),
+                           origin='lower')
+            ax.set_title(r'APS F([OIII]5007)')
+            ax.set_xlabel('X [px]')
+            ax.set_ylabel('Y [px]')
             plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'flux')
 
         ax = plt.subplot(gs[5, 1])
@@ -1738,14 +1738,14 @@ def html_plots(self):
 
         # ------
 
-        ax = plt.subplot(gs[6, 0])
-        im = ax.imshow(aps_maps['FLUX_HA_6562.80'].data,
-                       norm=LogNorm(vmin=0.1, vmax=np.nanpercentile(aps_maps['FLUX_HA_6562.80'].data, 90)),
-                       origin='lower')
-        ax.set_title(r'APS F(HA)')
-        ax.set_xlabel('X [px]')
-        ax.set_ylabel('Y [px]')
         if np.nanmax(aps_maps['FLUX_HA_6562.80'].data) > 0:
+            ax = plt.subplot(gs[6, 0])
+            im = ax.imshow(aps_maps['FLUX_HA_6562.80'].data,
+                           norm=LogNorm(vmin=0.1, vmax=np.nanpercentile(aps_maps['FLUX_HA_6562.80'].data, 90)),
+                           origin='lower')
+            ax.set_title(r'APS F(HA)')
+            ax.set_xlabel('X [px]')
+            ax.set_ylabel('Y [px]')
             plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'flux')
 
         ax = plt.subplot(gs[6, 1])
