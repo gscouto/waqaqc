@@ -2,6 +2,7 @@ import os
 import configparser
 import json
 
+import matplotlib
 import matplotlib.gridspec as gridspec
 import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
@@ -23,6 +24,8 @@ from scipy.optimize import curve_fit
 import tqdm
 from waqaqc.signalWEAVE import signalWEAVE
 from scipy.interpolate import interp1d
+
+matplotlib.use("Agg")
 
 try:
     from importlib.resources import files  # Python 3.9+
@@ -301,24 +304,22 @@ def html_plots(self):
     mask_faint_r = (mean_r_map > 0) & (median_r_map <= median_r_sky_map)
 
     int_b_spec_bright = np.sum(blue_cube[1].data * mask_bright_b[np.newaxis, :, :], axis=(1, 2)) * \
-                        np.mean(blue_cube[5].data[:], axis=0) / np.sum(mask_bright_b)
+                        blue_cube[5].data[:] / np.sum(mask_bright_b)
     int_b_spec_medium = np.sum(blue_cube[1].data * mask_medium_b[np.newaxis, :, :], axis=(1, 2)) * \
-                        np.mean(blue_cube[5].data[:], axis=0) / np.sum(mask_medium_b)
+                        blue_cube[5].data[:] / np.sum(mask_medium_b)
     int_b_spec_faint = np.sum(blue_cube[1].data * mask_faint_b[np.newaxis, :, :], axis=(1, 2)) * \
-                       np.mean(blue_cube[5].data[:], axis=0) / np.sum(mask_faint_b)
+                       blue_cube[5].data[:] / np.sum(mask_faint_b)
     int_r_spec_bright = np.sum(red_cube[1].data * mask_bright_r[np.newaxis, :, :], axis=(1, 2)) * \
-                        np.mean(red_cube[5].data[:], axis=0) / np.sum(mask_bright_r)
+                        red_cube[5].data[:] / np.sum(mask_bright_r)
     int_r_spec_medium = np.sum(red_cube[1].data * mask_medium_r[np.newaxis, :, :], axis=(1, 2)) * \
-                        np.mean(red_cube[5].data[:], axis=0) / np.sum(mask_medium_r)
+                        red_cube[5].data[:] / np.sum(mask_medium_r)
     int_r_spec_faint = np.sum(red_cube[1].data * mask_faint_r[np.newaxis, :, :], axis=(1, 2)) * \
-                       np.mean(red_cube[5].data[:], axis=0) / np.sum(mask_faint_r)
+                       red_cube[5].data[:] / np.sum(mask_faint_r)
 
-    int_b_sky_spec = np.sum(blue_cube[3].data - blue_cube[1].data, axis=(1, 2)) * np.mean(blue_cube[5].data[:],
-                                                                                          axis=0) / np.sum(
-        mask_faint_b)
-    int_r_sky_spec = np.sum(red_cube[3].data - red_cube[1].data, axis=(1, 2)) * np.mean(red_cube[5].data[:],
-                                                                                        axis=0) / np.sum(
-        mask_faint_r)
+    int_b_sky_spec = np.sum(blue_cube[3].data - blue_cube[1].data, axis=(1, 2)) * \
+                     blue_cube[5].data[:] / np.sum(mask_faint_b)
+    int_r_sky_spec = np.sum(red_cube[3].data - red_cube[1].data, axis=(1, 2)) * \
+                     red_cube[5].data[:] / np.sum(mask_faint_r)
 
     lam_r = red_cube[1].header['CRVAL3'] + (np.arange(red_cube[1].header['NAXIS3']) * red_cube[1].header['CD3_3'])
     lam_b = blue_cube[1].header['CRVAL3'] + (np.arange(blue_cube[1].header['NAXIS3']) * blue_cube[1].header['CD3_3'])
@@ -903,13 +904,13 @@ def html_plots(self):
     # ------
 
     ax = plt.subplot(gs[1, 0])
-    ax.plot(lam_b, blue_cube[1].data[:, ypmax_b, xpmax_b] * np.mean(blue_cube[5].data[:], axis=0))
+    ax.plot(lam_b, blue_cube[1].data[:, ypmax_b, xpmax_b] * blue_cube[5].data[:])
     ax.set_xlabel(r'$\lambda$ [$\AA$]')
     ax.set_ylabel('Flux')
     ax.set_title('Blue spectrum at (' + str(xpmax_b) + ', ' + str(ypmax_b) + ') [flux peak]')
 
     ax = plt.subplot(gs[1, 1])
-    ax.plot(lam_r, red_cube[1].data[:, ypmax_r, xpmax_r] * np.mean(red_cube[5].data[:], axis=0))
+    ax.plot(lam_r, red_cube[1].data[:, ypmax_r, xpmax_r] * red_cube[5].data[:])
     ax.set_xlabel(r'$\lambda$ [$\AA$]')
     ax.set_ylabel('Flux')
     ax.set_title('Red spectrum at (' + str(xpmax_r) + ', ' + str(ypmax_r) + ') [flux peak]')
@@ -1069,7 +1070,7 @@ def html_plots(self):
     ax.set_xlabel(r'SNR [@' + str(blue_cen_wave) + '$\AA$]')
 
     int_spec_b = np.sum(blue_cube[1].data * ((snr_b >= 3)[np.newaxis, :, :]), axis=(1, 2)) * \
-                 np.mean(blue_cube[5].data[:], axis=0)
+                 blue_cube[5].data[:]
     in_ax = ax.inset_axes([0.6, 0.55, 0.35, 0.3])
     in_ax.set_title(r'integrated spec [SNR$\geq$3]', fontsize=10, pad=14)
     in_ax.plot(lam_b, int_spec_b)
@@ -1083,7 +1084,7 @@ def html_plots(self):
     ax.set_xlabel(r'SNR [@' + str(red_cen_wave) + '$\AA$]')
 
     int_spec_r = np.sum(red_cube[1].data * ((snr_r >= 3)[np.newaxis, :, :]), axis=(1, 2)) * \
-                 np.mean(red_cube[5].data[:], axis=0)
+                 red_cube[5].data[:]
     in_ax = ax.inset_axes([0.6, 0.55, 0.35, 0.3])
     in_ax.set_title(r'integrated spec [SNR$\geq$3]', fontsize=10, pad=14)
     in_ax.plot(lam_r, int_spec_r)
@@ -1246,8 +1247,8 @@ def html_plots(self):
                                                 for i in np.arange(np.nanmax(vorbin_map) + 1)))
 
     for i in np.arange(int(np.nanmax(vorbin_map)) + 1):
-        nb_cube_data[i] = nb_cube[i][0] * np.mean(blue_cube[5].data[:], axis=0)
-        nb_cube_err[i] = nb_cube[i][1] * np.mean(blue_cube[5].data[:], axis=0)
+        nb_cube_data[i] = nb_cube[i][0] * blue_cube[5].data[:]
+        nb_cube_err[i] = nb_cube[i][1] * blue_cube[5].data[:]
 
     cube_head = fits.Header()
 
@@ -1361,8 +1362,8 @@ def html_plots(self):
                                                 for i in np.arange(np.nanmax(vorbin_map) + 1)))
 
     for i in np.arange(int(np.nanmax(vorbin_map)) + 1):
-        nb_cube_data[i] = nb_cube[i][0] * np.mean(red_cube[5].data[:], axis=0)
-        nb_cube_err[i] = nb_cube[i][1] * np.mean(red_cube[5].data[:], axis=0)
+        nb_cube_data[i] = nb_cube[i][0] * red_cube[5].data[:]
+        nb_cube_err[i] = nb_cube[i][1] * red_cube[5].data[:]
 
     cube_head = fits.Header()
     cube_head['SIMPLE'] = True
@@ -1692,7 +1693,7 @@ def html_plots(self):
         ax.set_title(r'APS V')
         ax.set_xlabel('X [px]')
         ax.set_ylabel('Y [px]')
-        ax.contour(aps_maps['V'].data, levels=[-300, -200, -100, 0, 100, 200, 300], colors=['black'],alpha=0.3)
+        ax.contour(aps_maps['V'].data, levels=[-300, -200, -100, 0, 100, 200, 300], colors=['black'], alpha=0.3)
         plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'V')
 
         ax = plt.subplot(gs[4, 1])
