@@ -211,8 +211,11 @@ def specs(self):
 
         wave = c[1].header['CRVAL3'] + (c[1].header['CDELT3'] * np.arange(c[1].header['NAXIS3']))
 
-        rss_data = np.zeros((len(np.unique(vorbin_map[vorbin_map >= 0])), len(wave)), dtype=np.float32)
-        rss_err = np.zeros((len(np.unique(vorbin_map[vorbin_map >= 0])), len(wave)), dtype=np.float32)
+        # rss_data = np.zeros((len(np.unique(vorbin_map[vorbin_map >= 0])), len(wave)), dtype=np.float32)
+        # rss_err = np.zeros((len(np.unique(vorbin_map[vorbin_map >= 0])), len(wave)), dtype=np.float32)
+
+        rss_data = np.zeros((np.max(np.unique(vorbin_map[vorbin_map >= 0])), len(wave)), dtype=np.float32)
+        rss_err = np.zeros((np.max(np.unique(vorbin_map[vorbin_map >= 0])), len(wave)), dtype=np.float32)
 
         for i in np.unique(vorbin_map[vorbin_map >= 0]).astype(int):
             rss_data[i] = c[1].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]]
