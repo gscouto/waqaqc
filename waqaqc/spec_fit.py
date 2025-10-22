@@ -196,11 +196,11 @@ def specs(self):
         res_dir = gal_dir + '/' + 'pyp_results/APS_' + datetime.now().strftime('%Y-%m-%d_%H.%M.%S')
         os.makedirs(res_dir, exist_ok=True)
 
-        c = fits.open(gal_dir + '/aps_cube_vorbin.fits')
-        vorbin_map = fits.getdata(gal_dir + '/vorbin_map_aps.fits')
+        # c = fits.open(gal_dir + '/aps_cube_vorbin.fits')
+        # vorbin_map = fits.getdata(gal_dir + '/vorbin_map_aps.fits')
 
-        # c = fits.open(gal_dir + '/' + gal + '_vorbin_cube.fits')
-        # vorbin_map = fits.getdata(gal_dir + '/vorbin_map.fits')
+        c = fits.open(gal_dir + '/' + gal + '_vorbin_cube.fits')
+        vorbin_map = fits.getdata(gal_dir + '/vorbin_map.fits')
 
         if int(config.get('spec_fit', 'resol_flag')) == 1:
             fwhm_str = gal_dir + '/resol_table_aps.txt'
