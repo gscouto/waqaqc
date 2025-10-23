@@ -559,9 +559,9 @@ def tab_cre(self):
         res_dir = gal_dir + '/pyp_results/' + np.sort([x for x in os.listdir(gal_dir + '/pyp_results/')
                                                        if ('APS' in x)])[-1] + '/'
 
-        wcs_c = fits.open(gal_dir + '/' + gal + '_cube.fits')
-        c = fits.open(gal_dir + '/aps_cube_vorbin.fits')
-        # c = fits.open(gal_dir + '/' + gal + '_vorbin_cube.fits')
+        # wcs_c = fits.open(gal_dir + '/' + gal + '_cube.fits')
+        # c = fits.open(gal_dir + '/aps_cube_vorbin.fits')
+        c = fits.open(gal_dir + '/' + gal + '_vorbin_cube.fits')
         # rss_file = fits.open(res_dir + gal + '_APS_vorbin_RSS.fits')
 
         contm_file = fits.open(res_dir + gal + '_APS_vorbin.cont_model.fits')
@@ -577,7 +577,8 @@ def tab_cre(self):
 
             elint_t = Table(elint_file[1].data)
 
-        vorbin_map = fits.getdata(gal_dir + '/vorbin_map_aps.fits')
+        # vorbin_map = fits.getdata(gal_dir + '/vorbin_map_aps.fits')
+        vorbin_map = fits.getdata(gal_dir + '/vorbin_map.fits')
 
         params_stel = open(res_dir + '/parameters_stellar_aps', 'r')
         lines = params_stel.readlines()
@@ -657,7 +658,23 @@ def tab_cre(self):
         stelt_maps_n.remove('base_coeff')
 
         if int(config.get('spec_fit', 'EL_flag')) == 1:
+            fiber_zero_indices = np.where(elint_t['fiber'] == 0)[0]
+
+            # If there are any fiber=0 rows, keep only the first one
+            if len(fiber_zero_indices) > 1:
+                # mark all except the first for removal
+                to_remove = fiber_zero_indices[1:]
+                mask = np.ones(len(elint_t), dtype=bool)
+                mask[to_remove] = False
+            else:
+                # nothing to remove
+                mask = np.ones(len(elint_t), dtype=bool)
+
+            # Apply mask
+            elint_t = elint_t[mask]
+
             tab_el = elint_t.copy()
+
             elint_maps = []
             elint_maps_n = elint_file[1].data.names
             elint_maps_n.remove('fiber')
@@ -680,20 +697,23 @@ def tab_cre(self):
                                      (len(base_coeff_maps), base_coeff_maps[0].shape[0], base_coeff_maps[0].shape[1]))
 
         for k in np.arange(len(stelt_file[1].data['fiber'])):
-            tx.append(np.where(vorbin_map == k)[1])
-            ty.append(np.where(vorbin_map == k)[0])
-            
+            if np.sum(stelt_file[1].data['fiber'] == k) > 0:
+                tx.append(np.where(vorbin_map == k)[1])
+                ty.append(np.where(vorbin_map == k)[0])
+                for i in np.arange(len(stelt_maps)):
+                    stelt_maps[i][vorbin_map == k] = \
+                        stelt_file[1].data[stelt_maps_n[i]][stelt_file[1].data['fiber'] == k][0]
+                for i in np.arange(len(base_coeff_maps)):
+                    base_coeff_maps[i][vorbin_map == k] = \
+                        stelt_file[1].data['base_coeff'][stelt_file[1].data['fiber'] == k][0][i]
+            else:
+                tx.append([np.nan])
+                ty.append([np.nan])
             if int(config.get('spec_fit', 'EL_flag')):
                 if np.sum(elint_file[1].data['fiber'] == k) > 0:
                     for i in np.arange(len(elint_maps)):
                         elint_maps[i][vorbin_map == k] = \
                             elint_file[1].data[elint_maps_n[i]][elint_file[1].data['fiber'] == k][0]
-            for i in np.arange(len(stelt_maps)):
-                stelt_maps[i][vorbin_map == k] = \
-                    stelt_file[1].data[stelt_maps_n[i]][stelt_file[1].data['fiber'] == k][0]
-            for i in np.arange(len(base_coeff_maps)):
-                base_coeff_maps[i][vorbin_map == k] = \
-                    stelt_file[1].data['base_coeff'][stelt_file[1].data['fiber'] == k][0][i]
 
         ttx = np.concatenate(tx)
         tty = np.concatenate(ty)
@@ -742,12 +762,18 @@ def tab_cre(self):
         cube_head['DISPAXIS'] = contm_file[0].header['DISPAXIS']
         cube_head['CRVAL3'] = contm_file[0].header['CRVAL1']
         cube_head['CRPIX3'] = contm_file[0].header['CRPIX1']
-        cube_head['CRPIX1'] = wcs_c[0].header['CRPIX1']
-        cube_head['CRPIX2'] = wcs_c[0].header['CRPIX2']
-        cube_head['CRVAL1'] = wcs_c[0].header['CRVAL1']
-        cube_head['CRVAL2'] = wcs_c[0].header['CRVAL2']
-        cube_head['CDELT1'] = wcs_c[0].header['CDELT1']
-        cube_head['CDELT2'] = wcs_c[0].header['CDELT2']
+        # cube_head['CRPIX1'] = wcs_c[0].header['CRPIX1']
+        # cube_head['CRPIX2'] = wcs_c[0].header['CRPIX2']
+        # cube_head['CRVAL1'] = wcs_c[0].header['CRVAL1']
+        # cube_head['CRVAL2'] = wcs_c[0].header['CRVAL2']
+        # cube_head['CDELT1'] = wcs_c[0].header['CDELT1']
+        # cube_head['CDELT2'] = wcs_c[0].header['CDELT2']
+        cube_head['CRPIX1'] = c[1].header['CRPIX1']
+        cube_head['CRPIX2'] = c[1].header['CRPIX2']
+        cube_head['CRVAL1'] = c[1].header['CRVAL1']
+        cube_head['CRVAL2'] = c[1].header['CRVAL2']
+        cube_head['CDELT1'] = c[1].header['CDELT1']
+        cube_head['CDELT2'] = c[1].header['CDELT2']
         cube_head['CTYPE1'] = 'RA---TAN'
         cube_head['CTYPE2'] = 'DEC--TAN'
         cube_head['CUNIT1'] = 'deg'
