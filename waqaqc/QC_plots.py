@@ -134,9 +134,9 @@ def fiber_lines(args):
                 # popt, pcov = curve_fit(gauss, w_lam, w_spec, p0=[0, 0, max(w_spec) / 2, cen_lam[i], 3],
                 #                        bounds=([-np.inf, -np.inf, 0, 0, 0],
                 #                                [np.inf, np.inf, np.inf, np.inf, np.inf]))
-                popt, pcov = curve_fit(gauss_hermite, w_lam, w_spec, p0=[0, 0, max(w_spec) / 2, cen_lam[i], 3],
-                                       bounds=([-np.inf, -np.inf, 0, 0, 0],
-                                               [np.inf, np.inf, np.inf, np.inf, np.inf]))
+                popt, pcov = curve_fit(gauss_hermite, w_lam, w_spec, p0=[0, 0, max(w_spec) / 2, cen_lam[i], 3, 0, 0],
+                                       bounds=([-np.inf, -np.inf, 0, 0, 0, -1, -1],
+                                               [np.inf, np.inf, np.inf, np.inf, np.inf, 1, 1]))
 
                 if (popt[4] * 2.355 > 0.1) & (popt[4] * 2.355 < 5.0):
                     # f_fit = np.sum(gauss(w_lam, *popt)) - np.nanmedian([gauss(w_lam, *popt)[0],
@@ -710,12 +710,19 @@ def html_plots(self):
 
         ax = plt.subplot(gs[3 + (4 * k), :])
         ax.plot(np.nanmedian(sky_cen - np.nanmedian(sky_cen, axis=0), axis=1), color=single_file[1].name[:-5],
-                alpha=0.5)
+                alpha=0.5, label='sky lines')
+        if single_file[0].header['CAMERA'] == 'WEAVEBLUE' and len(warc_cen_blue) > 0:
+            ax.plot(np.nanmedian(warc_cen_blue - np.nanmedian(warc_cen_blue, axis=0), axis=1), color='orange',
+                    alpha=0.5, label='warc lines')
+        if single_file[0].header['CAMERA'] == 'WEAVERED' and len(warc_cen_red) > 0:
+            ax.plot(np.nanmedian(warc_cen_red - np.nanmedian(warc_cen_red, axis=0), axis=1), color='orange',
+                    alpha=0.5, label='warc lines')
         ax.set_xlabel('fiber #')
         ax.set_ylabel(r'relative sky line offsets [$\AA$]')
         ax.set_ylim([-0.5, 0.5])
         ax.set_title('wavelength calibration')
         ax.grid()
+        ax.legend()
 
         # ------ estimate SNR using the ETC
 
