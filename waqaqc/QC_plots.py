@@ -129,15 +129,20 @@ def fiber_lines(args):
         w_lam = lamp_lam[lam_wind_c - lam_wind: lam_wind_c + lam_wind]
         w_spec = lamp_spec[fiber][lam_wind_c - lam_wind: lam_wind_c + lam_wind]
 
-        if (w_spec[int(w_spec.size / 2)] / 4 > w_spec[0]) and (w_spec[int(w_spec.size / 2)] / 4 > w_spec[-1]):
+        if (w_spec[int(w_spec.size / 2)] / 1 > w_spec[0]) and (w_spec[int(w_spec.size / 2)] / 1 > w_spec[-1]):
             try:
-                popt, pcov = curve_fit(gauss, w_lam, w_spec, p0=[0, 0, max(w_spec) / 2, cen_lam[i], 3],
+                # popt, pcov = curve_fit(gauss, w_lam, w_spec, p0=[0, 0, max(w_spec) / 2, cen_lam[i], 3],
+                #                        bounds=([-np.inf, -np.inf, 0, 0, 0],
+                #                                [np.inf, np.inf, np.inf, np.inf, np.inf]))
+                popt, pcov = curve_fit(gauss_hermite, w_lam, w_spec, p0=[0, 0, max(w_spec) / 2, cen_lam[i], 3],
                                        bounds=([-np.inf, -np.inf, 0, 0, 0],
                                                [np.inf, np.inf, np.inf, np.inf, np.inf]))
 
                 if (popt[4] * 2.355 > 0.1) & (popt[4] * 2.355 < 5.0):
-                    f_fit = np.sum(gauss(w_lam, *popt)) - np.nanmedian([gauss(w_lam, *popt)[0],
-                                                                        gauss(w_lam, *popt)[-1]])
+                    # f_fit = np.sum(gauss(w_lam, *popt)) - np.nanmedian([gauss(w_lam, *popt)[0],
+                    #                                                     gauss(w_lam, *popt)[-1]])
+                    f_fit = np.sum(gauss_hermite(w_lam, *popt)) - np.nanmedian([gauss_hermite(w_lam, *popt)[0],
+                                                                        gauss_hermite(w_lam, *popt)[-1]])
                     fib_flux.append(f_fit)
                     fib_cen.append(popt[3])
                     fib_sigma.append(popt[4] * 2.355)
@@ -146,6 +151,7 @@ def fiber_lines(args):
                         fig_skyline = plt.figure(figsize=(5, 4))
                         plt.plot(w_lam, w_spec, color='black')
                         plt.plot(w_lam, gauss(w_lam, *popt), color='red')
+                        plt.plot(w_lam, gauss_hermite(w_lam, *popt), color='red')
                         plt.xlabel(r'$\lambda$ [$\AA$]')
                         plt.ylabel(r'flux')
                         plt.annotate('cenlam = ' + str(round(popt[3], 2)), (0.01, 0.9), xycoords='axes fraction',
@@ -179,6 +185,41 @@ def fiber_lines(args):
 
 def gauss(x, a, b, amp, x0, sigma):
     return a + b * x + amp * np.exp(-(x - x0) ** 2 / (2 * sigma ** 2))
+
+
+def gauss_hermite(x, a, b, amp, x0, sigma, h3=0.0, h4=0.0):
+    """
+    Gauss–Hermite function for fitting asymmetric spectral lines.
+
+    Parameters
+    ----------
+    x : array-like
+        Input wavelength or pixel array.
+    a, b : float
+        Linear continuum parameters (baseline = a + b*x).
+    amp : float
+        Amplitude of the Gaussian component.
+    x0 : float
+        Central position (mean).
+    sigma : float
+        Standard deviation (dispersion).
+    h3, h4 : float, optional
+        Gauss–Hermite coefficients for skewness (h3) and kurtosis (h4).
+
+    Returns
+    -------
+    model : array
+        Gauss–Hermite line profile.
+    """
+    y = (x - x0) / sigma
+    gauss_f = np.exp(-0.5 * y ** 2)
+
+    # Normalized Hermite polynomials H3 and H4 (physicists' definition)
+    H3 = (2 * y ** 3 - 3 * y) / np.sqrt(6)
+    H4 = (4 * y ** 4 - 12 * y ** 2 + 3) / np.sqrt(24)
+
+    hermite = (1 + h3 * H3 + h4 * H4)
+    return a + b * x + amp * gauss_f * hermite
 
 
 def polinom(x, a, b, c):
@@ -473,7 +514,8 @@ def html_plots(self):
                 cen_lam = np.array([3606., 3738., 3850., 3995., 4104., 4132., 4290., 4400., 4511., 4545., 4579., 4609.,
                                     4765., 4806., 4965., 5187., 5410.])
             else:
-                cen_lam = np.array([7724., 7948., 8103., 8115., 8264., 8408., 8424., 8521., 8668., 9123., 9224., ])
+                # cen_lam = np.array([7724., 7948., 8103., 8115., 8264., 8408., 8424., 8521., 8668., 9123., 9224.])
+                cen_lam = np.array([7788., 7979., 8046., 8159., 8384., 8450., 8606., 8748., 8850., 9008., 9180.])
         else:
             cen_lam = lamp_lam[lam_wind + 1:-(lam_wind + 2)][
                 np.diff(lamp_spec[300])[lam_wind + 1:-(lam_wind + 1)] < -1500]
