@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(name='waqaqc',
       version='0.1',
       author="Guilherme Couto",
-      author_email="",
+      author_email="gcouto@aip.de",
       description="",
       url="",
       # packages=['waqaqc'],

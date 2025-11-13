@@ -3,7 +3,8 @@ Name: waqaqc
 Version: 0.1
 Home-page: 
 Author: Guilherme Couto
-Author-email: 
+Author-email: gcouto@aip.de
 License-File: LICENSE
 Dynamic: author
+Dynamic: author-email
 Dynamic: license-file

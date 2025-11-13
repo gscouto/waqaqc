@@ -129,20 +129,20 @@ def fiber_lines(args):
         w_lam = lamp_lam[lam_wind_c - lam_wind: lam_wind_c + lam_wind]
         w_spec = lamp_spec[fiber][lam_wind_c - lam_wind: lam_wind_c + lam_wind]
 
-        if (w_spec[int(w_spec.size / 2)] / 1 > w_spec[0]) and (w_spec[int(w_spec.size / 2)] / 1 > w_spec[-1]):
+        if (w_spec[int(w_spec.size / 2)] / 4 > w_spec[0]) and (w_spec[int(w_spec.size / 2)] / 4 > w_spec[-1]):
             try:
-                # popt, pcov = curve_fit(gauss, w_lam, w_spec, p0=[0, 0, max(w_spec) / 2, cen_lam[i], 3],
-                #                        bounds=([-np.inf, -np.inf, 0, 0, 0],
-                #                                [np.inf, np.inf, np.inf, np.inf, np.inf]))
-                popt, pcov = curve_fit(gauss_hermite, w_lam, w_spec, p0=[0, 0, max(w_spec) / 2, cen_lam[i], 3, 0, 0],
-                                       bounds=([-np.inf, -np.inf, 0, 0, 0, -1, -1],
-                                               [np.inf, np.inf, np.inf, np.inf, np.inf, 1, 1]))
+                popt, pcov = curve_fit(gauss, w_lam, w_spec, p0=[0, 0, max(w_spec) / 2, cen_lam[i], 3],
+                                       bounds=([-np.inf, -np.inf, 0, 0, 0],
+                                               [np.inf, np.inf, np.inf, np.inf, np.inf]))
+                # popt, pcov = curve_fit(gauss_hermite, w_lam, w_spec, p0=[0, 0, max(w_spec) / 2, cen_lam[i], 3, 0, 0],
+                #                        bounds=([-np.inf, -np.inf, 0, 0, 0, -1, -1],
+                #                                [np.inf, np.inf, np.inf, np.inf, np.inf, 1, 1]))
 
                 if (popt[4] * 2.355 > 0.1) & (popt[4] * 2.355 < 5.0):
-                    # f_fit = np.sum(gauss(w_lam, *popt)) - np.nanmedian([gauss(w_lam, *popt)[0],
-                    #                                                     gauss(w_lam, *popt)[-1]])
-                    f_fit = np.sum(gauss_hermite(w_lam, *popt)) - np.nanmedian([gauss_hermite(w_lam, *popt)[0],
-                                                                        gauss_hermite(w_lam, *popt)[-1]])
+                    f_fit = np.sum(gauss(w_lam, *popt)) - np.nanmedian([gauss(w_lam, *popt)[0],
+                                                                        gauss(w_lam, *popt)[-1]])
+                    # f_fit = np.sum(gauss_hermite(w_lam, *popt)) - np.nanmedian([gauss_hermite(w_lam, *popt)[0],
+                    #                                                             gauss_hermite(w_lam, *popt)[-1]])
                     fib_flux.append(f_fit)
                     fib_cen.append(popt[3])
                     fib_sigma.append(popt[4] * 2.355)
@@ -151,7 +151,7 @@ def fiber_lines(args):
                         fig_skyline = plt.figure(figsize=(5, 4))
                         plt.plot(w_lam, w_spec, color='black')
                         plt.plot(w_lam, gauss(w_lam, *popt), color='red')
-                        plt.plot(w_lam, gauss_hermite(w_lam, *popt), color='red')
+                        # plt.plot(w_lam, gauss_hermite(w_lam, *popt), color='red')
                         plt.xlabel(r'$\lambda$ [$\AA$]')
                         plt.ylabel(r'flux')
                         plt.annotate('cenlam = ' + str(round(popt[3], 2)), (0.01, 0.9), xycoords='axes fraction',
@@ -160,8 +160,16 @@ def fiber_lines(args):
                                      fontsize=10)
                         plt.annotate('flux = ' + str(round(f_fit, 1)), (0.01, 0.8), xycoords='axes fraction',
                                      fontsize=10)
+                        # plt.annotate('h3 = ' + str(round(popt[5], 1)), (0.01, 0.75), xycoords='axes fraction',
+                        #              fontsize=10)
+                        # plt.annotate('h4 = ' + str(round(popt[6], 1)), (0.01, 0.70), xycoords='axes fraction',
+                        #              fontsize=10)
                         fig_skyline.savefig(fiber_dir + str(round(popt[3])) + '.pdf')
                         plt.close(fig_skyline)
+                else:
+                    fib_flux.append(np.nan)
+                    fib_cen.append(np.nan)
+                    fib_sigma.append(np.nan)
 
             except:
                 fib_flux.append(np.nan)
@@ -410,11 +418,11 @@ def html_plots(self):
     # Start doing the L0 plots
     print('Doing L0 raw data plots')
 
-    fig = plt.figure(figsize=(14, 54))
+    fig = plt.figure(figsize=(14, 61))
 
     fig.suptitle('L0 QC plots', size=22, weight='bold')
 
-    gs = gridspec.GridSpec(15, 3, height_ratios=np.concatenate((np.array([1]), np.zeros(14) + 0.5)),
+    gs = gridspec.GridSpec(17, 3, height_ratios=np.concatenate((np.array([1]), np.zeros(16) + 0.5)),
                            width_ratios=[1, 1, 1])
     gs.update(left=0.07, right=0.95, bottom=0.02, top=0.95, wspace=0.3, hspace=0.3)
 
@@ -495,6 +503,9 @@ def html_plots(self):
     warc_cen_med_red = []
     warc_sigma_med_red = []
 
+    warc_cen_blue_ext = []
+    warc_cen_red_ext = []
+
     # Measuring WARC files lines
     for j in np.arange(len(warc_list)):
 
@@ -528,18 +539,24 @@ def html_plots(self):
         print('')
 
         if file_cam == 'WEAVEBLUE':
+            warc_cen_blue_ext = np.zeros((len(warc_stats), len(cen_lam)))
             for i in np.arange(len(warc_stats)):
                 warc_cen_blue.extend(warc_stats[i][2])
                 warc_cen_med_blue.append(warc_stats[i][3])
                 warc_sigma_blue.extend(warc_stats[i][4])
                 warc_sigma_med_blue.append(warc_stats[i][5])
+                for l in np.arange(len(cen_lam)):
+                    warc_cen_blue_ext[i, l] = warc_stats[i][2][l]
 
         if file_cam == 'WEAVERED':
+            warc_cen_red_ext = np.zeros((len(warc_stats), len(cen_lam)))
             for i in np.arange(len(warc_stats)):
                 warc_cen_red.extend(warc_stats[i][2])
                 warc_cen_med_red.append(warc_stats[i][3])
                 warc_sigma_red.extend(warc_stats[i][4])
                 warc_sigma_med_red.append(warc_stats[i][5])
+                for l in np.arange(len(cen_lam)):
+                    warc_cen_red_ext[i, l] = warc_stats[i][2][l]
 
     warc_cen_blue = np.ravel(warc_cen_blue)
     warc_sigma_blue = np.ravel(warc_sigma_blue)
@@ -584,8 +601,8 @@ def html_plots(self):
                 cen_lam = np.array([5577.])
             else:
                 cen_lam = np.array([6864., 6923., 6949., 6978., 7316., 7341., 7370., 7402., 7750., 7794., 7821., 7890.,
-                                    7931., 7993., 8062., 8399., 8430., 8465., 8505., 8886., 8920., 8959., 9002., 9338.,
-                                    9376., 9440.])
+                                    7931., 7993., 8062., 8399., 8430., 8465., 8505., 8886., 8920., 8959., 9002., 9376.,
+                                    9440.])
         else:
             cen_lam = sky_lam[lam_wind + 1:-(lam_wind + 2)][
                 np.diff(sky_spec[300])[lam_wind + 1:-(lam_wind + 1)] < -0.03]
@@ -622,7 +639,7 @@ def html_plots(self):
 
         # ------- plotting the sky resolution
 
-        ax = plt.subplot(gs[1 + (4 * k), 0])
+        ax = plt.subplot(gs[1 + (5 * k), 0])
         ax.plot(np.arange(len(resol)), np.ravel(sky_sigma_med), '.', color=single_file[1].name[:-5], alpha=0.5,
                 zorder=-1,
                 label='sky fits')
@@ -639,7 +656,7 @@ def html_plots(self):
         ax.set_ylabel('FWHM [A]')
         ax.legend()
 
-        ax = plt.subplot(gs[1 + (4 * k), 1])
+        ax = plt.subplot(gs[1 + (5 * k), 1])
         ax.plot(sky_cen, sky_sigma, '.', color=single_file[1].name[:-5], alpha=0.1, zorder=-1)
         if len(warc_list) > 0:
             if single_file[0].header['CAMERA'] == 'WEAVEBLUE' and len(warc_sigma_med_blue) > 0:
@@ -666,7 +683,7 @@ def html_plots(self):
         else:
             exp_res = 10000
 
-        ax = plt.subplot(gs[1 + (4 * k), 2])
+        ax = plt.subplot(gs[1 + (5 * k), 2])
         ax.plot(sky_cen, sky_cen / sky_sigma, '.', color=single_file[1].name[:-5], alpha=0.1, zorder=-1)
         if len(warc_list) > 0:
             if single_file[0].header['CAMERA'] == 'WEAVEBLUE' and len(warc_sigma_med_blue) > 0:
@@ -698,29 +715,50 @@ def html_plots(self):
 
         # ------- plotting the fiber throughput
 
-        ax = plt.subplot(gs[2 + (4 * k), :])
+        ax = plt.subplot(gs[2 + (5 * k), :])
         ax.plot(sky_flux_med / np.median(sky_flux_med), color=single_file[1].name[:-5], alpha=0.5)
         ax.set_xlabel('fiber #')
         ax.set_ylabel('relative median sky lines flux')
         ax.set_ylim([0.7, 1.3])
         ax.set_title('fiber throughput')
+        ft_m = np.median(sky_flux_med / np.median(sky_flux_med))
+        ft_p1_l, ft_p1_h = np.percentile(sky_flux_med / np.median(sky_flux_med), [15.87, 84.13])
+        ft_p1 = (ft_p1_h - ft_p1_l) / 2
+        ft_p3_l, ft_p3_h = np.percentile(sky_flux_med / np.median(sky_flux_med), [0.135, 99.865])
+        ft_p3 = (ft_p3_h - ft_p3_l) / 2
+        ax.annotate(r'median = ' + f"{ft_m:.2f}", (0.9, 0.9), xycoords='axes fraction')
+        ax.annotate(r'84 perc = ' + f"{ft_p1:.2f}", (0.9, 0.8), xycoords='axes fraction')
+        ax.annotate(r'99 perc = ' + f"{ft_p3:.2f}", (0.9, 0.7), xycoords='axes fraction')
         ax.grid()
 
         # ------- plotting the wavelength solution
 
-        ax = plt.subplot(gs[3 + (4 * k), :])
+        ax = plt.subplot(gs[3 + (5 * k), :])
         ax.plot(np.nanmedian(sky_cen - np.nanmedian(sky_cen, axis=0), axis=1), color=single_file[1].name[:-5],
                 alpha=0.5, label='sky lines')
-        if single_file[0].header['CAMERA'] == 'WEAVEBLUE' and len(warc_cen_blue) > 0:
-            ax.plot(np.nanmedian(warc_cen_blue - np.nanmedian(warc_cen_blue, axis=0), axis=1), color='orange',
+        if single_file[0].header['CAMERA'] == 'WEAVEBLUE' and len(warc_cen_blue_ext) > 0:
+            ax.plot(np.nanmedian(warc_cen_blue_ext - np.nanmedian(warc_cen_blue_ext, axis=0), axis=1), color='orange',
                     alpha=0.5, label='warc lines')
-        if single_file[0].header['CAMERA'] == 'WEAVERED' and len(warc_cen_red) > 0:
-            ax.plot(np.nanmedian(warc_cen_red - np.nanmedian(warc_cen_red, axis=0), axis=1), color='orange',
+        if single_file[0].header['CAMERA'] == 'WEAVERED' and len(warc_cen_red_ext) > 0:
+            ax.plot(np.nanmedian(warc_cen_red_ext - np.nanmedian(warc_cen_red_ext, axis=0), axis=1), color='orange',
                     alpha=0.5, label='warc lines')
         ax.set_xlabel('fiber #')
         ax.set_ylabel(r'relative sky line offsets [$\AA$]')
         ax.set_ylim([-0.5, 0.5])
         ax.set_title('wavelength calibration')
+        ws_sky_m = np.median(np.nanmedian(sky_cen - np.nanmedian(sky_cen, axis=0), axis=1))
+        ws_warc_m = np.median(np.nanmedian(warc_cen_blue_ext - np.nanmedian(warc_cen_blue_ext, axis=0)))
+        ws_sky_p1_l, ws_sky_p1_h = np.percentile(np.nanmedian(sky_cen -
+                                                              np.nanmedian(sky_cen, axis=0), axis=1), [15.87, 84.13])
+        ws_sky_p1 = (ws_sky_p1_h - ws_sky_p1_l) / 2
+        ws_warc_p1_l, ws_warc_p1_h = np.percentile(np.nanmedian(warc_cen_blue_ext -
+                                                                np.nanmedian(warc_cen_blue_ext, axis=0)),
+                                                   [15.87, 84.13])
+        ws_warc_p1 = (ws_warc_p1_h - ws_warc_p1_l) / 2
+        ax.annotate(r'sky median = ' + f"{ws_sky_m:.2f}" + r' $\pm$ ' + f"{ws_sky_p1:.2f}"
+                    + r'$\AA$', (0.1, 0.2), xycoords='axes fraction')
+        ax.annotate(r'warc median = ' + f"{ws_warc_m:.2f}" + r' $\pm$ ' + f"{ws_warc_p1:.2f}"
+                    + r'$\AA$', (0.1, 0.1), xycoords='axes fraction')
         ax.grid()
         ax.legend()
 
@@ -806,7 +844,7 @@ def html_plots(self):
             etc_snr.append(np.round(result['SNR'], 2))
         etc_snr = np.array(etc_snr)
 
-        ax = plt.subplot(gs[4 + (4 * k), :])
+        ax = plt.subplot(gs[4 + (5 * k), :])
         ax.plot(etc_mag, etc_snr, color='gray', linestyle='--', label='ETC')
         ax.scatter(mag_band.flatten(), snr_band.flatten(), s=20, marker='o', alpha=0.3, color=single_file[1].name[:-5],
                    edgecolor='black', label='fiber')
@@ -820,13 +858,28 @@ def html_plots(self):
         ax.annotate(r'airmass = ' + f"{air_mass:.2f}", (0.02, 0.25), xycoords='axes fraction')
         ax.annotate(r'seeing = ' + f"{seeing:.2f}", (0.02, 0.20), xycoords='axes fraction')
         ax.annotate(r'sky brightness = ' + f"{sky_bright:.2f}", (0.02, 0.15), xycoords='axes fraction')
+        ax.grid()
         ax.legend()
+
+        snr_band_etc = np.interp(mag_band.flatten(), etc_mag, etc_snr, left=None, right=None)
+
+        ax = plt.subplot(gs[5 + (5 * k), :])
+        ax.scatter(mag_band.flatten(), snr_band.flatten()-snr_band_etc, s=20, marker='o', alpha=0.3,
+                   color=single_file[1].name[:-5], edgecolor='black')
+        ax.axhline(0, color='black', linestyle='--', linewidth=1)
+        ax.set_xlim([13, 26])
+        ax.set_ylim([-20, 20])
+        ax.set_xlabel(band + ' band mag (Vega)')
+        ax.set_ylabel(r'$\Delta$ S/N ratio [per $\AA$]')
+        ax.grid()
+
+    # ------ flux calibration plots
 
     for k in np.arange(len(file_list)):
         single_file = fits.open(file_dir + file_list[k])
         lam = (np.arange(single_file[1].header['NAXIS1']) * single_file[1].header['CD1_1']) + \
               single_file[1].header['CRVAL1']
-        ax = plt.subplot(gs[9 + k, :])
+        ax = plt.subplot(gs[11 + k, :])
         ax.plot(lam, np.mean(single_file[1].data, axis=0) * np.median(single_file[5].data, axis=0), color='black',
                 label='mean flux spec')
         if single_file[1].name[:-5] == 'RED':
@@ -1826,38 +1879,85 @@ def html_plots(self):
 
         fig.savefig(fig_l2)
 
-        text = '''
+        text = f'''
         <html>
-            <body style="background-color:white;">
-                <div style="text-align: center;">
-                    <h1>Night report ''' + date + '''</h1>
-                    <h1>CNAME ''' + blue_cube[0].header['CCNAME1'] + '''</h1>
-                    <h1>IFUNAME ''' + blue_cube[0].header['IFUNAME'] + '''</h1>
-                    <h1>OBID ''' + str(blue_cube[0].header['OBID']) + '''</h1>
-                    <h1>LIFU MODE ''' + blue_cube[0].header['MODE'] + '''</h1>
-                    <img src="''' + fig_l0 + '''" class="center">
-                    <img src="''' + fig_l1 + '''" class="center">
-                    <img src="''' + fig_l2 + '''" class="center">
-                </div>
-            </body>
+          <body style="background-color:white;">
+            <div style="text-align: center;">
+              <h1>Data report {date}</h1>
+              <h1>CNAME {blue_cube[0].header['CCNAME1']}</h1>
+              <h1>IFUNAME {blue_cube[0].header['IFUNAME']}</h1>
+              <h1>OBID {blue_cube[0].header['OBID']}</h1>
+              <h1>LIFU MODE {blue_cube[0].header['MODE']}</h1>
+
+              <!-- Navigation buttons -->
+              <div style="margin: 20px;">
+                <a href="#fig_l0" style="margin:10px; text-decoration:none; padding:8px 16px; background-color:#007BFF; 
+                color:white; border-radius:8px;">L0 plots</a>
+                <a href="#fig_l1" style="margin:10px; text-decoration:none; padding:8px 16px; background-color:#007BFF; 
+                color:white; border-radius:8px;">L1 plots</a>
+                <a href="#fig_l2" style="margin:10px; text-decoration:none; padding:8px 16px; background-color:#007BFF; 
+                color:white; border-radius:8px;">L2 plots</a>
+              </div>
+
+              <!-- Figures with anchors -->
+              <div id="fig_l0">
+                <img src="{fig_l0}" class="center">
+              </div>
+
+              <div id="fig_l1">
+                <img src="{fig_l1}" class="center">
+              </div>
+
+              <div id="fig_l2">
+                <img src="{fig_l2}" class="center">
+              </div>
+
+              <!-- Back to top button -->
+              <div style="margin: 20px;">
+                <a href="#top" style="text-decoration:none; padding:8px 16px; background-color:#28a745; color:white; 
+                border-radius:8px;">Back to Top</a>
+              </div>
+            </div>
+          </body>
         </html>
         '''
 
     else:
 
-        text = '''
+        text = f'''
         <html>
-            <body style="background-color:white;">
-                <div style="text-align: center;">
-                    <h1>Night report ''' + date + '''</h1>
-                    <h1>CNAME ''' + blue_cube[0].header['CCNAME1'] + '''</h1>
-                    <h1>IFUNAME ''' + blue_cube[0].header['IFUNAME'] + '''</h1>
-                    <h1>OBID ''' + str(blue_cube[0].header['OBID']) + '''</h1>
-                    <h1>LIFU MODE ''' + blue_cube[0].header['MODE'] + '''</h1>
-                    <img src="''' + fig_l0 + '''" class="center">
-                    <img src="''' + fig_l1 + '''" class="center">
-                </div>
-            </body>
+          <body style="background-color:white;">
+            <div style="text-align: center;">
+              <h1>Data report {date}</h1>
+              <h1>CNAME {blue_cube[0].header['CCNAME1']}</h1>
+              <h1>IFUNAME {blue_cube[0].header['IFUNAME']}</h1>
+              <h1>OBID {blue_cube[0].header['OBID']}</h1>
+              <h1>LIFU MODE {blue_cube[0].header['MODE']}</h1>
+
+              <!-- Navigation buttons -->
+              <div style="margin: 20px;">
+                <a href="#fig_l0" style="margin:10px; text-decoration:none; padding:8px 16px; background-color:#007BFF; 
+                color:white; border-radius:8px;">L0 plots</a>
+                <a href="#fig_l1" style="margin:10px; text-decoration:none; padding:8px 16px; background-color:#007BFF; 
+                color:white; border-radius:8px;">L1 plots</a>
+              </div>
+
+              <!-- Figures with anchors -->
+              <div id="fig_l0">
+                <img src="{fig_l0}" class="center">
+              </div>
+
+              <div id="fig_l1">
+                <img src="{fig_l1}" class="center">
+              </div>
+
+              <!-- Back to top button -->
+              <div style="margin: 20px;">
+                <a href="#top" style="text-decoration:none; padding:8px 16px; background-color:#28a745; color:white; 
+                border-radius:8px;">Back to Top</a>
+              </div>
+            </div>
+          </body>
         </html>
         '''
 
@@ -1865,5 +1965,13 @@ def html_plots(self):
              + ".html", "w")
 
     f.write(text)
-
     f.close()
+
+    if config.get('QC_plots', 'aps_flag') == '1':
+        qc_plot_dir = 'CPSv' + blue_cube[0].header['CASUVERS'] + '_APSv' + aps_cube[1].header['APSVERS']
+    else:
+        qc_plot_dir = 'CPSv' + blue_cube[0].header['CASUVERS']
+
+    os.makedirs(qc_plot_dir, exist_ok=True)
+    os.system('mv ' + date + '_' + gal_name + '*.html ' + qc_plot_dir + '/.')
+    os.system('mv ' + date + '_' + gal_name + '*.png ' + qc_plot_dir + '/.')
