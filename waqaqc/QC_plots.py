@@ -129,57 +129,57 @@ def fiber_lines(args):
         w_lam = lamp_lam[lam_wind_c - lam_wind: lam_wind_c + lam_wind]
         w_spec = lamp_spec[fiber][lam_wind_c - lam_wind: lam_wind_c + lam_wind]
 
-        if (w_spec[int(w_spec.size / 2)] / 4 > w_spec[0]) and (w_spec[int(w_spec.size / 2)] / 4 > w_spec[-1]):
-            try:
-                popt, pcov = curve_fit(gauss, w_lam, w_spec, p0=[0, 0, max(w_spec), cen_lam[i], 1],
-                                       bounds=([-np.inf, -np.inf, 0, 0, 0],
-                                               [np.inf, np.inf, np.inf, np.inf, np.inf]))
-                # popt, pcov = curve_fit(gauss_hermite, w_lam, w_spec, p0=[0, 0, max(w_spec) / 2, cen_lam[i], 3, 0, 0],
-                #                        bounds=([-np.inf, -np.inf, 0, 0, 0, -1, -1],
-                #                                [np.inf, np.inf, np.inf, np.inf, np.inf, 1, 1]))
+        # if (w_spec[int(w_spec.size / 2)] / 4 > w_spec[0]) and (w_spec[int(w_spec.size / 2)] / 4 > w_spec[-1]):
+        # try:
+        popt, pcov = curve_fit(gauss, w_lam, w_spec, p0=[0, 0, max(w_spec), cen_lam[i], 1],
+                               bounds=([-np.inf, -np.inf, 0, 0, 0],
+                                       [np.inf, np.inf, np.inf, np.inf, np.inf]))
+        # popt, pcov = curve_fit(gauss_hermite, w_lam, w_spec, p0=[0, 0, max(w_spec) / 2, cen_lam[i], 3, 0, 0],
+        #                        bounds=([-np.inf, -np.inf, 0, 0, 0, -1, -1],
+        #                                [np.inf, np.inf, np.inf, np.inf, np.inf, 1, 1]))
 
-                if (popt[4] * 2.355 > 0.1) & (popt[4] * 2.355 < 5.0):
-                    f_fit = np.sum(gauss(w_lam, *popt)) - np.nanmedian([gauss(w_lam, *popt)[0],
-                                                                        gauss(w_lam, *popt)[-1]])
-                    # f_fit = np.sum(gauss_hermite(w_lam, *popt)) - np.nanmedian([gauss_hermite(w_lam, *popt)[0],
-                    #                                                             gauss_hermite(w_lam, *popt)[-1]])
-                    fib_flux.append(f_fit)
-                    fib_cen.append(popt[3])
-                    fib_sigma.append(popt[4] * 2.355)
+        # if (popt[4] * 2.355 > 0.1) & (popt[4] * 2.355 < 5.0):
+        f_fit = np.sum(gauss(w_lam, *popt)) - np.nanmedian([gauss(w_lam, *popt)[0],
+                                                            gauss(w_lam, *popt)[-1]])
+        # f_fit = np.sum(gauss_hermite(w_lam, *popt)) - np.nanmedian([gauss_hermite(w_lam, *popt)[0],
+        #                                                             gauss_hermite(w_lam, *popt)[-1]])
+        fib_flux.append(f_fit)
+        fib_cen.append(popt[3])
+        fib_sigma.append(popt[4] * 2.355)
 
-                    if sky_plot_flag == 1 and fiber % 25 == 0:
-                        fig_skyline = plt.figure(figsize=(5, 4))
-                        plt.plot(w_lam, w_spec, color='black')
-                        plt.plot(w_lam, gauss(w_lam, *popt), color='red')
-                        # plt.plot(w_lam, gauss_hermite(w_lam, *popt), color='red')
-                        plt.xlabel(r'$\lambda$ [$\AA$]')
-                        plt.ylabel(r'flux')
-                        plt.annotate('cenlam = ' + str(round(popt[3], 2)), (0.01, 0.9), xycoords='axes fraction',
-                                     fontsize=10)
-                        plt.annotate('FWHM = ' + str(round(popt[4] * 2.355, 2)), (0.01, 0.85), xycoords='axes fraction',
-                                     fontsize=10)
-                        plt.annotate('flux = ' + str(round(f_fit, 1)), (0.01, 0.8), xycoords='axes fraction',
-                                     fontsize=10)
-                        # plt.annotate('h3 = ' + str(round(popt[5], 1)), (0.01, 0.75), xycoords='axes fraction',
-                        #              fontsize=10)
-                        # plt.annotate('h4 = ' + str(round(popt[6], 1)), (0.01, 0.70), xycoords='axes fraction',
-                        #              fontsize=10)
-                        fig_skyline.savefig(fiber_dir + str(round(popt[3])) + '.pdf')
-                        plt.close(fig_skyline)
-                else:
-                    fib_flux.append(np.nan)
-                    fib_cen.append(np.nan)
-                    fib_sigma.append(np.nan)
+        if sky_plot_flag == 1 and fiber % 25 == 0:
+            fig_skyline = plt.figure(figsize=(5, 4))
+            plt.plot(w_lam, w_spec, color='black')
+            plt.plot(w_lam, gauss(w_lam, *popt), color='red')
+            # plt.plot(w_lam, gauss_hermite(w_lam, *popt), color='red')
+            plt.xlabel(r'$\lambda$ [$\AA$]')
+            plt.ylabel(r'flux')
+            plt.annotate('cenlam = ' + str(round(popt[3], 2)), (0.01, 0.9), xycoords='axes fraction',
+                         fontsize=10)
+            plt.annotate('FWHM = ' + str(round(popt[4] * 2.355, 2)), (0.01, 0.85), xycoords='axes fraction',
+                         fontsize=10)
+            plt.annotate('flux = ' + str(round(f_fit, 1)), (0.01, 0.8), xycoords='axes fraction',
+                         fontsize=10)
+            # plt.annotate('h3 = ' + str(round(popt[5], 1)), (0.01, 0.75), xycoords='axes fraction',
+            #              fontsize=10)
+            # plt.annotate('h4 = ' + str(round(popt[6], 1)), (0.01, 0.70), xycoords='axes fraction',
+            #              fontsize=10)
+            fig_skyline.savefig(fiber_dir + str(round(popt[3])) + '.pdf')
+            plt.close(fig_skyline)
+        # else:
+        #     fib_flux.append(np.nan)
+        #     fib_cen.append(np.nan)
+        #     fib_sigma.append(np.nan)
 
-            except:
-                fib_flux.append(np.nan)
-                fib_cen.append(np.nan)
-                fib_sigma.append(np.nan)
+        # except:
+        #     fib_flux.append(np.nan)
+        #     fib_cen.append(np.nan)
+        #     fib_sigma.append(np.nan)
 
-        else:
-            fib_flux.append(np.nan)
-            fib_cen.append(np.nan)
-            fib_sigma.append(np.nan)
+        # else:
+        #     fib_flux.append(np.nan)
+        #     fib_cen.append(np.nan)
+        #     fib_sigma.append(np.nan)
 
     warc_flux = np.ravel(fib_flux)
     warc_flux_med = np.nanmedian(np.ravel(fib_flux))
