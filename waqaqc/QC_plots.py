@@ -528,8 +528,12 @@ def html_plots(self):
                 # cen_lam = np.array([7724., 7948., 8103., 8115., 8264., 8408., 8424., 8521., 8668., 9123., 9224.])
                 cen_lam = np.array([7788., 7979., 8046., 8159., 8384., 8450., 8606., 8748., 8850., 9008., 9180.])
         else:
-            cen_lam = lamp_lam[lam_wind + 1:-(lam_wind + 2)][
-                np.diff(lamp_spec[300])[lam_wind + 1:-(lam_wind + 1)] < -1500]
+            if file_cam == 'WEAVEBLUE':
+                cen_lam = np.array([4727., 4765., 4806., 4848., 4880., 4965., 5017., 5091., 5159., 5208., 5231.])
+            else:
+                cen_lam = np.array([6457., 6531., 6584., 6644., 6677., 6684., 6753., 6767.])
+            # cen_lam = lamp_lam[lam_wind + 1:-(lam_wind + 2)][
+            #     np.diff(lamp_spec[300])[lam_wind + 1:-(lam_wind + 1)] < -1500]
 
         with mp.Pool(int(config.get('APS_cube', 'n_proc'))) as pool:
             warc_stats = pool.starmap(fiber_lines,
@@ -604,8 +608,12 @@ def html_plots(self):
                                     7931., 7993., 8062., 8399., 8430., 8465., 8505., 8886., 8920., 8959., 9002., 9376.,
                                     9440.])
         else:
-            cen_lam = sky_lam[lam_wind + 1:-(lam_wind + 2)][
-                np.diff(sky_spec[300])[lam_wind + 1:-(lam_wind + 1)] < -0.03]
+            if file_cam == 'WEAVEBLUE':
+                cen_lam = np.array([5198., 5239., 5256.])
+            else:
+                cen_lam = np.array([6170., 6258., 6287., 6300., 6330., 6363., 6533., 6553., 6577., ])
+            # cen_lam = sky_lam[lam_wind + 1:-(lam_wind + 2)][
+            #     np.diff(sky_spec[300])[lam_wind + 1:-(lam_wind + 1)] < -0.03]
 
         with mp.Pool(int(config.get('APS_cube', 'n_proc'))) as pool:
             warc_stats = pool.starmap(fiber_lines,
