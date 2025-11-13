@@ -131,7 +131,7 @@ def fiber_lines(args):
 
         if (w_spec[int(w_spec.size / 2)] / 4 > w_spec[0]) and (w_spec[int(w_spec.size / 2)] / 4 > w_spec[-1]):
             try:
-                popt, pcov = curve_fit(gauss, w_lam, w_spec, p0=[0, 0, max(w_spec) / 2, cen_lam[i], 3],
+                popt, pcov = curve_fit(gauss, w_lam, w_spec, p0=[0, 0, max(w_spec), cen_lam[i], 1],
                                        bounds=([-np.inf, -np.inf, 0, 0, 0],
                                                [np.inf, np.inf, np.inf, np.inf, np.inf]))
                 # popt, pcov = curve_fit(gauss_hermite, w_lam, w_spec, p0=[0, 0, max(w_spec) / 2, cen_lam[i], 3, 0, 0],
