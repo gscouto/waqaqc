@@ -379,11 +379,11 @@ def html_plots(self):
                                  (1 + float(config.get('pyp_params', 'redshift'))))).argmin()]
 
     if blue_cube[0].header['MODE'] == 'LOWRES':
-        sgn_wind = 100
+        sgn_wind = 50
     elif blue_cube[0].header['MODE'] == 'HIGHRES':
-        sgn_wind = 500
+        sgn_wind = 250
     else:
-        sgn_wind = 100
+        sgn_wind = 50
 
     med_b = np.median(blue_cube[1].data[np.where(lam_b == blue_cen_wave)[0][0] - sgn_wind:
                                         np.where(lam_b == blue_cen_wave)[0][0] + sgn_wind], axis=0)
