@@ -4,9 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="562a2c0d-57fa-4579-a39d-519034de1ccf" name="Changes" comment="Created a .gitignore">
+    <list default="true" id="562a2c0d-57fa-4579-a39d-519034de1ccf" name="Changes" comment="Changing the window size for SNR estimation on QC plots.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/waqaqc/APS_cube.py" beforeDir="false" afterPath="$PROJECT_DIR$/waqaqc/APS_cube.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/waqaqc/QC_plots.py" beforeDir="false" afterPath="$PROJECT_DIR$/waqaqc/QC_plots.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/waqaqc/pyp_params.py" beforeDir="false" afterPath="$PROJECT_DIR$/waqaqc/pyp_params.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/waqaqc/spec_fit.py" beforeDir="false" afterPath="$PROJECT_DIR$/waqaqc/spec_fit.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/waqaqc/table_creator.py" beforeDir="false" afterPath="$PROJECT_DIR$/waqaqc/table_creator.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -24,12 +28,19 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "last_opened_file_path": "/home/guilherme/bolsa/waqaqc/waqaqc",
+    "settings.editor.selected.configurable": "preferences.keymap"
   }
-}</component>
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/waqaqc" />
+    </key>
+  </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -60,7 +71,119 @@
       <option name="project" value="LOCAL" />
       <updated>1753699225698</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Updating to new L1 and L2 pipeline.">
+      <created>1761080705302</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1761080705302</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Small update in spec_fit in APS file reading.">
+      <created>1761135152168</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1761135152168</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Changing how to create rss_data and _err files considering he vorbin labels.">
+      <created>1761135900321</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1761135900321</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Changing how to create rss_data and _err files considering he vorbin labels.">
+      <created>1761136386662</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1761136386662</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Updating a few thing on the table_creator to meet with new data model.">
+      <created>1761234810717</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1761234810717</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Updating spec_fit to do the fitting in red non-binned cubes.">
+      <created>1761315516639</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1761315516639</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Changing line fitting function to Gauss-Hermite and choosing weaker red lamp line.">
+      <created>1761566661046</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1761566661046</updated>
+    </task>
+    <task id="LOCAL-00011" summary="Changing line fitting function to Gauss-Hermite and choosing weaker red lamp line.">
+      <created>1761574229050</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1761574229050</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Adding a few changes in the QC plots.">
+      <created>1763048078993</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1763048078994</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Updating .gitignore">
+      <created>1763048424623</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1763048424623</updated>
+    </task>
+    <task id="LOCAL-00014" summary="Updating .gitignore">
+      <created>1763048472382</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1763048472382</updated>
+    </task>
+    <task id="LOCAL-00015" summary="Updating arc and sky lines for highres.">
+      <created>1763052906605</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1763052906605</updated>
+    </task>
+    <task id="LOCAL-00016" summary="Updating arc and sky lines for highres.">
+      <created>1763053515565</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1763053515565</updated>
+    </task>
+    <task id="LOCAL-00017" summary="Updating arc and sky lines for highres.">
+      <created>1763053727065</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1763053727065</updated>
+    </task>
+    <task id="LOCAL-00018" summary="Updating arc and sky lines for highres.">
+      <created>1763054889736</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1763054889736</updated>
+    </task>
+    <task id="LOCAL-00019" summary="Changing the window size for SNR estimation on QC plots.">
+      <created>1763458455277</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1763458455277</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -78,6 +201,27 @@
     <MESSAGE value="Several changes in the QC plots." />
     <MESSAGE value="Update on APS cube to test it in lustre." />
     <MESSAGE value="Created a .gitignore" />
-    <option name="LAST_COMMIT_MESSAGE" value="Created a .gitignore" />
+    <MESSAGE value="Updating to new L1 and L2 pipeline." />
+    <MESSAGE value="Small update in spec_fit in APS file reading." />
+    <MESSAGE value="Changing how to create rss_data and _err files considering he vorbin labels." />
+    <MESSAGE value="Updating a few thing on the table_creator to meet with new data model." />
+    <MESSAGE value="Updating spec_fit to do the fitting in red non-binned cubes." />
+    <MESSAGE value="Changing line fitting function to Gauss-Hermite and choosing weaker red lamp line." />
+    <MESSAGE value="Adding a few changes in the QC plots." />
+    <MESSAGE value="Updating .gitignore" />
+    <MESSAGE value="Updating arc and sky lines for highres." />
+    <MESSAGE value="Changing the window size for SNR estimation on QC plots." />
+    <option name="LAST_COMMIT_MESSAGE" value="Changing the window size for SNR estimation on QC plots." />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/waqaqc/table_creator.py</url>
+          <line>9</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

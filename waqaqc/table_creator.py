@@ -5,20 +5,20 @@ from astropy.table import Table
 import configparser
 
 
-def tab_cre(self):
-    config = configparser.ConfigParser()
-    config.read(self)
+def tab_cre(ob, args):
+    # config = configparser.ConfigParser()
+    # config.read(self)
 
-    file_dir = config.get('APS_cube', 'file_dir')
+    file_dir = args.data_path + ob + '/'
 
-    blue_cube = fits.open(file_dir + config.get('QC_plots', 'blue_cube'))
+    blue_cube = fits.open(file_dir + np.sort([x for x in os.listdir() if ('stackcube' in x)])[1])
 
     gal = blue_cube[0].header['CCNAME1']
     gal_dir = gal + '_' + blue_cube[0].header['MODE'] + '_' + str(blue_cube[0].header['OBID'])
 
     # =================== running for blue cube ===========================
 
-    if int(config.get('pyp_params', 'blue_fit')) == 1:
+    if args.blue_fit_flag == 1:
 
         res_dir = gal_dir + '/pyp_results/' + np.sort([x for x in os.listdir(gal_dir + '/pyp_results/')
                                                        if ('BLUE' in x)])[-1] + '/'
@@ -26,12 +26,12 @@ def tab_cre(self):
         wcs_c = fits.open(gal_dir + '/blue_cube_vorbin.fits')
         # rss_file = fits.open(res_dir + gal + '_blue_vorbin_RSS.fits')
 
-        if int(config.get('spec_fit', 'vorbin_flag')) == 1:
+        if args.vorbin_flag == 1:
             file_n = '_blue_vorbin'
-        if int(config.get('spec_fit', 'vorbin_flag')) == 0:
+        if args.vorbin_flag == 0:
             file_n = '_blue'
 
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             elinm_file = fits.open(res_dir + gal + file_n + '.eline_model.fits')
             elinr_file = fits.open(res_dir + gal + file_n + '.eline_res.fits')
 
@@ -85,16 +85,16 @@ def tab_cre(self):
         # bin_id = c[2].data['BIN_ID']
         # r_bin_id = c[3].data['BIN_ID']
 
-        stel_template = fits.open(config.get('table_creator', 'template_dir') + lines[1].split()[1])
+        stel_template = fits.open(args.temp_path + lines[1].split()[1])
 
-        if int(config.get('spec_fit', 'vorbin_flag')) == 1:
+        if args.vorbin_flag == 1:
             n_shape = (contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2])
             contm_data = np.zeros(n_shape)
             contm_err = np.zeros(n_shape)
             contm_badp = np.zeros(n_shape)
             contm_norm = np.zeros(n_shape)
             contr_data = np.zeros(n_shape)
-            if int(config.get('spec_fit', 'EL_flag')) == 1:
+            if args.el_flag == 1:
                 elinm_data = np.zeros(n_shape)
                 elinr_data = np.zeros(n_shape)
 
@@ -105,7 +105,7 @@ def tab_cre(self):
                 contm_badp.T[vorbin_map.T == i] = contm_file[2].data[i]
                 contm_norm.T[vorbin_map.T == i] = contm_file[3].data[i]
                 contr_data.T[vorbin_map.T == i] = contr_file[0].data[i]
-                if int(config.get('spec_fit', 'EL_flag')) == 1:
+                if args.el_flag == 1:
                     elinm_data.T[vorbin_map.T == i] = elinm_file[0].data[i]
                     elinr_data.T[vorbin_map.T == i] = elinr_file[0].data[i]
                 print('Rearranging into datacube formats: ' + str(
@@ -114,14 +114,14 @@ def tab_cre(self):
 
             print('')
 
-        if int(config.get('spec_fit', 'vorbin_flag')) == 0:
+        if args.vorbin_flag == 0:
             n_shape = (wcs_c[1].data.shape[2], wcs_c[1].data.shape[1], contm_file[0].data.shape[1])
             contm_data = contm_file[0].data.reshape(n_shape).T
             contm_err = contm_file[1].data.reshape(n_shape).T
             contm_badp = contm_file[2].data.reshape(n_shape).T
             contm_norm = contm_file[3].data.reshape(n_shape).T
             contr_data = contr_file[0].data.reshape(n_shape).T
-            if int(config.get('spec_fit', 'EL_flag')) == 1:
+            if args.el_flag == 1:
                 elinm_data = elinm_file[0].data.reshape(n_shape).T
                 elinr_data = elinr_file[0].data.reshape(n_shape).T
 
@@ -136,7 +136,7 @@ def tab_cre(self):
         stelt_maps_n.remove('fiber')
         stelt_maps_n.remove('base_coeff')
 
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             tab_el = elint_t.copy()
             elint_maps = []
             elint_maps_n = elint_file[1].data.names
@@ -145,7 +145,7 @@ def tab_cre(self):
         base_coeff_t = Table(stel_template[1].data)
         base_coeff_maps = []
 
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             for i in np.arange(len(elint_maps_n)):
                 elint_maps.append(vorbin_map.copy())
         for i in np.arange(len(stelt_maps_n)):
@@ -153,7 +153,7 @@ def tab_cre(self):
         for i in np.arange(len(base_coeff_t)):
             base_coeff_maps.append(vorbin_map.copy())
 
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             elint_maps = np.reshape(elint_maps, (len(elint_maps_n), elint_maps[0].shape[0], elint_maps[0].shape[1]))
         stelt_maps = np.reshape(stelt_maps, (len(stelt_maps_n), stelt_maps[0].shape[0], stelt_maps[0].shape[1]))
         base_coeff_maps = np.reshape(base_coeff_maps,
@@ -163,7 +163,7 @@ def tab_cre(self):
             tx.append(np.where(vorbin_map == k)[1])
             ty.append(np.where(vorbin_map == k)[0])
 
-            if int(config.get('spec_fit', 'EL_flag')) == 1:
+            if args.el_flag == 1:
                 for i in np.arange(len(elint_maps)):
                     elint_maps[i][vorbin_map == k] = \
                         elint_file[1].data[elint_maps_n[i]][elint_file[1].data['fiber'] == k][0]
@@ -179,7 +179,7 @@ def tab_cre(self):
 
         for k in np.arange(len(stelt_file[1].data['fiber'])):
             for j in np.arange(len(np.where(vorbin_map == k)[0]) - 1):
-                if int(config.get('spec_fit', 'EL_flag')) == 1:
+                if args.el_flag == 1:
                     tab_el.add_row(tab_el[tab_el['fiber'] == k][0])
                 tab_st.add_row(tab_st[tab_st['fiber'] == k][0])
             print(
@@ -193,7 +193,7 @@ def tab_cre(self):
         tab_st.add_column(ttx, name='x_cor', index=0)
         tab_st.add_column(tty, name='y_cor', index=1)
 
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             tab_el = tab_el[tab_el.argsort(['fiber'])]
 
             tab_el.add_column(ttx, name='x_cor', index=0)
@@ -234,7 +234,7 @@ def tab_cre(self):
         n_tab_stell = fits.HDUList([stelt_file[0].copy(),
                                     fits.BinTableHDU(tab_st, header=stelt_file[1].header)])
 
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             n_elinm = fits.HDUList([fits.PrimaryHDU(data=elinm_data, header=cube_head)])
             n_elinr = fits.HDUList([fits.PrimaryHDU(data=elinr_data, header=cube_head)])
 
@@ -269,7 +269,7 @@ def tab_cre(self):
             hdu_base_coeff_maps.append(
                 fits.ImageHDU(data=base_coeff_maps[i], name='Template ' + str(i), header=map_head))
 
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             hdu_elint_maps = fits.HDUList([fits.PrimaryHDU()])
 
             for i in np.arange(len(elint_maps)):
@@ -285,7 +285,7 @@ def tab_cre(self):
         hdu_stelt_maps.writeto(res_dir + gal + '_blue_stellar_maps.fits', overwrite=True)
         hdu_base_coeff_maps.writeto(res_dir + gal + '_blue_base_coeff_maps.fits', overwrite=True)
 
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             n_elinm.writeto(res_dir + gal + '_blue_eline_model.fits', overwrite=True)
             n_elinr.writeto(res_dir + gal + '_blue_eline_res.fits', overwrite=True)
 
@@ -295,7 +295,7 @@ def tab_cre(self):
 
     # =================== running for red cube ===========================
 
-    if int(config.get('pyp_params', 'red_fit')) == 1:
+    if args.red_fit_flag == 1:
 
         res_dir = gal_dir + '/pyp_results/' + np.sort([x for x in os.listdir(gal_dir + '/pyp_results/')
                                                        if ('RED' in x)])[-1] + '/'
@@ -303,7 +303,7 @@ def tab_cre(self):
         wcs_c = fits.open(gal_dir + '/red_cube_vorbin.fits')
         rss_file = fits.open(res_dir + gal + '_red_vorbin_RSS.fits')
 
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             elinm_file = fits.open(res_dir + gal + '_red_vorbin.eline_model.fits')
             elinr_file = fits.open(res_dir + gal + '_red_vorbin.eline_res.fits')
 
@@ -357,14 +357,14 @@ def tab_cre(self):
         # bin_id = c[2].data['BIN_ID']
         # r_bin_id = c[3].data['BIN_ID']
 
-        stel_template = fits.open(config.get('table_creator', 'template_dir') + lines[1].split()[1])
+        stel_template = fits.open(args.temp_path + lines[1].split()[1])
 
         contm_data = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
         contm_err = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
         contm_badp = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
         contm_norm = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
         contr_data = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             elinm_data = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
             elinr_data = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
 
@@ -375,7 +375,7 @@ def tab_cre(self):
             contm_badp.T[vorbin_map.T == i] = contm_file[2].data[i]
             contm_norm.T[vorbin_map.T == i] = contm_file[3].data[i]
             contr_data.T[vorbin_map.T == i] = contr_file[0].data[i]
-            if int(config.get('spec_fit', 'EL_flag')) == 1:
+            if args.el_flag == 1:
                 elinm_data.T[vorbin_map.T == i] = elinm_file[0].data[i]
                 elinr_data.T[vorbin_map.T == i] = elinr_file[0].data[i]
             print('Rearranging into datacube formats: ' + str(
@@ -395,7 +395,7 @@ def tab_cre(self):
         stelt_maps_n.remove('fiber')
         stelt_maps_n.remove('base_coeff')
 
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             tab_el = elint_t.copy()
             elint_maps = []
             elint_maps_n = elint_file[1].data.names
@@ -404,7 +404,7 @@ def tab_cre(self):
         base_coeff_t = Table(stel_template[1].data)
         base_coeff_maps = []
 
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             for i in np.arange(len(elint_maps_n)):
                 elint_maps.append(vorbin_map.copy())
         for i in np.arange(len(stelt_maps_n)):
@@ -412,7 +412,7 @@ def tab_cre(self):
         for i in np.arange(len(base_coeff_t)):
             base_coeff_maps.append(vorbin_map.copy())
 
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             elint_maps = np.reshape(elint_maps, (len(elint_maps_n), elint_maps[0].shape[0], elint_maps[0].shape[1]))
         stelt_maps = np.reshape(stelt_maps, (len(stelt_maps_n), stelt_maps[0].shape[0], stelt_maps[0].shape[1]))
         base_coeff_maps = np.reshape(base_coeff_maps,
@@ -422,7 +422,7 @@ def tab_cre(self):
             tx.append(np.where(vorbin_map == k)[1])
             ty.append(np.where(vorbin_map == k)[0])
 
-            if int(config.get('spec_fit', 'EL_flag')) == 1:
+            if args.el_flag == 1:
                 for i in np.arange(len(elint_maps)):
                     elint_maps[i][vorbin_map == k] = \
                         elint_file[1].data[elint_maps_n[i]][elint_file[1].data['fiber'] == k][0]
@@ -438,7 +438,7 @@ def tab_cre(self):
 
         for k in np.arange(len(stelt_file[1].data['fiber'])):
             for j in np.arange(len(np.where(vorbin_map == k)[0]) - 1):
-                if int(config.get('spec_fit', 'EL_flag')) == 1:
+                if args.el_flag == 1:
                     tab_el.add_row(tab_el[tab_el['fiber'] == k][0])
                 tab_st.add_row(tab_st[tab_st['fiber'] == k][0])
             print(
@@ -452,7 +452,7 @@ def tab_cre(self):
         tab_st.add_column(ttx, name='x_cor', index=0)
         tab_st.add_column(tty, name='y_cor', index=1)
 
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             tab_el = tab_el[tab_el.argsort(['fiber'])]
 
             tab_el.add_column(ttx, name='x_cor', index=0)
@@ -493,7 +493,7 @@ def tab_cre(self):
         n_tab_stell = fits.HDUList([stelt_file[0].copy(),
                                     fits.BinTableHDU(tab_st, header=stelt_file[1].header)])
 
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             n_elinm = fits.HDUList([fits.PrimaryHDU(data=elinm_data, header=cube_head)])
             n_elinr = fits.HDUList([fits.PrimaryHDU(data=elinr_data, header=cube_head)])
 
@@ -528,7 +528,7 @@ def tab_cre(self):
             hdu_base_coeff_maps.append(
                 fits.ImageHDU(data=base_coeff_maps[i], name='Template ' + str(i), header=map_head))
 
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             hdu_elint_maps = fits.HDUList([fits.PrimaryHDU()])
 
             for i in np.arange(len(elint_maps)):
@@ -544,7 +544,7 @@ def tab_cre(self):
         hdu_stelt_maps.writeto(res_dir + gal + '_red_stellar_maps.fits', overwrite=True)
         hdu_base_coeff_maps.writeto(res_dir + gal + '_red_base_coeff_maps.fits', overwrite=True)
 
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             n_elinm.writeto(res_dir + gal + '_red_eline_model.fits', overwrite=True)
             n_elinr.writeto(res_dir + gal + '_red_eline_res.fits', overwrite=True)
 
@@ -554,7 +554,7 @@ def tab_cre(self):
 
     # =================== running for aps cube ===========================
 
-    if int(config.get('pyp_params', 'aps_fit')) == 1:
+    if args.aps_fit_flag == 1:
 
         res_dir = gal_dir + '/pyp_results/' + np.sort([x for x in os.listdir(gal_dir + '/pyp_results/')
                                                        if ('APS' in x)])[-1] + '/'
@@ -569,7 +569,7 @@ def tab_cre(self):
 
         stelt_file = fits.open(res_dir + gal + '_APS_vorbin.stellar_table.fits')
 
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             elinm_file = fits.open(res_dir + gal + '_APS_vorbin.eline_model.fits')
             elinr_file = fits.open(res_dir + gal + '_APS_vorbin.eline_res.fits')
 
@@ -619,14 +619,14 @@ def tab_cre(self):
         # bin_id = c[2].data['BIN_ID']
         # r_bin_id = c[3].data['BIN_ID']
 
-        stel_template = fits.open(config.get('table_creator', 'template_dir') + lines[1].split()[1])
+        stel_template = fits.open(args.temp_path + lines[1].split()[1])
 
         contm_data = np.zeros((contm_file[0].data.shape[1], c[1].data.shape[1], c[1].data.shape[2]))
         contm_err = np.zeros((contm_file[0].data.shape[1], c[1].data.shape[1], c[1].data.shape[2]))
         contm_badp = np.zeros((contm_file[0].data.shape[1], c[1].data.shape[1], c[1].data.shape[2]))
         contm_norm = np.zeros((contm_file[0].data.shape[1], c[1].data.shape[1], c[1].data.shape[2]))
         contr_data = np.zeros((contm_file[0].data.shape[1], c[1].data.shape[1], c[1].data.shape[2]))
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             elinm_data = np.zeros((contm_file[0].data.shape[1], c[1].data.shape[1], c[1].data.shape[2]))
             elinr_data = np.zeros((contm_file[0].data.shape[1], c[1].data.shape[1], c[1].data.shape[2]))
 
@@ -637,7 +637,7 @@ def tab_cre(self):
             contm_badp.T[vorbin_map.T == i] = contm_file[2].data[i]
             contm_norm.T[vorbin_map.T == i] = contm_file[3].data[i]
             contr_data.T[vorbin_map.T == i] = contr_file[0].data[i]
-            if int(config.get('spec_fit', 'EL_flag')) == 1:
+            if args.el_flag == 1:
                 elinm_data.T[vorbin_map.T == i] = elinm_file[0].data[i]
                 elinr_data.T[vorbin_map.T == i] = elinr_file[0].data[i]
             print('Rearranging into datacube formats: ' + str(
@@ -657,7 +657,7 @@ def tab_cre(self):
         stelt_maps_n.remove('fiber')
         stelt_maps_n.remove('base_coeff')
 
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             fiber_zero_indices = np.where(elint_t['fiber'] == 0)[0]
 
             # If there are any fiber=0 rows, keep only the first one
@@ -682,7 +682,7 @@ def tab_cre(self):
         base_coeff_t = Table(stel_template[1].data)
         base_coeff_maps = []
 
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             for i in np.arange(len(elint_maps_n)):
                 elint_maps.append(vorbin_map.copy())
         for i in np.arange(len(stelt_maps_n)):
@@ -690,7 +690,7 @@ def tab_cre(self):
         for i in np.arange(len(base_coeff_t)):
             base_coeff_maps.append(vorbin_map.copy())
 
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             elint_maps = np.reshape(elint_maps, (len(elint_maps_n), elint_maps[0].shape[0], elint_maps[0].shape[1]))
         stelt_maps = np.reshape(stelt_maps, (len(stelt_maps_n), stelt_maps[0].shape[0], stelt_maps[0].shape[1]))
         base_coeff_maps = np.reshape(base_coeff_maps,
@@ -709,7 +709,7 @@ def tab_cre(self):
             else:
                 tx.append([np.nan])
                 ty.append([np.nan])
-            if int(config.get('spec_fit', 'EL_flag')):
+            if args.el_flag:
                 if np.sum(elint_file[1].data['fiber'] == k) > 0:
                     for i in np.arange(len(elint_maps)):
                         elint_maps[i][vorbin_map == k] = \
@@ -720,7 +720,7 @@ def tab_cre(self):
 
         for k in np.arange(len(stelt_file[1].data['fiber'])):
             for j in np.arange(len(np.where(vorbin_map == k)[0]) - 1):
-                if int(config.get('spec_fit', 'EL_flag')) == 1:
+                if args.el_flag == 1:
                     if np.sum(elint_file[1].data['fiber'] == k) > 0:
                         tab_el.add_row(tab_el[tab_el['fiber'] == k][0])
                     else:
@@ -741,7 +741,7 @@ def tab_cre(self):
         tab_st.add_column(ttx, name='x_cor', index=0)
         tab_st.add_column(tty, name='y_cor', index=1)
 
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             tab_el = tab_el[tab_el.argsort(['fiber'])]
 
             tab_el.add_column(ttx, name='x_cor', index=0)
@@ -788,7 +788,7 @@ def tab_cre(self):
         n_tab_stell = fits.HDUList([stelt_file[0].copy(),
                                     fits.BinTableHDU(tab_st, header=stelt_file[1].header)])
 
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             n_elinm = fits.HDUList([fits.PrimaryHDU(data=elinm_data, header=cube_head)])
             n_elinr = fits.HDUList([fits.PrimaryHDU(data=elinr_data, header=cube_head)])
 
@@ -823,7 +823,7 @@ def tab_cre(self):
             hdu_base_coeff_maps.append(
                 fits.ImageHDU(data=base_coeff_maps[i], name='Template ' + str(i), header=map_head))
 
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             hdu_elint_maps = fits.HDUList([fits.PrimaryHDU()])
             for i in np.arange(len(elint_maps)):
                 hdu_elint_maps.append(fits.ImageHDU(data=elint_maps[i], name=elint_maps_n[i], header=map_head))
@@ -838,7 +838,7 @@ def tab_cre(self):
         hdu_stelt_maps.writeto(res_dir + gal + '_aps_stellar_maps.fits', overwrite=True)
         hdu_base_coeff_maps.writeto(res_dir + gal + '_aps_base_coeff_maps.fits', overwrite=True)
 
-        if int(config.get('spec_fit', 'EL_flag')) == 1:
+        if args.el_flag == 1:
             n_elinm.writeto(res_dir + gal + '_aps_eline_model.fits', overwrite=True)
             n_elinr.writeto(res_dir + gal + '_aps_eline_res.fits', overwrite=True)
 

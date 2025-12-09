@@ -296,18 +296,22 @@ def get_xy_peak_positions(
     return central_waves, x_peaks, y_peaks
 
 
-def html_plots(self):
+def html_plots(ob, redshift, args):
     warnings.filterwarnings("ignore")
 
-    config = configparser.ConfigParser()
-    config.read(self)
+    # config = configparser.ConfigParser()
+    # config.read(self)
 
-    file_dir = config.get('APS_cube', 'file_dir')
+    file_dir = args.data_path + ob + '/'
+
+    if len([x for x in os.listdir(file_dir) if ('LWVE' in x)]) > 0:
+        aps_file = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('LWVE' in x)])[0])
+        redshift = round(aps_file['PATCH_TABLE'].data['Z'][0],6)
 
     global blue_cube_data, blue_cube_err, red_cube_data, red_cube_err, aps_cube_data, aps_cube_err
 
-    blue_cube = fits.open(file_dir + config.get('QC_plots', 'blue_cube'))
-    red_cube = fits.open(file_dir + config.get('QC_plots', 'red_cube'))
+    blue_cube = fits.open(file_dir + np.sort([x for x in os.listdir() if ('stackcube' in x)])[1])
+    red_cube = fits.open(file_dir + np.sort([x for x in os.listdir() if ('stackcube' in x)])[0])
 
     blue_cube_data = blue_cube[1].data
     blue_cube_err = blue_cube[2].data
@@ -318,11 +322,11 @@ def html_plots(self):
     gal_name = blue_cube[0].header['CCNAME1']
     date = blue_cube[0].header['DATE-OBS']
 
-    gal_dir = gal_name + '_' + blue_cube[0].header['MODE'] + '_' + str(blue_cube[0].header['OBID']) + '/'
+    gal_dir = str(blue_cube[0].header['OBID']) + '_' + gal_name + '_' + blue_cube[0].header['MODE'] + '/'
     os.makedirs(gal_dir, exist_ok=True)
 
-    targetSN = float(config.get('QC_plots', 'target_SN'))
-    levels = np.array(json.loads(config.get('QC_plots', 'levels'))).astype(float)  # SNR levels to display
+    targetSN = args.target_snr
+    levels = np.array(json.loads(args.levels)).astype(float)  # SNR levels to display
 
     colap_b_map = np.sum(blue_cube[1].data[:], axis=0)
     colap_r_map = np.sum(red_cube[1].data[:], axis=0)
@@ -373,10 +377,8 @@ def html_plots(self):
     lam_r = red_cube[1].header['CRVAL3'] + (np.arange(red_cube[1].header['NAXIS3']) * red_cube[1].header['CD3_3'])
     lam_b = blue_cube[1].header['CRVAL3'] + (np.arange(blue_cube[1].header['NAXIS3']) * blue_cube[1].header['CD3_3'])
 
-    blue_cen_wave = lam_b[(np.abs(lam_b - int(config.get('QC_plots', 'blue_wav')) *
-                                  (1 + float(config.get('pyp_params', 'redshift'))))).argmin()]
-    red_cen_wave = lam_r[(np.abs(lam_r - int(config.get('QC_plots', 'red_wav')) *
-                                 (1 + float(config.get('pyp_params', 'redshift'))))).argmin()]
+    blue_cen_wave = lam_b[(np.abs(lam_b - args.blue_wav * (1 + redshift))).argmin()]
+    red_cen_wave = lam_r[(np.abs(lam_r - args.red_wav * (1 + redshift))).argmin()]
 
     if blue_cube[0].header['MODE'] == 'LOWRES':
         sgn_wind = 50
@@ -473,7 +475,7 @@ def html_plots(self):
     file_list = np.sort([x for x in os.listdir(file_dir) if ("APS" not in x) & ('single' in x)])  # single files list
     warc_list = np.sort([x for x in os.listdir(file_dir) if ('warc' in x)])  # WARC files list
 
-    sky_plot_flag = int(config.get('QC_plots', 'sky_plot_flag'))
+    sky_plot_flag = args.sky_plot_flag
 
     sky_plot_dir = gal_dir + 'sky_fit_plots/'
     warc_plot_dir = gal_dir + 'warc_fit_plots/'
@@ -535,7 +537,7 @@ def html_plots(self):
             # cen_lam = lamp_lam[lam_wind + 1:-(lam_wind + 2)][
             #     np.diff(lamp_spec[300])[lam_wind + 1:-(lam_wind + 1)] < -1500]
 
-        with mp.Pool(int(config.get('APS_cube', 'n_proc'))) as pool:
+        with mp.Pool(args.n_proc) as pool:
             warc_stats = pool.starmap(fiber_lines,
                                       tqdm.tqdm(zip((fiber, cen_lam, lamp_spec, lamp_lam, lam_wind, sky_plot_flag,
                                                      warc_plot_dir, file_cam)
@@ -615,7 +617,7 @@ def html_plots(self):
             # cen_lam = sky_lam[lam_wind + 1:-(lam_wind + 2)][
             #     np.diff(sky_spec[300])[lam_wind + 1:-(lam_wind + 1)] < -0.03]
 
-        with mp.Pool(int(config.get('APS_cube', 'n_proc'))) as pool:
+        with mp.Pool(args.n_proc) as pool:
             warc_stats = pool.starmap(fiber_lines,
                                       tqdm.tqdm(zip((fiber, cen_lam, sky_spec, sky_lam, lam_wind, sky_plot_flag,
                                                      sky_plot_dir, file_cam)
@@ -905,7 +907,7 @@ def html_plots(self):
 
     # ------
 
-    fig_l0 = date + '_' + gal_name + '_' + blue_cube[0].header['MODE'] + '_' + str(blue_cube[0].header['OBID']) \
+    fig_l0 = blue_cube[0].header['OBID'] + '_' + date + '_' + gal_name + '_' + blue_cube[0].header['MODE'] \
              + '_L0.png'
 
     fig.savefig(fig_l0)
@@ -947,7 +949,7 @@ def html_plots(self):
         if (i >= max(lam_b_res)) & (i <= min(lam_r_res)):
             resol_aps[lam_aps_res == i] = (resol_blue[-1] + resol_red[0]) / 2
 
-    lam_aps_res = lam_aps_res / (1 + float(config.get('pyp_params', 'redshift')))
+    lam_aps_res = lam_aps_res / (1 + redshift)
 
     np.savetxt(gal_dir + '/resol_table_blue.txt', np.column_stack([lam_b_res, np.around(resol_blue, 2)]),
                fmt=['%.1f', '%.2f'])
@@ -1287,7 +1289,7 @@ def html_plots(self):
 
         return sn_cov
 
-    if int(config.get('QC_plots', 'cov_flag')) == 1:
+    if args.cov_flag == 1:
         try:
             binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_b, y_t_b, sgn_tt_b, rms_tt_b,
                                                                                       targetSN, pixelsize=pixelsize,
@@ -1352,7 +1354,7 @@ def html_plots(self):
     nb_cube_data = np.zeros((int(np.nanmax(vorbin_map) + 1), blue_cube[1].data.shape[0]))
     nb_cube_err = np.zeros((int(np.nanmax(vorbin_map) + 1), blue_cube[1].data.shape[0]))
 
-    with mp.Pool(int(config.get('APS_cube', 'n_proc'))) as pool:
+    with mp.Pool(args.n_proc) as pool:
         nb_cube = pool.starmap(vorbin_loop, zip((i, vorbin_map, blue_cube[0].header['CAMERA'])
                                                 for i in np.arange(np.nanmax(vorbin_map) + 1)))
 
@@ -1374,7 +1376,7 @@ def html_plots(self):
     cube_head['CRPIX2'] = blue_cube[1].header['CRPIX3']
     cube_head['DISPAXIS'] = 1
     cube_head['CNAME'] = gal_name
-    cube_head['W_Z'] = config.get('pyp_params', 'redshift')
+    cube_head['W_Z'] = redshift
     cube_head['N_FLUX'] = ('1e-19', 'normalized spectra flux')
 
     n_cube = fits.HDUList([fits.PrimaryHDU(),
@@ -1402,7 +1404,7 @@ def html_plots(self):
 
         return sn_cov
 
-    if int(config.get('QC_plots', 'cov_flag')) == 1:
+    if args.cov_flag == 1:
         try:
             binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_r, y_t_r, sgn_tt_r, rms_tt_r,
                                                                                       targetSN, pixelsize=pixelsize,
@@ -1467,7 +1469,7 @@ def html_plots(self):
     nb_cube_data = np.zeros((int(np.nanmax(vorbin_map) + 1), red_cube[1].data.shape[0]))
     nb_cube_err = np.zeros((int(np.nanmax(vorbin_map) + 1), red_cube[1].data.shape[0]))
 
-    with mp.Pool(int(config.get('APS_cube', 'n_proc'))) as pool:
+    with mp.Pool(args.n_proc) as pool:
         nb_cube = pool.starmap(vorbin_loop, zip((i, vorbin_map, red_cube[0].header['CAMERA'])
                                                 for i in np.arange(np.nanmax(vorbin_map) + 1)))
 
@@ -1488,7 +1490,7 @@ def html_plots(self):
     cube_head['CRPIX2'] = red_cube[1].header['CRPIX3']
     cube_head['DISPAXIS'] = 1
     cube_head['CNAME'] = gal_name
-    cube_head['W_Z'] = config.get('pyp_params', 'redshift')
+    cube_head['W_Z'] = redshift
     cube_head['N_FLUX'] = ('1e-19', 'normalized spectra flux')
 
     n_cube = fits.HDUList([fits.PrimaryHDU(),
@@ -1531,7 +1533,7 @@ def html_plots(self):
     ax.set_title('Peak flux spaxel (Red)')
     ax.legend(markerscale=5)
 
-    fig_l1 = date + '_' + gal_name + '_' + blue_cube[0].header['MODE'] + '_' + str(blue_cube[0].header['OBID']) \
+    fig_l1 = blue_cube[0].header['OBID'] + '_' + date + '_' + gal_name + '_' + blue_cube[0].header['MODE'] \
              + '_L1.png'
 
     fig.savefig(fig_l1)
@@ -1540,7 +1542,7 @@ def html_plots(self):
 
     # creating plots for APS
 
-    if int(config.get('QC_plots', 'aps_flag')) == 1:
+    if args.aps_flag == 1:
 
         print('Doing L2 APS plots')
         print('')
@@ -1551,10 +1553,9 @@ def html_plots(self):
         aps_cube_data = aps_cube[1].data
         aps_cube_err = aps_cube[2].data
 
-        targetSN = float(config.get('QC_plots', 'target_SN'))
-        levels = np.array(json.loads(config.get('QC_plots', 'levels'))).astype(float)  # SNR levels to display
+        levels = np.array(json.loads(args.levels)).astype(float)  # SNR levels to display
 
-        aps_cen_wave = int(config.get('QC_plots', 'aps_wav'))
+        aps_cen_wave = args.aps_wav
 
         colap_a_map = np.nansum(aps_cube[1].data[:], axis=0)
 
@@ -1674,7 +1675,7 @@ def html_plots(self):
 
             return sn_cov
 
-        if int(config.get('QC_plots', 'cov_flag')) == 1:
+        if args.cov_flag == 1:
             try:
                 binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_a, y_t_a, sgn_tt_a,
                                                                                           rms_tt_a,
@@ -1744,7 +1745,7 @@ def html_plots(self):
         na_cube_data = np.zeros((int(np.nanmax(vorbin_map) + 1), aps_cube[1].data.shape[0]))
         na_cube_err = np.zeros((int(np.nanmax(vorbin_map) + 1), aps_cube[2].data.shape[0]))
 
-        with mp.Pool(int(config.get('APS_cube', 'n_proc'))) as pool:
+        with mp.Pool(args.n_proc) as pool:
             nb_cube = pool.starmap(vorbin_loop, zip((i, vorbin_map, 'APS')
                                                     for i in np.arange(np.nanmax(vorbin_map) + 1)))
 
@@ -1753,7 +1754,7 @@ def html_plots(self):
             na_cube_err[i] = nb_cube[i][1]
 
         cube_head = aps_cube[1].header.copy()
-        cube_head['W_Z'] = config.get('pyp_params', 'redshift')
+        cube_head['W_Z'] = redshift
 
         cube_head = fits.Header()
         cube_head['SIMPLE'] = True
@@ -1768,7 +1769,7 @@ def html_plots(self):
         cube_head['CRPIX2'] = aps_cube[1].header['CRPIX3']
         cube_head['DISPAXIS'] = 1
         cube_head['CNAME'] = gal_name
-        cube_head['W_Z'] = config.get('pyp_params', 'redshift')
+        cube_head['W_Z'] = redshift
         cube_head['N_FLUX'] = ('1e-19', 'normalized spectra flux')
 
         n_cube = fits.HDUList([fits.PrimaryHDU(),
@@ -1882,8 +1883,8 @@ def html_plots(self):
 
         # ------
 
-        fig_l2 = date + '_' + gal_name + '_' + blue_cube[0].header['MODE'] + '_' + \
-                 str(blue_cube[0].header['OBID']) + '_L2.png'
+        fig_l2 = blue_cube[0].header['OBID'] + '_' + date + '_' + gal_name + '_' + blue_cube[0].header['MODE']\
+                 + '_L2.png'
 
         fig.savefig(fig_l2)
 
@@ -1969,13 +1970,13 @@ def html_plots(self):
         </html>
         '''
 
-    f = open(date + '_' + gal_name + '_' + blue_cube[0].header['MODE'] + '_' + str(blue_cube[0].header['OBID'])
+    f = open(str(blue_cube[0].header['OBID'] + '_' + date + '_' + gal_name + '_' + blue_cube[0].header['MODE'])
              + ".html", "w")
 
     f.write(text)
     f.close()
 
-    if config.get('QC_plots', 'aps_flag') == '1':
+    if args.aps_flag == '1':
         qc_plot_dir = 'CPSv' + blue_cube[0].header['CASUVERS'] + '_APSv' + aps_cube[1].header['APSVERS']
     else:
         qc_plot_dir = 'CPSv' + blue_cube[0].header['CASUVERS']

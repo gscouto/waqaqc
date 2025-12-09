@@ -1,24 +1,32 @@
 import configparser
 from astropy import constants as const
 from astropy.io import fits
+import numpy as np
+import os
 
 
-def pp(self):
-    config = configparser.ConfigParser()
-    config.read(self)
+def pp(ob, redshift, args):
+    # config = configparser.ConfigParser()
+    # config.read(self)
 
-    blue_cube = fits.open(config.get('APS_cube', 'file_dir') + config.get('QC_plots', 'blue_cube'))
+    file_dir = args.data_path + ob + '/'
+
+    if len([x for x in os.listdir(file_dir) if ('LWVE' in x)]) > 0:
+        aps_file = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('LWVE' in x)])[0])
+        redshift = round(aps_file['PATCH_TABLE'].data['Z'][0],6)
+
+    blue_cube = fits.open(file_dir + np.sort([x for x in os.listdir() if ('stackcube' in x)])[1])
 
     # =======
     # read redshift and input velocity and line flux
-    z = float(config.get('pyp_params', 'redshift'))
+    z = redshift
 
-    vel = float(config.get('pyp_params', 'line_vel'))
-    line_flux = float(config.get('pyp_params', 'line_flux'))
+    vel = args.line_vel
+    line_flux = args.line_flux
 
     # =================== running for blue cube ===========================
 
-    if int(config.get('pyp_params', 'blue_fit')) == 1:
+    if args.blue_fit_flag == 1:
 
         # =======
         # create stellar parameters file
@@ -28,26 +36,22 @@ def pp(self):
         f = open("parameters_stellar_blue", "w+")
 
         f.write(
-            'tmpldir            ' + config.get('pyp_params', 'temp_dir') + '          '
-                                                                           '!Directory with template spec (string)\n')
+            'tmpldir            ' + args.temp_path + '          !Directory with template spec (string)\n')
         f.write(
-            'tmplfile           ' + config.get('pyp_params', 'temp_file') + '                         '
-                                                                            '!Template library fits file (string)\n')
+            'tmplfile           ' + args.temp_file + '                         !Template library fits file (string)\n')
         f.write(
             'tmplinitspec       10                                          '
             '!Number of the template spectrum as an inital guess (integer)\n')
         f.write('vel_guess          ' + str(vel) +
                 '                                  !rough velocity guess for the object in km/s as cz (float)\n')
-        f.write('vel_min            ' + str(
-            vel - float(config.get('pyp_params', 'vel_range'))) + '                                  '
-                                                                  '!minimum velocity in km/s (float)\n')
-        f.write('vel_max            ' + str(
-            vel + float(config.get('pyp_params', 'vel_range'))) + '                                  '
-                                                                  '!maximum velocity in km/s (float)\n')
+        f.write('vel_min            ' + str(vel - args.vel_range) + '                                  '
+                                                               '!minimum velocity in km/s (float)\n')
+        f.write('vel_max            ' + str(vel + args.vel_range) + '                                  '
+                                                               '!maximum velocity in km/s (float)\n')
         f.write(
             'disp_min           10.0                                        '
             '!minimum velocity dispersion in km/s (float)\n')
-        f.write('disp_max           ' + config.get('pyp_params', 'disp_max') +
+        f.write('disp_max           ' + args.disp_max +
                 '                                       !maximum velocity  dispersion in km/s (float)\n')
         f.write(
             'kin_fix            0                                           '
@@ -67,12 +71,12 @@ def pp(self):
         f.write(
             'nwidth_norm        150                                         '
             '!Width of running mean in pixels for the normalization (int)\n')
-        f.write('start_wave         ' + config.get('pyp_params', 'blue_lam_min') +
+        f.write('start_wave         ' + args.blue_lam_min +
                 '                                   !Lower wavelength limit for the stellar population fitting\n')
-        start_wave = float(config.get('pyp_params', 'blue_lam_min'))
-        f.write('end_wave           ' + config.get('pyp_params', 'blue_lam_max') +
+        start_wave = args.blue_lam_min
+        f.write('end_wave           ' + args.blue_lam_max +
                 '                                   !Upper wavelength limit for the stellar population fitting\n')
-        end_wave = float(config.get('pyp_params', 'blue_lam_max'))
+        end_wave = args.blue_lam_max
         f.write('min_x              1                                           !Minimum x dimension (int)\n')
         f.write('max_x              10000                                       !Maximum x dimension (int)\n')
         f.write('min_y              1                                           !Minimum y dimension (int)\n')
@@ -260,7 +264,7 @@ def pp(self):
 
     # =================== running for red cube ===========================
 
-    if int(config.get('pyp_params', 'red_fit')) == 1:
+    if args.red_fit_flag == 1:
 
         vel = round(vel + (const.c.to('km/s').value * z), 1)
 
@@ -270,11 +274,10 @@ def pp(self):
         f = open("parameters_stellar_red", "w+")
 
         f.write(
-            'tmpldir            ' + config.get('pyp_params', 'temp_dir') + '          '
-                                                                           '!Directory with template spec (string)\n')
+            'tmpldir            ' + args.temp_path + '          !Directory with template spec (string)\n')
         f.write(
-            'tmplfile           ' + config.get('pyp_params', 'temp_file') + '                         '
-                                                                            '!Template library fits file (string)\n')
+            'tmplfile           ' + args.temp_file + '                         '
+                                                     '!Template library fits file (string)\n')
         f.write(
             'tmplinitspec       10                                          '
             '!Number of the template spectrum as an inital guess (integer)\n')
@@ -287,7 +290,7 @@ def pp(self):
         f.write(
             'disp_min           40.0                                        '
             '!minimum velocity dispersion in km/s (float)\n')
-        f.write('disp_max           ' + config.get('pyp_params', 'disp_max') +
+        f.write('disp_max           ' + args.disp_max +
                 '                                       !maximum velocity  dispersion in km/s (float)\n')
         f.write(
             'kin_fix            0                                           '
@@ -307,12 +310,12 @@ def pp(self):
         f.write(
             'nwidth_norm        150                                         '
             '!Width of running mean in pixels for the normalization (int)\n')
-        f.write('start_wave         ' + config.get('pyp_params', 'red_lam_min') +
+        f.write('start_wave         ' + args.red_lam_min +
                 '                                   !Lower wavelength limit for the stellar population fitting\n')
-        start_wave = float(config.get('pyp_params', 'red_lam_min'))
-        f.write('end_wave           ' + config.get('pyp_params', 'red_lam_max') +
+        start_wave = args.red_lam_min
+        f.write('end_wave           ' + args.red_lam_max +
                 '                                   !Upper wavelength limit for the stellar population fitting\n')
-        end_wave = float(config.get('pyp_params', 'red_lam_max'))
+        end_wave = args.red_lam_max
         f.write('min_x              1                                           !Minimum x dimension (int)\n')
         f.write('max_x              10000                                       !Maximum x dimension (int)\n')
         f.write('min_y              1                                           !Minimum y dimension (int)\n')
@@ -518,7 +521,7 @@ def pp(self):
 
     # =================== running for APS ===========================
 
-    if int(config.get('pyp_params', 'aps_fit')) == 1:
+    if args.aps_fit_flag == 1:
 
         # =======
         # create stellar parameters file
@@ -526,11 +529,9 @@ def pp(self):
         f = open("parameters_stellar_aps", "w+")
 
         f.write(
-            'tmpldir            ' + config.get('pyp_params', 'temp_dir') + '          '
-                                                                           '!Directory with template spec (string)\n')
+            'tmpldir            ' + args.temp_path + '          !Directory with template spec (string)\n')
         f.write(
-            'tmplfile           ' + config.get('pyp_params', 'temp_file') + '                         '
-                                                                            '!Template library fits file (string)\n')
+            'tmplfile           ' + args.temp_file + '                         !Template library fits file (string)\n')
         f.write(
             'tmplinitspec       10                                          '
             '!Number of the template spectrum as an inital guess (integer)\n')
@@ -543,7 +544,7 @@ def pp(self):
         f.write(
             'disp_min           40.0                                        '
             '!minimum velocity dispersion in km/s (float)\n')
-        f.write('disp_max           ' + config.get('pyp_params', 'disp_max') +
+        f.write('disp_max           ' + args.disp_max +
                 '                                       !maximum velocity  dispersion in km/s (float)\n')
         f.write(
             'kin_fix            0                                           '
@@ -563,12 +564,12 @@ def pp(self):
         f.write(
             'nwidth_norm        150                                         '
             '!Width of running mean in pixels for the normalization (int)\n')
-        f.write('start_wave         ' + config.get('pyp_params', 'aps_lam_min') +
+        f.write('start_wave         ' + args.aps_lam_min +
                 '                                   !Lower wavelength limit for the stellar population fitting\n')
-        start_wave = float(config.get('pyp_params', 'aps_lam_min'))
-        f.write('end_wave           ' + config.get('pyp_params', 'aps_lam_max') +
+        start_wave = args.aps_lam_min
+        f.write('end_wave           ' + args.aps_lam_max +
                 '                                   !Upper wavelength limit for the stellar population fitting\n')
-        end_wave = float(config.get('pyp_params', 'aps_lam_max'))
+        end_wave = args.aps_lam_max
         f.write('min_x              1                                           !Minimum x dimension (int)\n')
         f.write('max_x              10000                                       !Maximum x dimension (int)\n')
         f.write('min_y              1                                           !Minimum y dimension (int)\n')

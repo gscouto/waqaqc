@@ -89,17 +89,18 @@ def process_aps_maps_pixel(idx, pix, vorbin_map, bin_id, r_bin_id, data4, map_na
     return results
 
 
-def cube_creator(self):
-    config = configparser.ConfigParser()
-    config.read(self)
+def cube_creator(ob, args):
+    # config = configparser.ConfigParser()
+    # config.read(self)
 
-    file_dir = config.get('APS_cube', 'file_dir')
+    file_dir = args.data_path + ob + '/'
 
-    wcs_c = fits.open(file_dir + config.get('QC_plots', 'blue_cube'))
-    c = fits.open(file_dir + config.get('APS_cube', 'aps_file'))
+    wcs_c = fits.open(file_dir + np.sort([x for x in os.listdir() if ('stackcube' in x)])[1])
+    c = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('LWVE' in x)])[0])
 
     gal_id = c[1].data['CNAME'][0]
-    gal_dir = gal_id + '_' + wcs_c[0].header['MODE'] + '_' + str(wcs_c[0].header['OBID'])
+    # gal_dir = gal_id + '_' + wcs_c[0].header['MODE'] + '_' + str(wcs_c[0].header['OBID'])
+    gal_dir = str(wcs_c[0].header['OBID']) + '_' + gal_id + '_' + wcs_c[0].header['MODE'] + '/'
 
     os.makedirs(gal_dir, exist_ok=True)
 
@@ -226,7 +227,7 @@ def cube_creator(self):
     print('')
     print('Recreating Voronoi binning datacube from APS file. This may take a few minutes...')
 
-    pool = mp.Pool(processes=int(config.get('APS_cube', 'n_proc')),
+    pool = mp.Pool(processes=args.n_proc),
                    initializer=init_globals,
                    initargs=(wave, n_wave),
                    maxtasksperchild=10)
@@ -256,7 +257,7 @@ def cube_creator(self):
         for i in range(len(pix_mapt))
     ]
 
-    with mp.Pool(processes=int(config.get('APS_cube', 'n_proc'))) as pool:
+    with mp.Pool(processes=args.n_proc) as pool:
         results = pool.starmap(process_vorbin_pixel, tqdm.tqdm(args, total=len(args)))
 
     valid_results = [r for r in results if r is not None]
@@ -277,7 +278,7 @@ def cube_creator(self):
     args = [(cnt, pix_mapt[cnt], vorbin_map, bin_id, r_bin_id, c[3].data, aps_maps_names)
             for cnt in range(len(pix_mapt))]
 
-    with mp.Pool(processes=int(config.get('APS_cube', 'n_proc'))) as pool:
+    with mp.Pool(processes=args.n_proc) as pool:
         results = pool.starmap(process_aps_maps_pixel, tqdm.tqdm(args, total=len(args)))
 
     flat_results = [item for sublist in results for item in sublist]
