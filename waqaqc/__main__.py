@@ -117,6 +117,8 @@ def main():
         print(f"Error: redshift list has {len(redshift_list)} entries but ob_list has {len(ob_list)}.")
         sys.exit(1)
 
+    args.redshift = redshift_list
+
     run_waqaqc.run(args=args)
 
 
