@@ -106,7 +106,7 @@ def main():
     args = parser.parse_args()
 
     print('')
-    print(args.redshift)
+    print(len(args.redshift))
     print(args.ob_list)
     print('')
 
