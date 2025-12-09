@@ -105,7 +105,10 @@ def main():
 
     args = parser.parse_args()
 
+    print('')
     print(args.redshift)
+    print(args.ob_list)
+    print('')
 
     if args.redshift is None:
         args.redshift = [defaults['redshift']] * len(args.ob_list)
