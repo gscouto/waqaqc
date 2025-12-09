@@ -227,7 +227,7 @@ def cube_creator(ob, args):
     print('')
     print('Recreating Voronoi binning datacube from APS file. This may take a few minutes...')
 
-    pool = mp.Pool(processes=args.n_proc),
+    pool = mp.Pool(processes=args.n_proc,
                    initializer=init_globals,
                    initargs=(wave, n_wave),
                    maxtasksperchild=10)
