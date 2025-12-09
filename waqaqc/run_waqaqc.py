@@ -19,6 +19,8 @@ def run(args):
 
         # ------------------------
 
+        print(args.aps_cube)
+
         if args.aps_cube:
             try:
                 print('')
