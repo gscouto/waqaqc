@@ -303,6 +303,7 @@ def html_plots(ob, redshift, args):
     # config.read(self)
 
     file_dir = args.data_path + ob + '/'
+    print(file_dir)
 
     if len([x for x in os.listdir(file_dir) if ('LWVE' in x)]) > 0:
         aps_file = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('LWVE' in x)])[0])
