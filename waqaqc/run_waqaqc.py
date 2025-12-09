@@ -9,7 +9,7 @@ def run(args):
     for i in np.arange(len(args.ob_list)):
 
         ob = args.ob_list[i]
-        redshift = float(args.redshift[i])
+        redshift = args.redshift[i]
 
         print('')
         print('********************************************')

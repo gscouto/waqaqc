@@ -12,7 +12,7 @@ def main():
     parser.add_argument("data_path", type=str,
                         help="Full path to the main data folder")
     parser.add_argument("ob_list", type=str,
-                        help="List of OBs to be processed in a list format, e.g. ['11111','11112','11113']")
+                        help="List of OBs to be processed in a list format separated by commas, e.g. 11111,11112,11113]")
     parser.add_argument("temp_path", type=str,
                         help="Stellar templates path for PyParadise fitting.")
     parser.add_argument("temp_file", type=str,
@@ -49,8 +49,8 @@ def main():
                         help="Flag to apply covariance correction to Voroni binning. 1 = yes / 0 = no.")
     parser.add_argument("-r", "--redshift", type=float, default=None,
                         help="Redshift list for each OB galaxy, with same size as the 'ob_list'. If no value is given, "
-                             "default is zero. Note: if an APS file is found within the OB directory, the redshift "
-                             "value found in this file is used instead, e.g. [0.023, 0.001].")
+                             "default is zero. Run separating by comma e.g. 0.023,0.001. Note: if an APS file is "
+                             "found within the OB directory, the redshift value found in this file is used instead.")
     parser.add_argument("-bff", "--blue_fit_flag", type=int, default=defaults['blue_fit_flag'],
                         help="Flag for fitting the blue arm datacube with PyParadise. 1 = yes / 0 = no.")
     parser.add_argument("-rff", "--red_fit_flag", type=int, default=defaults['red_fit_flag'],
@@ -106,20 +106,29 @@ def main():
 
     args = parser.parse_args()
 
-    ob_list = ast.literal_eval(args.ob_list)
+    ob_list = parse_csv_list(args.ob_list, "ob_list")
 
     if args.redshift is None:
-        redshift_list = [defaults['redshift']] * len(ob_list)
+        redshift_list = [0.0] * len(ob_list)
     else:
-        redshift_list = ast.literal_eval(args.redshift)
-
-    if len(redshift_list) != len(ob_list):
-        print(f"Error: redshift list has {len(redshift_list)} entries but ob_list has {len(ob_list)}.")
-        sys.exit(1)
+        redshift_list = parse_csv_float_list(args.redshift, "redshift")
+        if len(redshift_list) != len(ob_list):
+            print(f"Error: redshift list has {len(redshift_list)} entries but ob_list has {len(ob_list)}.")
+            sys.exit(1)
 
     args.redshift = redshift_list
+    args.ob_list = ob_list
 
     run_waqaqc.run(args=args)
+
+
+def parse_csv_float_list(s, name="value"):
+    if s.strip() == "":
+        return []
+    try:
+        return [float(x.strip()) for x in s.split(",")]
+    except Exception:
+        raise ValueError(f"Malformed float list for {name}. Use format: 0.01,0.02")
 
 
 if __name__ == '__main__':
