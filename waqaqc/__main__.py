@@ -122,6 +122,17 @@ def main():
     run_waqaqc.run(args=args)
 
 
+def parse_csv_list(s, name="value"):
+    # empty → return empty list
+    if s.strip() == "":
+        return []
+    # split by comma
+    parts = [x.strip() for x in s.split(",")]
+    if any(p == "" for p in parts):
+        raise ValueError(f"Malformed list for {name}.")
+    return parts
+
+
 def parse_csv_float_list(s, name="value"):
     if s.strip() == "":
         return []
