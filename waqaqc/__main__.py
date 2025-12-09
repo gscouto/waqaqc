@@ -105,6 +105,8 @@ def main():
 
     args = parser.parse_args()
 
+    print(args.redshift)
+
     if args.redshift is None:
         args.redshift = [defaults['redshift']] * len(args.ob_list)
         # validate size
