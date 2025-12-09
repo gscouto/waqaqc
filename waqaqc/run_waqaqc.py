@@ -1,6 +1,7 @@
 from waqaqc import QC_plots, APS_cube, spec_fit, table_creator, pyp_params
 import numpy as np
 import time
+import traceback
 
 
 def run(args):
@@ -19,8 +20,6 @@ def run(args):
 
         # ------------------------
 
-        print(args.aps_cube)
-
         if args.aps_cube:
             try:
                 print('')
@@ -33,6 +32,7 @@ def run(args):
 
             except Exception as e:
                 print(f"❌ [APS_cube] Error processing galaxy {ob}: {e}")
+                traceback.print_exc()
 
         # ------------------------
 
@@ -48,6 +48,7 @@ def run(args):
 
             except Exception as e:
                 print(f"❌ [QC_plots] Error processing galaxy {ob}: {e}")
+                traceback.print_exc()
 
         # ------------------------
 
@@ -63,6 +64,7 @@ def run(args):
 
             except Exception as e:
                 print(f"❌ [pyp_params] Error processing galaxy {ob}: {e}")
+                traceback.print_exc()
 
         # ------------------------
 
@@ -78,6 +80,7 @@ def run(args):
 
             except Exception as e:
                 print(f"❌ [spec_fit] Error processing galaxy {ob}: {e}")
+                traceback.print_exc()
 
         # ------------------------
 
@@ -93,5 +96,6 @@ def run(args):
 
             except Exception as e:
                 print(f"❌ [table_creator] Error processing galaxy {ob}: {e}")
+                traceback.print_exc()
 
     print('The total run took ' + str(round(time.time() - ss_time, 2)) + ' secs')
