@@ -303,7 +303,6 @@ def html_plots(ob, redshift, args):
     # config.read(self)
 
     file_dir = args.data_path + ob + '/'
-    print(file_dir)
 
     if len([x for x in os.listdir(file_dir) if ('LWVE' in x)]) > 0:
         aps_file = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('LWVE' in x)])[0])
@@ -311,8 +310,8 @@ def html_plots(ob, redshift, args):
 
     global blue_cube_data, blue_cube_err, red_cube_data, red_cube_err, aps_cube_data, aps_cube_err
 
-    blue_cube = fits.open(file_dir + np.sort([x for x in os.listdir() if ('stackcube' in x)])[1])
-    red_cube = fits.open(file_dir + np.sort([x for x in os.listdir() if ('stackcube' in x)])[0])
+    blue_cube = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('stackcube' in x)])[1])
+    red_cube = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('stackcube' in x)])[0])
 
     blue_cube_data = blue_cube[1].data
     blue_cube_err = blue_cube[2].data

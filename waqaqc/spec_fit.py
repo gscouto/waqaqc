@@ -11,7 +11,7 @@ def specs(ob, args):
 
     file_dir = args.data_path + ob + '/'
 
-    blue_cube = fits.open(file_dir + np.sort([x for x in os.listdir() if ('stackcube' in x)])[1])
+    blue_cube = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('stackcube' in x)])[1])
 
     gal = blue_cube[0].header['CCNAME1']
 
@@ -44,7 +44,7 @@ def specs(ob, args):
                                                     np.nanmedian(rss_data[i][j + 5:j + 10])) / 2.
 
         elif args.vorbin_flag == 0:
-            c = fits.open(file_dir + np.sort([x for x in os.listdir() if ('stackcube' in x)])[0])
+            c = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('stackcube' in x)])[0])
             rss_data = c[1].data.reshape(c[1].data.shape[2] * c[1].data.shape[1],
                                          c[1].data.shape[0]) * np.mean(c[5].data[:], axis=0)
             rss_err = c[2].data.reshape(c[1].data.shape[2] * c[1].data.shape[1],
@@ -129,7 +129,7 @@ def specs(ob, args):
             rss_data = np.zeros((len(np.unique(vorbin_map[vorbin_map >= 0])), c[1].data.shape[0]), dtype=np.float32)
             rss_err = np.zeros((len(np.unique(vorbin_map[vorbin_map >= 0])), c[1].data.shape[0]), dtype=np.float32)
         if args.vorbin_flag == 0:
-            c = fits.open(file_dir + np.sort([x for x in os.listdir() if ('stackcube' in x)])[1])
+            c = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('stackcube' in x)])[1])
             rss_data = blue_cube[1].data.reshape(blue_cube[1].data.shape[2] * blue_cube[1].data.shape[1],
                                                  blue_cube[1].data.shape[0]) * np.mean(blue_cube[5].data[:], axis=0)
             rss_err = blue_cube[2].data.reshape(blue_cube[1].data.shape[2] * blue_cube[1].data.shape[1],

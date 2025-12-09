@@ -15,7 +15,7 @@ def pp(ob, redshift, args):
         aps_file = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('LWVE' in x)])[0])
         redshift = round(aps_file['PATCH_TABLE'].data['Z'][0],6)
 
-    blue_cube = fits.open(file_dir + np.sort([x for x in os.listdir() if ('stackcube' in x)])[1])
+    blue_cube = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('stackcube' in x)])[1])
 
     # =======
     # read redshift and input velocity and line flux
