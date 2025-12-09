@@ -1,6 +1,7 @@
 from . import run_waqaqc
 import argparse
 import sys
+import ast
 
 from waqaqc.config import defaults
 
@@ -46,7 +47,7 @@ def main():
                         help="Central wavelength of the window used to measure SNR for the APS spectra.")
     parser.add_argument("-cf", "--cov_flag", type=int, default=defaults['cov_flag'],
                         help="Flag to apply covariance correction to Voroni binning. 1 = yes / 0 = no.")
-    parser.add_argument("-r", "--redshift", type=float, default=defaults['redshift'],
+    parser.add_argument("-r", "--redshift", type=float, default=None,
                         help="Redshift list for each OB galaxy, with same size as the 'ob_list'. If no value is given, "
                              "default is zero. Note: if an APS file is found within the OB directory, the redshift "
                              "value found in this file is used instead, e.g. [0.023, 0.001].")
@@ -105,19 +106,15 @@ def main():
 
     args = parser.parse_args()
 
-    print('')
-    print(len(args.redshift))
-    print(args.ob_list)
-    print('')
+    ob_list = ast.literal_eval(args.ob_list)
 
     if args.redshift is None:
-        args.redshift = [defaults['redshift']] * len(args.ob_list)
-        # validate size
-    elif len(args.redshift) != len(args.ob_list):
-        print(
-            f"Error: redshift list has {len(args.redshift)} entries but ob_list has {len(args.ob_list)}.",
-            file=sys.stderr,
-        )
+        redshift_list = [defaults['redshift']] * len(ob_list)
+    else:
+        redshift_list = ast.literal_eval(args.redshift)
+
+    if len(redshift_list) != len(ob_list):
+        print(f"Error: redshift list has {len(redshift_list)} entries but ob_list has {len(ob_list)}.")
         sys.exit(1)
 
     run_waqaqc.run(args=args)
