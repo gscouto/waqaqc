@@ -325,6 +325,13 @@ def html_plots(ob, redshift, args):
     gal_dir = str(blue_cube[0].header['OBID']) + '_' + gal_name + '_' + blue_cube[0].header['MODE'] + '/'
     os.makedirs(gal_dir, exist_ok=True)
 
+    print('')
+    print(gal_name, type(gal_name))
+    print(date, type(date))
+    print(blue_cube[0].header['OBID'], type(blue_cube[0].header['OBID']))
+    print(blue_cube[0].header['MODE'], type(blue_cube[0].header['MODE']))
+    print('')
+
     targetSN = args.target_snr
     levels = args.levels  # SNR levels to display
 
