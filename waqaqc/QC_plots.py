@@ -328,7 +328,7 @@ def html_plots(ob, redshift, args):
     os.makedirs(gal_dir, exist_ok=True)
 
     targetSN = args.target_snr
-    levels = np.array(json.loads(args.levels)).astype(float)  # SNR levels to display
+    levels = args.levels  # SNR levels to display
 
     colap_b_map = np.sum(blue_cube[1].data[:], axis=0)
     colap_r_map = np.sum(red_cube[1].data[:], axis=0)
