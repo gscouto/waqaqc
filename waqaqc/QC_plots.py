@@ -537,7 +537,7 @@ def html_plots(ob, redshift, args):
             # cen_lam = lamp_lam[lam_wind + 1:-(lam_wind + 2)][
             #     np.diff(lamp_spec[300])[lam_wind + 1:-(lam_wind + 1)] < -1500]
 
-        with mp.Pool(args.n_proc) as pool:
+        with mp.Pool(args.nproc) as pool:
             warc_stats = pool.starmap(fiber_lines,
                                       tqdm.tqdm(zip((fiber, cen_lam, lamp_spec, lamp_lam, lam_wind, sky_plot_flag,
                                                      warc_plot_dir, file_cam)
@@ -617,7 +617,7 @@ def html_plots(ob, redshift, args):
             # cen_lam = sky_lam[lam_wind + 1:-(lam_wind + 2)][
             #     np.diff(sky_spec[300])[lam_wind + 1:-(lam_wind + 1)] < -0.03]
 
-        with mp.Pool(args.n_proc) as pool:
+        with mp.Pool(args.nproc) as pool:
             warc_stats = pool.starmap(fiber_lines,
                                       tqdm.tqdm(zip((fiber, cen_lam, sky_spec, sky_lam, lam_wind, sky_plot_flag,
                                                      sky_plot_dir, file_cam)
@@ -1354,7 +1354,7 @@ def html_plots(ob, redshift, args):
     nb_cube_data = np.zeros((int(np.nanmax(vorbin_map) + 1), blue_cube[1].data.shape[0]))
     nb_cube_err = np.zeros((int(np.nanmax(vorbin_map) + 1), blue_cube[1].data.shape[0]))
 
-    with mp.Pool(args.n_proc) as pool:
+    with mp.Pool(args.nproc) as pool:
         nb_cube = pool.starmap(vorbin_loop, zip((i, vorbin_map, blue_cube[0].header['CAMERA'])
                                                 for i in np.arange(np.nanmax(vorbin_map) + 1)))
 
@@ -1469,7 +1469,7 @@ def html_plots(ob, redshift, args):
     nb_cube_data = np.zeros((int(np.nanmax(vorbin_map) + 1), red_cube[1].data.shape[0]))
     nb_cube_err = np.zeros((int(np.nanmax(vorbin_map) + 1), red_cube[1].data.shape[0]))
 
-    with mp.Pool(args.n_proc) as pool:
+    with mp.Pool(args.nproc) as pool:
         nb_cube = pool.starmap(vorbin_loop, zip((i, vorbin_map, red_cube[0].header['CAMERA'])
                                                 for i in np.arange(np.nanmax(vorbin_map) + 1)))
 
@@ -1745,7 +1745,7 @@ def html_plots(ob, redshift, args):
         na_cube_data = np.zeros((int(np.nanmax(vorbin_map) + 1), aps_cube[1].data.shape[0]))
         na_cube_err = np.zeros((int(np.nanmax(vorbin_map) + 1), aps_cube[2].data.shape[0]))
 
-        with mp.Pool(args.n_proc) as pool:
+        with mp.Pool(args.nproc) as pool:
             nb_cube = pool.starmap(vorbin_loop, zip((i, vorbin_map, 'APS')
                                                     for i in np.arange(np.nanmax(vorbin_map) + 1)))
 

@@ -227,7 +227,7 @@ def cube_creator(ob, args):
     print('')
     print('Recreating Voronoi binning datacube from APS file. This may take a few minutes...')
 
-    pool = mp.Pool(processes=args.n_proc,
+    pool = mp.Pool(processes=args.nproc,
                    initializer=init_globals,
                    initargs=(wave, n_wave),
                    maxtasksperchild=10)
@@ -257,7 +257,7 @@ def cube_creator(ob, args):
         for i in range(len(pix_mapt))
     ]
 
-    with mp.Pool(processes=args.n_proc) as pool:
+    with mp.Pool(processes=args.nproc) as pool:
         results = pool.starmap(process_vorbin_pixel, tqdm.tqdm(args, total=len(args)))
 
     valid_results = [r for r in results if r is not None]
@@ -278,7 +278,7 @@ def cube_creator(ob, args):
     args = [(cnt, pix_mapt[cnt], vorbin_map, bin_id, r_bin_id, c[3].data, aps_maps_names)
             for cnt in range(len(pix_mapt))]
 
-    with mp.Pool(processes=args.n_proc) as pool:
+    with mp.Pool(processes=args.nproc) as pool:
         results = pool.starmap(process_aps_maps_pixel, tqdm.tqdm(args, total=len(args)))
 
     flat_results = [item for sublist in results for item in sublist]
