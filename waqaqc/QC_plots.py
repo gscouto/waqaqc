@@ -1980,5 +1980,5 @@ def html_plots(ob, redshift, args):
         qc_plot_dir = 'CPSv' + blue_cube[0].header['CASUVERS']
 
     os.makedirs(qc_plot_dir, exist_ok=True)
-    os.system('mv ' + date + '_' + gal_name + '*.html ' + qc_plot_dir + '/.')
-    os.system('mv ' + date + '_' + gal_name + '*.png ' + qc_plot_dir + '/.')
+    os.system('mv ' + str(blue_cube[0].header['OBID']) + '*.html ' + qc_plot_dir + '/.')
+    os.system('mv ' + str(blue_cube[0].header['OBID']) + '*.png ' + qc_plot_dir + '/.')
