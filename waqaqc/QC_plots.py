@@ -302,8 +302,6 @@ def html_plots(ob, redshift, args):
     # config = configparser.ConfigParser()
     # config.read(self)
 
-    print(args.levels)
-
     file_dir = args.data_path + ob + '/'
 
     if len([x for x in os.listdir(file_dir) if ('LWVE' in x)]) > 0:
