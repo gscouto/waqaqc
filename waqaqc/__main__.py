@@ -35,7 +35,7 @@ def main():
                         help="Flag to save fit plots of the warc and sky lines. 1 = yes / 0 = no.")
     parser.add_argument("-t_snr", "--target_snr", type=float, default=defaults['target_snr'],
                         help="Target signal to noise ratio for the Voronoi binning")
-    parser.add_argument("-lvls", "--levels", type=float, default=defaults['levels'],
+    parser.add_argument("-lvls", "--levels", type=str, default=str(defaults['levels']),
                         help="Contour levels list on SNR maps, e.g. [5, 30]")
     parser.add_argument("-bw", "--blue_wav", type=float, default=defaults['blue_wav'],
                         help="Central wavelength of the window used to measure SNR (corrected by redshift) "
@@ -116,8 +116,19 @@ def main():
             print(f"Error: redshift list has {len(redshift_list)} entries but ob_list has {len(ob_list)}.")
             sys.exit(1)
 
+    try:
+        levels = ast.literal_eval(args.levels)
+        if not isinstance(levels, list):
+            raise ValueError
+        # optional: cast all to float
+        levels = [float(x) for x in levels]
+    except Exception:
+        print(f"Error: --levels must be a list of numbers, e.g. [5,30]")
+        sys.exit(1)
+
     args.redshift = redshift_list
     args.ob_list = ob_list
+    args.levels = levels
 
     run_waqaqc.run(args=args)
 
