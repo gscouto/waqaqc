@@ -325,12 +325,7 @@ def html_plots(ob, redshift, args):
     gal_dir = str(blue_cube[0].header['OBID']) + '_' + gal_name + '_' + blue_cube[0].header['MODE'] + '/'
     os.makedirs(gal_dir, exist_ok=True)
 
-    print('')
-    print(gal_name, type(gal_name))
-    print(date, type(date))
-    print(blue_cube[0].header['OBID'], type(blue_cube[0].header['OBID']))
-    print(blue_cube[0].header['MODE'], type(blue_cube[0].header['MODE']))
-    print('')
+    output_str = str(blue_cube[0].header['OBID']) + '_' + date + '_' + gal_name + '_' + blue_cube[0].header['MODE']
 
     targetSN = args.target_snr
     levels = args.levels  # SNR levels to display
@@ -914,8 +909,7 @@ def html_plots(ob, redshift, args):
 
     # ------
 
-    fig_l0 = blue_cube[0].header['OBID'] + '_' + date + '_' + gal_name + '_' + blue_cube[0].header['MODE'] \
-             + '_L0.png'
+    fig_l0 = output_str + '_L0.png'
 
     fig.savefig(fig_l0)
 
@@ -1540,8 +1534,7 @@ def html_plots(ob, redshift, args):
     ax.set_title('Peak flux spaxel (Red)')
     ax.legend(markerscale=5)
 
-    fig_l1 = blue_cube[0].header['OBID'] + '_' + date + '_' + gal_name + '_' + blue_cube[0].header['MODE'] \
-             + '_L1.png'
+    fig_l1 = output_str + '_L1.png'
 
     fig.savefig(fig_l1)
 
@@ -1890,8 +1883,7 @@ def html_plots(ob, redshift, args):
 
         # ------
 
-        fig_l2 = blue_cube[0].header['OBID'] + '_' + date + '_' + gal_name + '_' + blue_cube[0].header['MODE']\
-                 + '_L2.png'
+        fig_l2 = output_str + '_L2.png'
 
         fig.savefig(fig_l2)
 
@@ -1977,8 +1969,7 @@ def html_plots(ob, redshift, args):
         </html>
         '''
 
-    f = open(str(blue_cube[0].header['OBID'] + '_' + date + '_' + gal_name + '_' + blue_cube[0].header['MODE'])
-             + ".html", "w")
+    f = open(output_str + ".html", "w")
 
     f.write(text)
     f.close()
