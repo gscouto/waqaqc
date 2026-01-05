@@ -157,14 +157,28 @@ def main():
 
 
 def parse_csv_list(s, name="value"):
-    # empty → return empty list
-    if s.strip() == "":
+    """
+    Accepts:
+      - None
+      - list (from YAML)
+      - comma-separated string (from CLI)
+    Returns:
+      - list
+    """
+    if s is None:
         return []
-    # split by comma
-    parts = [x.strip() for x in s.split(",")]
-    if any(p == "" for p in parts):
-        raise ValueError(f"Malformed list for {name}.")
-    return parts
+
+    # already a list (YAML case)
+    if isinstance(s, list):
+        return s
+
+    # string case (CLI)
+    if isinstance(s, str):
+        if s.strip() == "":
+            return []
+        return [item.strip() for item in s.split(",")]
+
+    raise TypeError(f"{name} must be a list or comma-separated string, got {type(s)}")
 
 
 def parse_csv_float_list(s, name="value"):
