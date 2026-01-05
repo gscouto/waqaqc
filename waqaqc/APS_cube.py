@@ -251,7 +251,7 @@ def cube_creator(ob, args):
     for bin_val in unique_bins:
         bin_pixel_counts[bin_val] = np.count_nonzero(vorbin_map == bin_val)
 
-    args = [
+    args_vorbin = [
         (i, pix_mapt[i], vorbin_map, r_bin_id, bin_id,
          vorbin_cube_data, vorbin_cube_err, cube[4].data['V'], bin_pixel_counts)
         for i in range(len(pix_mapt))
@@ -260,7 +260,7 @@ def cube_creator(ob, args):
     breakpoint()
 
     with mp.Pool(processes=args.nproc) as pool:
-        results = pool.starmap(process_vorbin_pixel, tqdm.tqdm(args, total=len(args)))
+        results = pool.starmap(process_vorbin_pixel, tqdm.tqdm(args_vorbin, total=len(args_vorbin)))
 
     valid_results = [r for r in results if r is not None]
     for x, y, data_slice, err_slice, vel_val in valid_results:
@@ -277,11 +277,11 @@ def cube_creator(ob, args):
     print('')
     print('Rearranging APS maps into datacube format:')
 
-    args = [(cnt, pix_mapt[cnt], vorbin_map, bin_id, r_bin_id, cube[4].data, aps_maps_names)
+    args_cube = [(cnt, pix_mapt[cnt], vorbin_map, bin_id, r_bin_id, cube[4].data, aps_maps_names)
             for cnt in range(len(pix_mapt))]
 
     with mp.Pool(processes=args.nproc) as pool:
-        results = pool.starmap(process_aps_maps_pixel, tqdm.tqdm(args, total=len(args)))
+        results = pool.starmap(process_aps_maps_pixel, tqdm.tqdm(args_cube, total=len(args_cube)))
 
     flat_results = [item for sublist in results for item in sublist]
     for j, y, x, val in flat_results:
