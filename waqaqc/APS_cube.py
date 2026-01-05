@@ -233,6 +233,8 @@ def cube_creator(ob, args):
         print('')
         print('Recreating original datacube from APS file. This may take a few minutes...')
 
+        breakpoint()
+
         rss_data = np.zeros((cube['PATCH_ALLSPEC'].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
         rss_err = np.zeros((cube['PATCH_ALLSPEC'].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
 
