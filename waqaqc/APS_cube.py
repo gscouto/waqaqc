@@ -98,17 +98,17 @@ def cube_creator(ob, args):
     wcs_c = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('stackcube' in x)])[1])
     cube = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('LWVE' in x)])[0])
 
-    gal_id = cube[1].data['CNAME'][0]
+    gal_id = cube['PATCH_ALLSPEC'].data['CNAME'][0]
     # gal_dir = gal_id + '_' + wcs_c[0].header['MODE'] + '_' + str(wcs_c[0].header['OBID'])
     gal_dir = str(wcs_c[0].header['OBID']) + '_' + gal_id + '_' + wcs_c[0].header['MODE'] + '/'
 
     os.makedirs(gal_dir, exist_ok=True)
 
     # aps_id = c[2].data['APS_ID'] # commenting due to being dropped (c1)
-    bin_id = cube[2].data['BIN_ID']
-    r_bin_id = cube[3].data['BIN_ID']
+    bin_id = cube['PATCH_TABLE'].data['BIN_ID']
+    r_bin_id = cube['PATCH_BINSPEC'].data['BIN_ID']
 
-    wave = np.exp(cube[1].data['LOGLAM'][0])
+    wave = np.exp(cube['PATCH_ALLSPEC'].data['LOGLAM'][0])
     if wcs_c[0].header['MODE'] == 'HIGHRES':
         n_wave = np.arange(min(wave) + 0.1, max(wave), 0.1)
     elif wcs_c[0].header['MODE'] == 'LOWRES':
@@ -128,16 +128,16 @@ def cube_creator(ob, args):
     # axis_header['CUNIT1'] = wcs_c[1].header['CUNIT1']
     # axis_header['CUNIT2'] = wcs_c[1].header['CUNIT2']
 
-    axis_header['NAXIS1'] = len(np.unique(np.round(cube[2].data['X'], 2)))
-    axis_header['NAXIS2'] = len(np.unique(np.round(cube[2].data['Y'], 2)))
-    axis_header['CD1_1'] = (np.unique(np.round(cube[2].data['X'], 2))[1] -
-                            np.unique(np.round(cube[2].data['X'], 2))[0]) / 3600.
-    axis_header['CD2_2'] = (np.unique(np.round(cube[2].data['Y'], 2))[1] -
-                            np.unique(np.round(cube[2].data['Y'], 2))[0]) / 3600.
+    axis_header['NAXIS1'] = len(np.unique(np.round(cube['PATCH_TABLE'].data['X'], 2)))
+    axis_header['NAXIS2'] = len(np.unique(np.round(cube['PATCH_TABLE'].data['Y'], 2)))
+    axis_header['CD1_1'] = (np.unique(np.round(cube['PATCH_TABLE'].data['X'], 2))[1] -
+                            np.unique(np.round(cube['PATCH_TABLE'].data['X'], 2))[0]) / 3600.
+    axis_header['CD2_2'] = (np.unique(np.round(cube['PATCH_TABLE'].data['Y'], 2))[1] -
+                            np.unique(np.round(cube['PATCH_TABLE'].data['Y'], 2))[0]) / 3600.
     axis_header['CRPIX1'] = 1
     axis_header['CRPIX2'] = 1
-    axis_header['CRVAL1'] = cube[2].data['X_0'][0] + (np.min(cube[2].data['X']/3600.))
-    axis_header['CRVAL2'] = cube[2].data['Y_0'][0] + (np.min(cube[2].data['Y']/3600.))
+    axis_header['CRVAL1'] = cube['PATCH_TABLE'].data['X_0'][0] + (np.min(cube['PATCH_TABLE'].data['X'] / 3600.))
+    axis_header['CRVAL2'] = cube['PATCH_TABLE'].data['Y_0'][0] + (np.min(cube['PATCH_TABLE'].data['Y'] / 3600.))
     axis_header['CTYPE1'] = wcs_c[1].header['CTYPE1']
     axis_header['CTYPE2'] = wcs_c[1].header['CTYPE2']
     axis_header['CUNIT1'] = wcs_c[1].header['CUNIT1']
@@ -145,8 +145,8 @@ def cube_creator(ob, args):
 
     wcs = WCS(axis_header)
 
-    aps_ra = cube[2].data['X_0'] + (cube[2].data['X'] / 3600)
-    aps_dec = cube[2].data['Y_0'] + (cube[2].data['Y'] / 3600)
+    aps_ra = cube['PATCH_TABLE'].data['X_0'] + (cube['PATCH_TABLE'].data['X'] / 3600)
+    aps_dec = cube['PATCH_TABLE'].data['Y_0'] + (cube['PATCH_TABLE'].data['Y'] / 3600)
 
     aps_ra_dec = np.vstack((aps_ra, aps_dec)).T
 
@@ -175,10 +175,20 @@ def cube_creator(ob, args):
     vorbin_err = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1),
                           dtype=np.float32)
 
+    if 'PATCH_ALLSPEC' in cube:
+        aps_id = cube['PATCH_TABLE'].data['APS_ID']
+        apsid_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
+        cube_data = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1),
+                             dtype=np.float32)
+        cube_err = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1),
+                            dtype=np.float32)
+
     cnt = 0
     #
     for i in pix_mapt:
         # apsid_map[i[1], i[0]] = aps_id[cnt] (c1)
+        if 'PATCH_ALLSPEC' in cube:
+            apsid_map[i[1], i[0]] = aps_id[cnt]
         vorbin_map[i[1], i[0]] = bin_id[cnt]
         cnt += 1
 
@@ -219,8 +229,49 @@ def cube_creator(ob, args):
 
     # (c1)
 
-    vorbin_cube_data = np.zeros((cube[3].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
-    vorbin_cube_err = np.zeros((cube[3].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
+    if 'PATCH_ALLSPEC' in cube:
+        print('')
+        print('Recreating original datacube from APS file. This may take a few minutes...')
+
+        rss_data = np.zeros((cube['PATCH_ALLSPEC'].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
+        rss_err = np.zeros((cube['PATCH_ALLSPEC'].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
+
+        ext = 1
+
+        pool = mp.Pool(processes=args.nproc,
+                       initializer=init_globals,
+                       initargs=(wave, n_wave),
+                       maxtasksperchild=10)
+
+        for i, (f_resampled, e_resampled) in tqdm.tqdm(
+                enumerate(pool.starmap(forloop, ((cube[ext].data['SPEC'][i], cube[ext].data['ESPEC'][i])
+                                                 for i in range(cube[ext].data['SPEC'].shape[0])),
+                                       chunksize=1)), total=cube[ext].data['SPEC'].shape[0]):
+            rss_data[i] = f_resampled
+            rss_err[i] = e_resampled
+
+        pool.close()
+        pool.join()
+
+        args_cube = [(pix_mapt[i], apsid_map, aps_id, rss_data, rss_err)
+                     for i in range(len(pix_mapt))]
+
+        print('')
+        print('Rearranging into datacube formats:')
+
+        with mp.Pool(processes=int(config.get('APS_cube', 'n_proc'))) as pool:
+            results = pool.starmap(process_aps_pixel, tqdm.tqdm(args_cube, total=len(args)))
+
+        valid_results = [r for r in results if r is not None]
+        for x, y, data_slice, err_slice in valid_results:
+            cube_data[:, y, x] = data_slice
+            cube_err[:, y, x] = err_slice
+
+        del rss, rss_data, rss_err
+        gc.collect()
+
+    vorbin_cube_data = np.zeros((cube['PATCH_BINSPEC'].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
+    vorbin_cube_err = np.zeros((cube['PATCH_BINSPEC'].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
 
     ext = 3
 
@@ -253,7 +304,7 @@ def cube_creator(ob, args):
 
     args_vorbin = [
         (i, pix_mapt[i], vorbin_map, r_bin_id, bin_id,
-         vorbin_cube_data, vorbin_cube_err, cube[4].data['V'], bin_pixel_counts)
+         vorbin_cube_data, vorbin_cube_err, cube['GALAXY_TABLE'].data['V'], bin_pixel_counts)
         for i in range(len(pix_mapt))
     ]
 
@@ -270,13 +321,13 @@ def cube_creator(ob, args):
 
     gc.collect()
 
-    aps_maps_names = list(cube[4].data.names[1:])
+    aps_maps_names = list(cube['GALAXY_TABLE'].data.names[1:])
 
     print('')
     print('Rearranging APS maps into datacube format:')
 
-    args_cube = [(cnt, pix_mapt[cnt], vorbin_map, bin_id, r_bin_id, cube[4].data, aps_maps_names)
-            for cnt in range(len(pix_mapt))]
+    args_cube = [(cnt, pix_mapt[cnt], vorbin_map, bin_id, r_bin_id, cube['GALAXY_TABLE'].data, aps_maps_names)
+                 for cnt in range(len(pix_mapt))]
 
     with mp.Pool(processes=args.nproc) as pool:
         results = pool.starmap(process_aps_maps_pixel, tqdm.tqdm(args_cube, total=len(args_cube)))
@@ -291,8 +342,8 @@ def cube_creator(ob, args):
 
     print('')
 
-    cpix = [cube[2].data['X_0'][0] + (min(cube[2].data['X'], key=abs) / 3600), cube[2].data['Y_0'][0] +
-            (min(cube[2].data['Y'], key=abs) / 3600)]
+    cpix = [cube['PATCH_TABLE'].data['X_0'][0] + (min(cube['PATCH_TABLE'].data['X'], key=abs) / 3600),
+            cube['PATCH_TABLE'].data['Y_0'][0] + (min(cube['PATCH_TABLE'].data['Y'], key=abs) / 3600)]
 
     cpix_x, cpix_y = np.round(wcs.wcs_world2pix(np.array([cpix]), 0))[0]
 
@@ -349,6 +400,13 @@ def cube_creator(ob, args):
     # n_cube = fits.HDUList([fits.PrimaryHDU(), (c1)
     #                        fits.ImageHDU(data=cube_data, header=cube_head, name='DATA'),
     #                        fits.ImageHDU(data=cube_err, header=cube_head, name='ERROR')])
+
+    if 'PATCH_ALLSPEC' in cube:
+        n_cube = fits.HDUList([fits.PrimaryHDU(),
+                               fits.ImageHDU(data=cube_data, header=cube_head, name='DATA'),
+                               fits.ImageHDU(data=cube_err, header=cube_head, name='ERROR')])
+        n_cube.writeto(gal_dir + '/' + gal_id + '_cube.fits', overwrite=True)
+
     n_vorbin = fits.HDUList([fits.PrimaryHDU(),
                              fits.ImageHDU(data=vorbin_data, header=cube_head, name='DATA'),
                              fits.ImageHDU(data=vorbin_err, header=cube_head, name='ERROR')])
