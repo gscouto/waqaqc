@@ -98,7 +98,7 @@ def cube_creator(ob, args):
     wcs_c = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('stackcube' in x)])[1])
     cube = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('LWVE' in x)])[0])
 
-    gal_id = c[1].data['CNAME'][0]
+    gal_id = cube[1].data['CNAME'][0]
     # gal_dir = gal_id + '_' + wcs_c[0].header['MODE'] + '_' + str(wcs_c[0].header['OBID'])
     gal_dir = str(wcs_c[0].header['OBID']) + '_' + gal_id + '_' + wcs_c[0].header['MODE'] + '/'
 
@@ -107,10 +107,10 @@ def cube_creator(ob, args):
     breakpoint()
 
     # aps_id = c[2].data['APS_ID'] # commenting due to being dropped (c1)
-    bin_id = c[1].data['BIN_ID']
-    r_bin_id = c[2].data['BIN_ID']
+    bin_id = cube[1].data['BIN_ID']
+    r_bin_id = cube[2].data['BIN_ID']
 
-    wave = np.exp(c[2].data['LOGLAM'][0])
+    wave = np.exp(cube[2].data['LOGLAM'][0])
     if wcs_c[0].header['MODE'] == 'HIGHRES':
         n_wave = np.arange(min(wave) + 0.1, max(wave), 0.1)
     elif wcs_c[0].header['MODE'] == 'LOWRES':
@@ -130,16 +130,16 @@ def cube_creator(ob, args):
     # axis_header['CUNIT1'] = wcs_c[1].header['CUNIT1']
     # axis_header['CUNIT2'] = wcs_c[1].header['CUNIT2']
 
-    axis_header['NAXIS1'] = len(np.unique(np.round(c[1].data['X'], 2)))
-    axis_header['NAXIS2'] = len(np.unique(np.round(c[1].data['Y'], 2)))
-    axis_header['CD1_1'] = (np.unique(np.round(c[1].data['X'], 2))[1] -
-                            np.unique(np.round(c[1].data['X'], 2))[0]) / 3600.
-    axis_header['CD2_2'] = (np.unique(np.round(c[1].data['Y'], 2))[1] -
-                            np.unique(np.round(c[1].data['Y'], 2))[0]) / 3600.
+    axis_header['NAXIS1'] = len(np.unique(np.round(cube[1].data['X'], 2)))
+    axis_header['NAXIS2'] = len(np.unique(np.round(cube[1].data['Y'], 2)))
+    axis_header['CD1_1'] = (np.unique(np.round(cube[1].data['X'], 2))[1] -
+                            np.unique(np.round(cube[1].data['X'], 2))[0]) / 3600.
+    axis_header['CD2_2'] = (np.unique(np.round(cube[1].data['Y'], 2))[1] -
+                            np.unique(np.round(cube[1].data['Y'], 2))[0]) / 3600.
     axis_header['CRPIX1'] = 1
     axis_header['CRPIX2'] = 1
-    axis_header['CRVAL1'] = c[1].data['X_0'][0] + (np.min(c[1].data['X']/3600.))
-    axis_header['CRVAL2'] = c[1].data['Y_0'][0] + (np.min(c[1].data['Y']/3600.))
+    axis_header['CRVAL1'] = cube[1].data['X_0'][0] + (np.min(cube[1].data['X']/3600.))
+    axis_header['CRVAL2'] = cube[1].data['Y_0'][0] + (np.min(cube[1].data['Y']/3600.))
     axis_header['CTYPE1'] = wcs_c[1].header['CTYPE1']
     axis_header['CTYPE2'] = wcs_c[1].header['CTYPE2']
     axis_header['CUNIT1'] = wcs_c[1].header['CUNIT1']
@@ -147,8 +147,8 @@ def cube_creator(ob, args):
 
     wcs = WCS(axis_header)
 
-    aps_ra = c[1].data['X_0'] + (c[1].data['X'] / 3600)
-    aps_dec = c[1].data['Y_0'] + (c[1].data['Y'] / 3600)
+    aps_ra = cube[1].data['X_0'] + (cube[1].data['X'] / 3600)
+    aps_dec = cube[1].data['Y_0'] + (cube[1].data['Y'] / 3600)
 
     aps_ra_dec = np.vstack((aps_ra, aps_dec)).T
 
@@ -166,7 +166,7 @@ def cube_creator(ob, args):
     vorbin_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
     stel_vel_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
     aps_maps = np.zeros(
-        (len(c[3].data.names) - 1, np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
+        (len(cube[3].data.names) - 1, np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
 
     # cube_data = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1),
     #                      dtype=np.float32) (c1)
@@ -221,8 +221,8 @@ def cube_creator(ob, args):
 
     # (c1)
 
-    vorbin_cube_data = np.zeros((c[2].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
-    vorbin_cube_err = np.zeros((c[2].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
+    vorbin_cube_data = np.zeros((cube[2].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
+    vorbin_cube_err = np.zeros((cube[2].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
 
     ext = 2
 
@@ -235,9 +235,9 @@ def cube_creator(ob, args):
                    maxtasksperchild=10)
 
     for i, (f_resampled, e_resampled) in tqdm.tqdm(
-            enumerate(pool.starmap(forloop, ((c[ext].data['SPEC'][i], c[ext].data['ESPEC'][i])
-                                             for i in range(c[ext].data['SPEC'].shape[0])),
-                                   chunksize=1)), total=c[ext].data['SPEC'].shape[0]):
+            enumerate(pool.starmap(forloop, ((cube[ext].data['SPEC'][i], cube[ext].data['ESPEC'][i])
+                                             for i in range(cube[ext].data['SPEC'].shape[0])),
+                                   chunksize=1)), total=cube[ext].data['SPEC'].shape[0]):
         vorbin_cube_data[i] = f_resampled
         vorbin_cube_err[i] = e_resampled
 
@@ -255,7 +255,7 @@ def cube_creator(ob, args):
 
     args = [
         (i, pix_mapt[i], vorbin_map, r_bin_id, bin_id,
-         vorbin_cube_data, vorbin_cube_err, c[3].data['V'], bin_pixel_counts)
+         vorbin_cube_data, vorbin_cube_err, cube[3].data['V'], bin_pixel_counts)
         for i in range(len(pix_mapt))
     ]
 
@@ -272,12 +272,12 @@ def cube_creator(ob, args):
 
     gc.collect()
 
-    aps_maps_names = list(c[3].data.names[1:])
+    aps_maps_names = list(cube[3].data.names[1:])
 
     print('')
     print('Rearranging APS maps into datacube format:')
 
-    args = [(cnt, pix_mapt[cnt], vorbin_map, bin_id, r_bin_id, c[3].data, aps_maps_names)
+    args = [(cnt, pix_mapt[cnt], vorbin_map, bin_id, r_bin_id, cube[3].data, aps_maps_names)
             for cnt in range(len(pix_mapt))]
 
     with mp.Pool(processes=args.nproc) as pool:
@@ -293,14 +293,14 @@ def cube_creator(ob, args):
 
     print('')
 
-    cpix = [c[1].data['X_0'][0] + (min(c[1].data['X'], key=abs) / 3600), c[1].data['Y_0'][0] +
-            (min(c[1].data['Y'], key=abs) / 3600)]
+    cpix = [cube[1].data['X_0'][0] + (min(cube[1].data['X'], key=abs) / 3600), cube[1].data['Y_0'][0] +
+            (min(cube[1].data['Y'], key=abs) / 3600)]
 
     cpix_x, cpix_y = np.round(wcs.wcs_world2pix(np.array([cpix]), 0))[0]
 
     # create RSS file
 
-    cube_head = c[0].header.copy()
+    cube_head = cube[0].header.copy()
     cube_head['SIMPLE'] = True
     cube_head['BITPIX'] = -32
     cube_head['NAXIS'] = 3
@@ -327,7 +327,7 @@ def cube_creator(ob, args):
     cube_head['CUNIT1'] = 'deg'
     cube_head['CUNIT2'] = 'deg'
     cube_head['CCNAME'] = gal_id
-    cube_head['OBSMODE'] = c[0].header['OBSMODE']
+    cube_head['OBSMODE'] = cube[0].header['OBSMODE']
     cube_head['MODE'] = wcs_c[0].header['MODE']
 
     map_head = fits.Header()
