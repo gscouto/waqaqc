@@ -104,6 +104,8 @@ def cube_creator(ob, args):
 
     os.makedirs(gal_dir, exist_ok=True)
 
+    breakpoint()
+
     # aps_id = c[2].data['APS_ID'] # commenting due to being dropped (c1)
     bin_id = c[1].data['BIN_ID']
     r_bin_id = c[2].data['BIN_ID']
