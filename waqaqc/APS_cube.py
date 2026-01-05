@@ -257,8 +257,6 @@ def cube_creator(ob, args):
         for i in range(len(pix_mapt))
     ]
 
-    breakpoint()
-
     with mp.Pool(processes=args.nproc) as pool:
         results = pool.starmap(process_vorbin_pixel, tqdm.tqdm(args_vorbin, total=len(args_vorbin)))
 
