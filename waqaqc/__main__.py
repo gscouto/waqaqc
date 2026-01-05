@@ -17,13 +17,13 @@ def main():
         with open(config_args.config) as f:
             cfg = yaml.safe_load(f) or {}
 
-    parser.add_argument("data_path", type=str,
+    parser.add_argument("data_path", type=str, nargs="?", default=None,
                         help="Full path to the main data folder")
-    parser.add_argument("ob_list", type=str,
+    parser.add_argument("ob_list", type=str, nargs="?", default=None,
                         help="List of OBs to be processed in a list format separated by commas, e.g. 11111,11112,11113]")
-    parser.add_argument("temp_path", type=str,
+    parser.add_argument("temp_path", type=str, nargs="?", default=None,
                         help="Stellar templates path for PyParadise fitting.")
-    parser.add_argument("temp_file", type=str,
+    parser.add_argument("temp_file", type=str, nargs="?", default=None,
                         help="Stellar templates file to be used (located in temp_path).")
     parser.add_argument("-ac", "--aps_cube", type=int, default=defaults['aps_cube'],
                         help="Flag to run the APS cube creator. 1 = yes / 0 = no.")
@@ -115,6 +115,12 @@ def main():
 
     # args = parser.parse_args()
     args = parser.parse_args(remaining_argv)
+
+    required = ["data_path", "ob_list", "temp_path", "temp_file"]
+    missing = [k for k in required if getattr(args, k) is None]
+
+    if missing:
+        parser.error(f"Missing required arguments (not provided via CLI or config): {', '.join(missing)}")
 
     # if args.config:
     #     with open(args.config) as f:
