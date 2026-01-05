@@ -2,6 +2,7 @@ from . import run_waqaqc
 import argparse
 import sys
 import ast
+import yaml
 
 from waqaqc.config import defaults
 
@@ -9,6 +10,7 @@ from waqaqc.config import defaults
 def main():
     parser = argparse.ArgumentParser(prog='waqaqc - WEAVE-Apertif Quality Assurance (WAQA) Quality Control plots')
 
+    parser.add_argument("-c", "--config", type=str, help="YAML configuration file")
     parser.add_argument("data_path", type=str,
                         help="Full path to the main data folder")
     parser.add_argument("ob_list", type=str,
@@ -105,6 +107,13 @@ def main():
                              "factor to derived standard deviation.")
 
     args = parser.parse_args()
+
+    if args.config:
+        with open(args.config) as f:
+            cfg = yaml.safe_load(f)
+
+        for k, v in cfg.items():
+            setattr(args, k, v)
 
     ob_list = parse_csv_list(args.ob_list, "ob_list")
 
