@@ -9,6 +9,8 @@ def run(args):
 
     for i in np.arange(len(args.ob_list)):
 
+        print(args.ob_list)
+
         ob = args.ob_list[i]
         redshift = args.redshift[i]
 
