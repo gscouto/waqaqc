@@ -175,6 +175,8 @@ def cube_creator(ob, args):
     vorbin_err = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1),
                           dtype=np.float32)
 
+    breakpoint()
+
     if 'PATCH_ALLSPEC' in cube:
         aps_id = cube['PATCH_TABLE'].data['APS_ID']
         apsid_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
