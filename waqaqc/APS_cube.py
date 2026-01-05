@@ -93,8 +93,6 @@ def cube_creator(ob, args):
     # config = configparser.ConfigParser()
     # config.read(self)
 
-    print('oi1')
-
     file_dir = args.data_path + ob + '/'
 
     wcs_c = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('stackcube' in x)])[1])
@@ -145,8 +143,6 @@ def cube_creator(ob, args):
     axis_header['CUNIT1'] = wcs_c[1].header['CUNIT1']
     axis_header['CUNIT2'] = wcs_c[1].header['CUNIT2']
 
-    print('oi2')
-
     wcs = WCS(axis_header)
 
     aps_ra = cube['PATCH_TABLE'].data['X_0'] + (cube['PATCH_TABLE'].data['X'] / 3600)
@@ -164,15 +160,11 @@ def cube_creator(ob, args):
 
     x_pix, y_pix = pix_map.T.astype(int)
 
-    print('oi3')
-
     # apsid_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan (c1)
     vorbin_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
     stel_vel_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
     aps_maps = np.zeros(
         (len(cube[4].data.names) - 1, np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
-
-    print('oi4')
 
     # cube_data = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1),
     #                      dtype=np.float32) (c1)
@@ -182,8 +174,6 @@ def cube_creator(ob, args):
                            dtype=np.float32)
     vorbin_err = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1),
                           dtype=np.float32)
-
-    breakpoint()
 
     if 'PATCH_ALLSPEC' in cube:
         aps_id = cube['PATCH_TABLE'].data['APS_ID']
