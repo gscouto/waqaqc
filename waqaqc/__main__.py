@@ -151,6 +151,7 @@ def main():
 
     args.redshift = redshift_list
     args.ob_list = ob_list
+    args.ob_list = [str(ob) for ob in ob_list]
     args.levels = levels
 
     run_waqaqc.run(args=args)
