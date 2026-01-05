@@ -108,6 +108,8 @@ def cube_creator(ob, args):
     # bin_id = cube[1].data['BIN_ID']
     r_bin_id = cube[2].data['BIN_ID']
 
+    breakpoint()
+
     wave = np.exp(cube[2].data['LOGLAM'][0])
     if wcs_c[0].header['MODE'] == 'HIGHRES':
         n_wave = np.arange(min(wave) + 0.1, max(wave), 0.1)
