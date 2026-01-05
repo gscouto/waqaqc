@@ -113,7 +113,6 @@ def main():
                              "factor to derived standard deviation.")
     parser.set_defaults(**cfg)
 
-    # args = parser.parse_args()
     args = parser.parse_args(remaining_argv)
 
     required = ["data_path", "ob_list", "temp_path", "temp_file"]
@@ -121,13 +120,6 @@ def main():
 
     if missing:
         parser.error(f"Missing required arguments (not provided via CLI or config): {', '.join(missing)}")
-
-    # if args.config:
-    #     with open(args.config) as f:
-    #         cfg = yaml.safe_load(f)
-    #
-    #     for k, v in cfg.items():
-    #         setattr(args, k, v)
 
     ob_list = parse_csv_list(args.ob_list, "ob_list")
 
@@ -150,8 +142,7 @@ def main():
         sys.exit(1)
 
     args.redshift = redshift_list
-    args.ob_list = ob_list
-    args.ob_list = [str(ob) for ob in ob_list]
+    args.ob_list = [str(ob) for ob in parse_csv_list(args.ob_list, "ob_list")]
     args.levels = levels
 
     run_waqaqc.run(args=args)
@@ -183,12 +174,34 @@ def parse_csv_list(s, name="value"):
 
 
 def parse_csv_float_list(s, name="value"):
-    if s.strip() == "":
+    """
+    Accepts:
+      - None
+      - list (from YAML)
+      - comma-separated string (from CLI)
+    Returns:
+      - list of floats
+    """
+    if s is None:
         return []
-    try:
-        return [float(x.strip()) for x in s.split(",")]
-    except Exception:
-        raise ValueError(f"Malformed float list for {name}. Use format: 0.01,0.02")
+
+    # already a list (YAML case)
+    if isinstance(s, list):
+        try:
+            return [float(x) for x in s]
+        except Exception:
+            raise ValueError(f"{name} list must contain only numbers")
+
+    # string case (CLI)
+    if isinstance(s, str):
+        if s.strip() == "":
+            return []
+        try:
+            return [float(x.strip()) for x in s.split(",")]
+        except Exception:
+            raise ValueError(f"Malformed float list for {name}. Use format: 0.01,0.02")
+
+    raise TypeError(f"{name} must be a list or comma-separated string, got {type(s)}")
 
 
 if __name__ == '__main__':
