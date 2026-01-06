@@ -266,7 +266,7 @@ def cube_creator(ob, args):
                 )
             )
 
-            for i, (f_resampled, e_resampled) in enumerate(tqdm(iterator, total=n_tasks)):
+            for i, (f_resampled, e_resampled) in enumerate(tqdm.tqdm(iterator, total=n_tasks)):
                 rss_data[i] = f_resampled
                 rss_err[i] = e_resampled
 
