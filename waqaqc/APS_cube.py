@@ -28,6 +28,10 @@ def forloop(c_spec, c_espec):
     return n_flux, n_err
 
 
+def forloop_star(args):
+    return forloop(*args)
+
+
 def process_aps_pixel(pix, apsid_map, aps_id, rss_data, rss_err):
     y, x = pix[1], pix[0]
     aps_val = apsid_map[y, x]
@@ -259,11 +263,12 @@ def cube_creator(ob, args):
         ) as pool:
 
             iterator = pool.imap(
-                forloop,
+                forloop_star,
                 (
                     (cube[ext].data['SPEC'][i], cube[ext].data['ESPEC'][i])
                     for i in range(n_tasks)
-                )
+                ),
+                chunksize=max(1, n_tasks // (args.nproc * 8))
             )
 
             for i, (f_resampled, e_resampled) in enumerate(tqdm.tqdm(iterator, total=n_tasks)):
