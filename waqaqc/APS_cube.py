@@ -270,7 +270,8 @@ def cube_creator(ob, args):
                     (cube[ext].data['SPEC'][i], cube[ext].data['ESPEC'][i])
                     for i in range(n_tasks)
                 ),
-                chunksize=max(1, n_tasks // (args.nproc * 8))
+                # chunksize=max(1, n_tasks // (args.nproc * 8))
+                chunksize=1
             )
 
             for i, (f_resampled, e_resampled) in enumerate(tqdm.tqdm(iterator, total=n_tasks)):
