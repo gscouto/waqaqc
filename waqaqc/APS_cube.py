@@ -286,7 +286,7 @@ def cube_creator(ob, args):
         print('Rearranging into datacube formats:')
 
         with mp.Pool(processes=args.nproc) as pool:
-            results = pool.starmap(process_aps_pixel, tqdm.tqdm(args_cube, total=len(args)))
+            results = pool.starmap(process_aps_pixel, tqdm.tqdm(args_cube, total=len(args_cube)))
 
         valid_results = [r for r in results if r is not None]
         for x, y, data_slice, err_slice in valid_results:
