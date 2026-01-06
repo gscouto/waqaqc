@@ -243,6 +243,8 @@ def cube_creator(ob, args):
         ext = 1
         n_tasks = cube[ext].data['SPEC'].shape[0]
 
+        breakpoint()
+
         # pool = mp.Pool(processes=args.nproc,
         #                initializer=init_globals,
         #                initargs=(wave, n_wave),
