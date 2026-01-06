@@ -293,7 +293,7 @@ def cube_creator(ob, args):
             cube_data[:, y, x] = data_slice
             cube_err[:, y, x] = err_slice
 
-        del rss, rss_data, rss_err
+        del rss_data, rss_err
         gc.collect()
 
     vorbin_cube_data = np.zeros((cube['PATCH_BINSPEC'].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
