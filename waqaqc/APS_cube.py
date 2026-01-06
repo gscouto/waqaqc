@@ -276,7 +276,7 @@ def cube_creator(ob, args):
                 chunksize=max(1, n_tasks // (args.nproc * 10))
             )
 
-            for i, f_resampled, e_resampled in tqdm(iterator, total=n_tasks):
+            for i, f_resampled, e_resampled in tqdm.tqdm(iterator, total=n_tasks):
                 rss_data[i] = f_resampled
                 rss_err[i] = e_resampled
 
