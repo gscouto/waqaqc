@@ -19,22 +19,13 @@ def init_globals(wave, n_wave):
     _n_wave = n_wave
 
 
-# def forloop(c_spec, c_espec):
-#     n_flux, n_err = spectres.spectres(_n_wave, _wave, c_spec, c_espec)
-#
-#     n_flux = np.array(n_flux, dtype=np.float32)
-#     n_err = np.array(n_err, dtype=np.float32)
-#
-#     return n_flux, n_err
-
-
-def forloop(i, c_spec, c_espec):
+def forloop(c_spec, c_espec):
     n_flux, n_err = spectres.spectres(_n_wave, _wave, c_spec, c_espec)
 
-    n_flux = np.asarray(n_flux, dtype=np.float32)
-    n_err = np.asarray(n_err, dtype=np.float32)
+    n_flux = np.array(n_flux, dtype=np.float32)
+    n_err = np.array(n_err, dtype=np.float32)
 
-    return i, n_flux, n_err
+    return n_flux, n_err
 
 
 def process_aps_pixel(pix, apsid_map, aps_id, rss_data, rss_err):
@@ -267,16 +258,15 @@ def cube_creator(ob, args):
                 maxtasksperchild=10
         ) as pool:
 
-            iterator = pool.imap_unordered(
+            iterator = pool.imap(
                 forloop,
                 (
-                    (i, cube[ext].data['SPEC'][i], cube[ext].data['ESPEC'][i])
+                    (cube[ext].data['SPEC'][i], cube[ext].data['ESPEC'][i])
                     for i in range(n_tasks)
-                ),
-                chunksize=max(1, n_tasks // (args.nproc * 10))
+                )
             )
 
-            for i, f_resampled, e_resampled in tqdm.tqdm(iterator, total=n_tasks):
+            for i, (f_resampled, e_resampled) in enumerate(tqdm(iterator, total=n_tasks)):
                 rss_data[i] = f_resampled
                 rss_err[i] = e_resampled
 
