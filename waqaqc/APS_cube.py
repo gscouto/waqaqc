@@ -350,8 +350,6 @@ def cube_creator(ob, args):
 
     gc.collect()
 
-    breakpoint()
-
     aps_maps_names = list(cube['GALAXY_TABLE'].data.names[1:])
 
     print('')
@@ -364,6 +362,9 @@ def cube_creator(ob, args):
         results = pool.starmap(process_aps_maps_pixel, tqdm.tqdm(args_cube, total=len(args_cube)))
 
     flat_results = [item for sublist in results for item in sublist]
+
+    breakpoint()
+
     for j, y, x, val in flat_results:
         aps_maps[j, y, x] = val
 
