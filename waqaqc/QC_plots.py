@@ -1405,6 +1405,8 @@ def html_plots(ob, redshift, args):
 
         return sn_cov
 
+    breakpoint()
+
     if args.cov_flag == 1:
         try:
             binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_r, y_t_r, sgn_tt_r, rms_tt_r,
