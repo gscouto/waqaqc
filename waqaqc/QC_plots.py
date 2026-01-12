@@ -1422,7 +1422,7 @@ def html_plots(ob, redshift, args):
         try:
             binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_r, y_t_r, sgn_tt_r, rms_tt_r,
                                                                                       targetSN, pixelsize=pixelsize,
-                                                                                      plot=0, quiet=0, cvt=False)
+                                                                                      plot=0, quiet=1, cvt=False)
             vorbin_sn = targetSN
         except:
             binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_r, y_t_r, sgn_tt_r, rms_tt_r,
@@ -1553,7 +1553,7 @@ def html_plots(ob, redshift, args):
         aps_cube_data = aps_cube[1].data
         aps_cube_err = aps_cube[2].data
 
-        levels = np.array(json.loads(args.levels)).astype(float)  # SNR levels to display
+        # levels = np.array(json.loads(args.levels)).astype(float)  # SNR levels to display
 
         aps_cen_wave = args.aps_wav
 
