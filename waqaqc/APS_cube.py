@@ -299,7 +299,10 @@ def cube_creator(ob, args):
     vorbin_cube_data = np.zeros((cube['PATCH_BINSPEC'].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
     vorbin_cube_err = np.zeros((cube['PATCH_BINSPEC'].data['SPEC'].shape[0], len(n_wave)), dtype=np.float32)
 
-    ext = 3
+    if 'PATCH_ALLSPEC' in cube:
+        ext = 3
+    else:
+        ext = 2
 
     print('')
     print('Recreating Voronoi binning datacube from APS file. This may take a few minutes...')
