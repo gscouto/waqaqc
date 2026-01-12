@@ -1974,6 +1974,8 @@ def html_plots(ob, redshift, args):
     f.write(text)
     f.close()
 
+    breakpoint()
+
     if args.aps_flag == '1':
         qc_plot_dir = 'CPSv' + blue_cube[0].header['CASUVERS'] + '_APSv' + aps_cube[1].header['APSVERS']
     else:
