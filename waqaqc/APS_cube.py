@@ -102,9 +102,7 @@ def cube_creator(ob, args):
     wcs_c = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('stackcube' in x)])[1])
     cube = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('LWVE' in x)])[0])
 
-    breakpoint()
-
-    gal_id = cube['PATCH_ALLSPEC'].data['CNAME'][0]
+    gal_id = cube['PATCH_TABLE'].data['CNAME'][0]
     # gal_dir = gal_id + '_' + wcs_c[0].header['MODE'] + '_' + str(wcs_c[0].header['OBID'])
     gal_dir = str(wcs_c[0].header['OBID']) + '_' + gal_id + '_' + wcs_c[0].header['MODE'] + '/'
 
@@ -114,7 +112,7 @@ def cube_creator(ob, args):
     bin_id = cube['PATCH_TABLE'].data['BIN_ID']
     r_bin_id = cube['PATCH_BINSPEC'].data['BIN_ID']
 
-    wave = np.exp(cube['PATCH_ALLSPEC'].data['LOGLAM'][0])
+    wave = np.exp(cube['PATCH_BINSPEC'].data['LOGLAM'][0])
     if wcs_c[0].header['MODE'] == 'HIGHRES':
         n_wave = np.arange(min(wave) + 0.1, max(wave), 0.1)
     elif wcs_c[0].header['MODE'] == 'LOWRES':
