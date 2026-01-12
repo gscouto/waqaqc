@@ -350,6 +350,8 @@ def cube_creator(ob, args):
 
     gc.collect()
 
+    breakpoint()
+
     aps_maps_names = list(cube['GALAXY_TABLE'].data.names[1:])
 
     print('')
