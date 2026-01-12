@@ -102,6 +102,8 @@ def cube_creator(ob, args):
     wcs_c = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('stackcube' in x)])[1])
     cube = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('LWVE' in x)])[0])
 
+    breakpoint()
+
     gal_id = cube['PATCH_ALLSPEC'].data['CNAME'][0]
     # gal_dir = gal_id + '_' + wcs_c[0].header['MODE'] + '_' + str(wcs_c[0].header['OBID'])
     gal_dir = str(wcs_c[0].header['OBID']) + '_' + gal_id + '_' + wcs_c[0].header['MODE'] + '/'
