@@ -1294,25 +1294,25 @@ def html_plots(ob, redshift, args):
         try:
             binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_b, y_t_b, sgn_tt_b, rms_tt_b,
                                                                                       targetSN, pixelsize=pixelsize,
-                                                                                      plot=0,
-                                                                                      quiet=1, sn_func=sn_func_blue)
+                                                                                      plot=0, quiet=1,
+                                                                                      sn_func=sn_func_blue, cvt=False)
             vorbin_sn = targetSN
         except:
             binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_b, y_t_b, sgn_tt_b, rms_tt_b,
                                                                                       10, pixelsize=pixelsize, plot=0,
-                                                                                      quiet=1, sn_func=sn_func_blue)
+                                                                                      quiet=1, sn_func=sn_func_blue,
+                                                                                      cvt=False)
             vorbin_sn = 10.
     else:
         try:
             binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_b, y_t_b, sgn_tt_b, rms_tt_b,
                                                                                       targetSN, pixelsize=pixelsize,
-                                                                                      plot=0,
-                                                                                      quiet=1)
+                                                                                      plot=0, quiet=1, cvt=False)
             vorbin_sn = targetSN
         except:
             binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_b, y_t_b, sgn_tt_b, rms_tt_b,
                                                                                       10, pixelsize=pixelsize, plot=0,
-                                                                                      quiet=1)
+                                                                                      quiet=1, cvt=False)
             vorbin_sn = 10.
 
     ax = plt.subplot(gs[17, 0])
