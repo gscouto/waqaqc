@@ -167,8 +167,8 @@ def cube_creator(ob, args):
     # apsid_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan (c1)
     vorbin_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
     stel_vel_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
-    aps_maps = np.zeros(
-        (len(cube[4].data.names) - 1, np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
+    aps_maps = np.zeros((len(cube['GALAXY_TABLE'].data.names) - 1, np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) -
+                         np.min(x_pix) + 1)) * np.nan
 
     # cube_data = np.zeros((len(n_wave), np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1),
     #                      dtype=np.float32) (c1)
@@ -363,10 +363,7 @@ def cube_creator(ob, args):
 
     flat_results = [item for sublist in results for item in sublist]
 
-    breakpoint()
-
     for j, y, x, val in flat_results:
-        print(j, y, x, val)
         aps_maps[j, y, x] = val
 
     ###
