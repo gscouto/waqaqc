@@ -366,6 +366,7 @@ def cube_creator(ob, args):
     breakpoint()
 
     for j, y, x, val in flat_results:
+        print(j, y, x, val)
         aps_maps[j, y, x] = val
 
     ###
