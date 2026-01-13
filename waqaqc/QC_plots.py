@@ -1614,6 +1614,8 @@ def html_plots(ob, redshift, args):
 
         # ------
 
+        breakpoint()
+
         ax = plt.subplot(gs[0, 1:])
         ax.plot(lam_a, aps_cube[1].data[:, ypmax_a, xpmax_a])
         ax.set_xlabel(r'$\lambda$ [$\AA$]')
