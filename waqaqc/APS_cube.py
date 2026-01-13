@@ -176,7 +176,8 @@ def cube_creator(ob, args):
 
     aps_ra_dec = np.vstack((aps_ra, aps_dec)).T
 
-    pix_map = np.round(wcs.wcs_world2pix(aps_ra_dec, 0), 0)
+    # pix_map = np.round(wcs.wcs_world2pix(aps_ra_dec, 0), 0)
+    pix_map = np.floor(wcs.wcs_world2pix(aps_ra_dec, 0)).astype(int)
 
     pix_mapt = pix_map.T.astype(int)
     pix_mapt[0] = pix_mapt[0] - np.min(pix_mapt[0])
@@ -185,8 +186,6 @@ def cube_creator(ob, args):
     pix_mapt = pix_mapt.T
 
     x_pix, y_pix = pix_map.T.astype(int)
-
-    breakpoint()
 
     # apsid_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan (c1)
     vorbin_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
