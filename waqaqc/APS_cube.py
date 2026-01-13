@@ -156,7 +156,7 @@ def cube_creator(ob, args):
     def estimate_spacing(arr):
         arr = np.sort(arr)
         diffs = np.diff(arr)
-        diffs = diffs[diffs > 1e-4]  # remove numerical noise
+        diffs = diffs[diffs > 1e-1]  # remove numerical noise
         return np.median(diffs)
 
     dx = estimate_spacing(X)
