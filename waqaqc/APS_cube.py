@@ -109,6 +109,17 @@ def process_aps_maps_pixel(idx, pix, vorbin_map, bin_id, r_bin_id, data4, map_na
     return results
 
 
+def unique_with_tol(arr, tol=1e-3):
+    arr = np.sort(arr)
+    groups = [[arr[0]]]
+    for v in arr[1:]:
+        if abs(v - groups[-1][-1]) < tol:
+            groups[-1].append(v)
+        else:
+            groups.append([v])
+    return np.array([np.mean(g) for g in groups])
+
+
 def cube_creator(ob, args):
     # config = configparser.ConfigParser()
     # config.read(self)
@@ -133,6 +144,33 @@ def cube_creator(ob, args):
         n_wave = np.arange(min(wave) + 0.1, max(wave), 0.1)
     elif wcs_c[0].header['MODE'] == 'LOWRES':
         n_wave = np.arange(min(wave) + 0.5, max(wave), 0.5)
+
+
+
+
+    breakpoint()
+
+    x_centers = unique_with_tol(cube['PATCH_TABLE'].data['X'], tol=1e-3)
+    y_centers = unique_with_tol(cube['PATCH_TABLE'].data['Y'], tol=1e-3)
+
+    from scipy.spatial import cKDTree
+
+    x_tree = cKDTree(x_centers[:, None])
+    y_tree = cKDTree(y_centers[:, None])
+
+    ix = x_tree.query(cube['PATCH_TABLE'].data['X'][:, None])[1]
+    iy = y_tree.query(cube['PATCH_TABLE'].data['Y'][:, None])[1]
+
+    print(len(np.unique(list(zip(ix, iy)))) == len(ix))
+
+    nx, ny = len(x_centers), len(y_centers)
+
+    vorbin_data = np.zeros((n_wave, ny, nx), dtype=np.float32)
+
+    vorbin_data[:, iy[i], ix[i]] = spectrum
+
+
+
 
     axis_header = fits.Header()
     # axis_header['NAXIS1'] = wcs_c[1].header['NAXIS1']
