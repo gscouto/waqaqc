@@ -151,6 +151,8 @@ def cube_creator(ob, args):
     axis_header['CUNIT1'] = wcs_c[1].header['CUNIT1']
     axis_header['CUNIT2'] = wcs_c[1].header['CUNIT2']
 
+    breakpoint()
+
     wcs = WCS(axis_header)
 
     # aps_ra = cube['PATCH_TABLE'].data['X_0'] + (cube['PATCH_TABLE'].data['X'] / 3600)
