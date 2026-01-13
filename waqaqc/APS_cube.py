@@ -72,7 +72,21 @@ def process_vorbin_pixel(idx_i, pix, vorbin_map, r_bin_id, bin_id,
         return x, y, data_slice, err_slice, vel_val
 
     except Exception:
+        print("Failed pixel:", x, y, "bin:", bin_val, "error:", e)
         return None
+
+
+# def process_vorbin_pixel(pix, vorbin_map, bin_to_spec, vel_map):
+#     y, x = pix[1], pix[0]
+#     bin_val = vorbin_map[y, x]
+#
+#     if bin_val < 0 or bin_val not in bin_to_spec:
+#         return None
+#
+#     data_slice, err_slice = bin_to_spec[bin_val]
+#     vel_val = vel_map[bin_val]
+#
+#     return x, y, data_slice, err_slice, vel_val
 
 
 def process_aps_maps_pixel(idx, pix, vorbin_map, bin_id, r_bin_id, data4, map_names):
@@ -113,8 +127,6 @@ def cube_creator(ob, args):
     # aps_id = c[2].data['APS_ID'] # commenting due to being dropped (c1)
     bin_id = cube['PATCH_TABLE'].data['BIN_ID']
     r_bin_id = cube['PATCH_BINSPEC'].data['BIN_ID']
-
-    breakpoint()
 
     wave = np.exp(cube['PATCH_BINSPEC'].data['LOGLAM'][0])
     if wcs_c[0].header['MODE'] == 'HIGHRES':
@@ -173,6 +185,8 @@ def cube_creator(ob, args):
     pix_mapt = pix_mapt.T
 
     x_pix, y_pix = pix_map.T.astype(int)
+
+    breakpoint()
 
     # apsid_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan (c1)
     vorbin_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
