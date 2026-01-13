@@ -148,26 +148,38 @@ def cube_creator(ob, args):
 
 
 
+
+
+    X = cube['PATCH_TABLE'].data['X']
+    Y = cube['PATCH_TABLE'].data['Y']
+
+    def estimate_spacing(arr):
+        arr = np.sort(arr)
+        diffs = np.diff(arr)
+        diffs = diffs[diffs > 1e-4]  # remove numerical noise
+        return np.median(diffs)
+
+    dx = estimate_spacing(X)
+    dy = estimate_spacing(Y)
+
+    def estimate_offset(arr, delta):
+        folded = np.mod(arr, delta)
+        return np.median(folded)
+
+    x0 = estimate_offset(X, dx)
+    y0 = estimate_offset(Y, dy)
+
+    ix = np.round((X - x0) / dx).astype(int)
+    iy = np.round((Y - y0) / dy).astype(int)
+
+    ix -= ix.min()
+    iy -= iy.min()
+
+    nx = ix.max() + 1
+    ny = iy.max() + 1
+
     breakpoint()
 
-    x_centers = unique_with_tol(cube['PATCH_TABLE'].data['X'], tol=1e-3)
-    y_centers = unique_with_tol(cube['PATCH_TABLE'].data['Y'], tol=1e-3)
-
-    from scipy.spatial import cKDTree
-
-    x_tree = cKDTree(x_centers[:, None])
-    y_tree = cKDTree(y_centers[:, None])
-
-    ix = x_tree.query(cube['PATCH_TABLE'].data['X'][:, None])[1]
-    iy = y_tree.query(cube['PATCH_TABLE'].data['Y'][:, None])[1]
-
-    print(len(np.unique(list(zip(ix, iy)))) == len(ix))
-
-    nx, ny = len(x_centers), len(y_centers)
-
-    vorbin_data = np.zeros((n_wave, ny, nx), dtype=np.float32)
-
-    vorbin_data[:, iy[i], ix[i]] = spectrum
 
 
 
