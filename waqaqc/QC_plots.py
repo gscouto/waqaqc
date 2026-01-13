@@ -1838,6 +1838,8 @@ def html_plots(ob, redshift, args):
             ax.set_ylabel('Y [px]')
             plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'flux')
 
+        breakpoint()
+
         ax = plt.subplot(gs[subplots_rows[2], 1])
         im = ax.imshow(aps_maps['V_[OIII]_5006.77'].data, origin='lower', cmap='bwr',
                        vmin=np.nanpercentile(aps_maps['V_[OIII]_5006.77'].data, 10),
