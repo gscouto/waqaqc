@@ -1548,111 +1548,112 @@ def html_plots(ob, redshift, args):
         print('')
 
         aps_maps = fits.open(gal_dir + '/' + gal_name + '_APS_maps.fits')
-        aps_vorbin_cube_hdr = fits.getheader(gal_dir + '/' + gal_name + '_vorbin_cube.fits', ext=1)
-
-        aps_vers = aps_vorbin_cube_hdr['APSVERS']
 
         if os.path.exists(gal_dir + '/' + gal_name + '_cube.fits'):
-
             aps_cube = fits.open(gal_dir + '/' + gal_name + '_cube.fits')
 
-            aps_cube_data = aps_cube[1].data
-            aps_cube_err = aps_cube[2].data
+        else:
+            aps_cube = fits.open(gal_dir + '/' + gal_name + '_vorbin_cube.fits')
 
-            aps_cen_wave = args.aps_wav
+        aps_cube_data = aps_cube[1].data
+        aps_cube_err = aps_cube[2].data
 
-            colap_a_map = np.nansum(aps_cube[1].data[:], axis=0)
+        aps_cen_wave = args.aps_wav
 
-            lam_a = aps_cube[1].header['CRVAL3'] + (np.arange(aps_cube[1].header['NAXIS3']) * aps_cube[1].header['CDELT3'])
+        colap_a_map = np.nansum(aps_cube[1].data[:], axis=0)
 
-            sgn_lam = min(lam_a, key=lambda x: abs(x - aps_cen_wave))
-            sgn_a = np.mean(aps_cube[1].data[np.where(lam_a == sgn_lam)[0][0] - sgn_wind:
-                                             np.where(lam_a == sgn_lam)[0][0] + sgn_wind], axis=0)
-            rms_a = np.sqrt(sgn_a)
-            snr_a = sgn_a / rms_a
+        lam_a = aps_cube[1].header['CRVAL3'] + (np.arange(aps_cube[1].header['NAXIS3']) * aps_cube[1].header['CDELT3'])
 
-            # doing the plots
+        sgn_lam = min(lam_a, key=lambda x: abs(x - aps_cen_wave))
+        sgn_a = np.mean(aps_cube[1].data[np.where(lam_a == sgn_lam)[0][0] - sgn_wind:
+                                         np.where(lam_a == sgn_lam)[0][0] + sgn_wind], axis=0)
+        rms_a = np.sqrt(sgn_a)
+        snr_a = sgn_a / rms_a
 
-            axis_header = fits.Header()
-            axis_header['NAXIS1'] = aps_cube[1].header['NAXIS1']
-            axis_header['NAXIS2'] = aps_cube[1].header['NAXIS2']
-            axis_header['CD1_1'] = aps_cube[1].header['CDELT1']
-            axis_header['CD2_2'] = aps_cube[1].header['CDELT2']
-            axis_header['CRPIX1'] = aps_cube[1].header['CRPIX1']
-            axis_header['CRPIX2'] = aps_cube[1].header['CRPIX2']
-            axis_header['CRVAL1'] = aps_cube[1].header['CRVAL1']
-            axis_header['CRVAL2'] = aps_cube[1].header['CRVAL2']
-            axis_header['CTYPE1'] = aps_cube[1].header['CTYPE1']
-            axis_header['CTYPE2'] = aps_cube[1].header['CTYPE2']
-            axis_header['CUNIT1'] = aps_cube[1].header['CUNIT1']
-            axis_header['CUNIT2'] = aps_cube[1].header['CUNIT2']
+        # doing the plots
 
-            fig = plt.figure(figsize=(14, 26))
+        axis_header = fits.Header()
+        axis_header['NAXIS1'] = aps_cube[1].header['NAXIS1']
+        axis_header['NAXIS2'] = aps_cube[1].header['NAXIS2']
+        axis_header['CD1_1'] = aps_cube[1].header['CDELT1']
+        axis_header['CD2_2'] = aps_cube[1].header['CDELT2']
+        axis_header['CRPIX1'] = aps_cube[1].header['CRPIX1']
+        axis_header['CRPIX2'] = aps_cube[1].header['CRPIX2']
+        axis_header['CRVAL1'] = aps_cube[1].header['CRVAL1']
+        axis_header['CRVAL2'] = aps_cube[1].header['CRVAL2']
+        axis_header['CTYPE1'] = aps_cube[1].header['CTYPE1']
+        axis_header['CTYPE2'] = aps_cube[1].header['CTYPE2']
+        axis_header['CUNIT1'] = aps_cube[1].header['CUNIT1']
+        axis_header['CUNIT2'] = aps_cube[1].header['CUNIT2']
 
-            fig.suptitle('L2/APS QC plots / APSVERS = ' + aps_cube[1].header['APSVERS'], size=22, weight='bold')
+        fig = plt.figure(figsize=(14, 26))
 
-            gs = gridspec.GridSpec(7, 3, height_ratios=[1, 1, 1, 0.5, 1, 1, 1], width_ratios=[1, 1, 1])
-            gs.update(left=0.09, right=0.95, bottom=0.02, top=0.95, wspace=0.3, hspace=0.25)
-            props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+        fig.suptitle('L2/APS QC plots / APSVERS = ' + aps_cube[1].header['APSVERS'], size=22, weight='bold')
 
-            wcs = WCS(axis_header)
+        gs = gridspec.GridSpec(7, 3, height_ratios=[1, 1, 1, 0.5, 1, 1, 1], width_ratios=[1, 1, 1])
+        gs.update(left=0.09, right=0.95, bottom=0.02, top=0.95, wspace=0.3, hspace=0.25)
+        props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
 
-            ax = plt.subplot(gs[0, 0], projection=wcs)
-            im = ax.imshow(np.log10(colap_a_map), origin='lower')
+        wcs = WCS(axis_header)
 
-            cube_central_waves, cube_x_peaks, cube_y_peaks = get_xy_peak_positions(aps_cube[1].data, lam_a,
-                                                                                   bin_size=aps_cube[1].data.shape[0])
+        ax = plt.subplot(gs[0, 0], projection=wcs)
+        im = ax.imshow(np.log10(colap_a_map), origin='lower')
 
-            ypmax_a = round(cube_x_peaks[0])
-            xpmax_a = round(cube_y_peaks[0])
+        cube_central_waves, cube_x_peaks, cube_y_peaks = get_xy_peak_positions(aps_cube[1].data, lam_a,
+                                                                               bin_size=aps_cube[1].data.shape[0])
 
-            ax.plot(xpmax_a, ypmax_a, 'x', color='red', markersize=4, label=str(xpmax_a) + ', ' + str(ypmax_a))
-            ax.set_title('Collapsed APS Datacube')
-            ax.set_xlabel('X [px]')
-            ax.set_ylabel('Y [px]')
-            ax.legend()
-            plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'log scale')
+        ypmax_a = round(cube_x_peaks[0])
+        xpmax_a = round(cube_y_peaks[0])
 
-            # ------
+        ax.plot(xpmax_a, ypmax_a, 'x', color='red', markersize=4, label=str(xpmax_a) + ', ' + str(ypmax_a))
+        ax.set_title('Collapsed APS Datacube')
+        ax.set_xlabel('X [px]')
+        ax.set_ylabel('Y [px]')
+        ax.legend()
+        plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'log scale')
 
-            ax = plt.subplot(gs[0, 1:])
-            ax.plot(lam_a, aps_cube[1].data[:, ypmax_a, xpmax_a])
-            ax.set_xlabel(r'$\lambda$ [$\AA$]')
-            ax.set_ylabel('Counts')
-            ax.set_title('APS spectrum at (' + str(xpmax_a) + ', ' + str(ypmax_a) + ') [flux peak]')
+        # ------
 
-            # ------
+        ax = plt.subplot(gs[0, 1:])
+        ax.plot(lam_a, aps_cube[1].data[:, ypmax_a, xpmax_a])
+        ax.set_xlabel(r'$\lambda$ [$\AA$]')
+        ax.set_ylabel('Counts')
+        ax.set_title('APS spectrum at (' + str(xpmax_a) + ', ' + str(ypmax_a) + ') [flux peak]')
 
-            ax = plt.subplot(gs[1, 0])
-            im = ax.imshow(snr_a, origin='lower')
-            cs = ax.contour(snr_a, levels, linestyles=np.array([':', '-']), colors='white')
-            m1 = mlines.Line2D([], [], color='black', linestyle=':', markersize=5, label='SNR = ' + str(levels[0]))
-            m2 = mlines.Line2D([], [], color='black', linestyle='-', markersize=5, label='SNR = ' + str(levels[1]))
-            ax.legend(handles=[m1, m2], framealpha=1, fontsize=8, loc='lower left')
+        # ------
 
-            ax.set_title(r'SNR @' + str(aps_cen_wave) + '$\AA$')
-            ax.set_xlabel('X [px]')
-            ax.set_ylabel('Y [px]')
-            plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'SNR')
+        ax = plt.subplot(gs[1, 0])
+        im = ax.imshow(snr_a, origin='lower')
+        cs = ax.contour(snr_a, levels, linestyles=np.array([':', '-']), colors='white')
+        m1 = mlines.Line2D([], [], color='black', linestyle=':', markersize=5, label='SNR = ' + str(levels[0]))
+        m2 = mlines.Line2D([], [], color='black', linestyle='-', markersize=5, label='SNR = ' + str(levels[1]))
+        ax.legend(handles=[m1, m2], framealpha=1, fontsize=8, loc='lower left')
 
-            fits.writeto(gal_dir + 'SNR_map_aps.fits', snr_a, overwrite=True)
+        ax.set_title(r'SNR @' + str(aps_cen_wave) + '$\AA$')
+        ax.set_xlabel('X [px]')
+        ax.set_ylabel('Y [px]')
+        plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'SNR')
 
-            # ------
+        fits.writeto(gal_dir + 'SNR_map_aps.fits', snr_a, overwrite=True)
 
-            ax = plt.subplot(gs[1, 1:])
-            ax.hist(snr_a[snr_a >= 3], 30, histtype='step', lw=2)
-            ax.set_yscale('log')
-            ax.set_ylabel(r'N pixels [SNR $\geq$ 3]')
-            ax.set_xlabel(r'SNR [@' + str(aps_cen_wave) + '$\AA$]')
+        # ------
 
-            int_spec_a = np.sum(aps_cube[1].data * ((snr_a >= 3)[np.newaxis, :, :]), axis=(1, 2))
-            in_ax = ax.inset_axes([0.55, 0.5, 0.4, 0.3])
-            in_ax.set_title(r'integrated spec [SNR$\geq$3]', fontsize=10)
-            in_ax.plot(lam_a, int_spec_a)
-            in_ax.axvline(aps_cen_wave - sgn_wind * aps_cube[1].header['CDELT3'], linestyle='--', color='black')
-            in_ax.axvline(aps_cen_wave + sgn_wind * aps_cube[1].header['CDELT3'], linestyle='--', color='black')
+        ax = plt.subplot(gs[1, 1:])
+        ax.hist(snr_a[snr_a >= 3], 30, histtype='step', lw=2)
+        ax.set_yscale('log')
+        ax.set_ylabel(r'N pixels [SNR $\geq$ 3]')
+        ax.set_xlabel(r'SNR [@' + str(aps_cen_wave) + '$\AA$]')
 
-            # doing voronoi binning
+        int_spec_a = np.sum(aps_cube[1].data * ((snr_a >= 3)[np.newaxis, :, :]), axis=(1, 2))
+        in_ax = ax.inset_axes([0.55, 0.5, 0.4, 0.3])
+        in_ax.set_title(r'integrated spec [SNR$\geq$3]', fontsize=10)
+        in_ax.plot(lam_a, int_spec_a)
+        in_ax.axvline(aps_cen_wave - sgn_wind * aps_cube[1].header['CDELT3'], linestyle='--', color='black')
+        in_ax.axvline(aps_cen_wave + sgn_wind * aps_cube[1].header['CDELT3'], linestyle='--', color='black')
+
+        # doing voronoi binning
+
+        if os.path.exists(gal_dir + '/' + gal_name + '_cube.fits'):
 
             print('Doing L2 APS voronoi binning')
             print('')
@@ -1782,27 +1783,32 @@ def html_plots(ob, redshift, args):
 
             n_cube.writeto(gal_dir + 'aps_vorbin_RSS.fits', overwrite=True)
 
-            # ------
+        # ------
 
-            central_waves, x_peaks, y_peaks = get_xy_peak_positions(aps_cube[1].data, lam_a)
+        if os.path.exists(gal_dir + '/' + gal_name + '_cube.fits'):
+            subplots_rows = np.array([3, 4, 5, 6])
+        else:
+            subplots_rows = np.array([2, 3, 4, 5])
 
-            cube_central_waves, cube_x_peaks, cube_y_peaks = get_xy_peak_positions(aps_cube[1].data, lam_a,
-                                                                                   bin_size=aps_cube[1].data.shape[0])
+        central_waves, x_peaks, y_peaks = get_xy_peak_positions(aps_cube[1].data, lam_a)
 
-            ax = plt.subplot(gs[3, :])
-            ax.plot(central_waves, x_peaks - cube_x_peaks[0], '+', color='blue', ms=2,
-                    label='X center mean = ' + str(round(cube_x_peaks[0], 1)))
-            ax.plot(central_waves, y_peaks - cube_y_peaks[0], '+', color='red', ms=2,
-                    label='Y center mean = ' + str(round(cube_y_peaks[0], 1)))
-            ax.set_xlabel(r'$\lambda$ [$\AA$]')
-            ax.set_ylabel(r'X and Y center')
-            ax.set_ylim([-5, 5])
-            ax.set_title('Peak flux spaxel (L2)')
-            ax.legend(markerscale=5)
+        cube_central_waves, cube_x_peaks, cube_y_peaks = get_xy_peak_positions(aps_cube[1].data, lam_a,
+                                                                               bin_size=aps_cube[1].data.shape[0])
+
+        ax = plt.subplot(gs[subplots_rows[0], :])
+        ax.plot(central_waves, x_peaks - cube_x_peaks[0], '+', color='blue', ms=2,
+                label='X center mean = ' + str(round(cube_x_peaks[0], 1)))
+        ax.plot(central_waves, y_peaks - cube_y_peaks[0], '+', color='red', ms=2,
+                label='Y center mean = ' + str(round(cube_y_peaks[0], 1)))
+        ax.set_xlabel(r'$\lambda$ [$\AA$]')
+        ax.set_ylabel(r'X and Y center')
+        ax.set_ylim([-5, 5])
+        ax.set_title('Peak flux spaxel (L2)')
+        ax.legend(markerscale=5)
 
         # ------
 
-        ax = plt.subplot(gs[4, 0])
+        ax = plt.subplot(gs[subplots_rows[1], 0])
         im = ax.imshow(aps_maps['V'].data, origin='lower', cmap='bwr', vmin=np.nanpercentile(aps_maps['V'].data, 10),
                        vmax=np.nanpercentile(aps_maps['V'].data, 90))
         ax.set_title(r'APS V')
@@ -1811,7 +1817,7 @@ def html_plots(ob, redshift, args):
         ax.contour(aps_maps['V'].data, levels=[-300, -200, -100, 0, 100, 200, 300], colors=['black'], alpha=0.3)
         plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'V')
 
-        ax = plt.subplot(gs[4, 1])
+        ax = plt.subplot(gs[subplots_rows[1], 1])
         im = ax.imshow(aps_maps['sigma'].data, origin='lower', vmin=0,
                        vmax=np.nanpercentile(aps_maps['sigma'].data, 90))
         ax.set_title(r'APS sigma')
@@ -1823,7 +1829,7 @@ def html_plots(ob, redshift, args):
         # ------
 
         if np.nanmax(aps_maps['FLUX_[OIII]_5006.77'].data) > 0:
-            ax = plt.subplot(gs[5, 0])
+            ax = plt.subplot(gs[subplots_rows[2], 0])
             im = ax.imshow(aps_maps['FLUX_[OIII]_5006.77'].data,
                            norm=LogNorm(vmin=0.1, vmax=np.nanpercentile(aps_maps['FLUX_[OIII]_5006.77'].data, 90)),
                            origin='lower')
@@ -1832,7 +1838,7 @@ def html_plots(ob, redshift, args):
             ax.set_ylabel('Y [px]')
             plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'flux')
 
-        ax = plt.subplot(gs[5, 1])
+        ax = plt.subplot(gs[subplots_rows[2], 1])
         im = ax.imshow(aps_maps['V_[OIII]_5006.77'].data, origin='lower', cmap='bwr',
                        vmin=np.nanpercentile(aps_maps['V_[OIII]_5006.77'].data, 10),
                        vmax=np.nanpercentile(aps_maps['V_[OIII]_5006.77'].data, 90))
@@ -1843,7 +1849,7 @@ def html_plots(ob, redshift, args):
                    alpha=0.3)
         plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'V')
 
-        ax = plt.subplot(gs[5, 2])
+        ax = plt.subplot(gs[subplots_rows[2], 2])
         im = ax.imshow(aps_maps['SIGMA_[OIII]_5006.77'].data, origin='lower', vmin=0,
                        vmax=np.nanpercentile(aps_maps['SIGMA_[OIII]_5006.77'].data, 90))
         ax.set_title(r'APS SIGMA([OIII]5007)')
@@ -1855,7 +1861,7 @@ def html_plots(ob, redshift, args):
         # ------
 
         if np.nanmax(aps_maps['FLUX_HA_6562.80'].data) > 0:
-            ax = plt.subplot(gs[6, 0])
+            ax = plt.subplot(gs[subplots_rows[3], 0])
             im = ax.imshow(aps_maps['FLUX_HA_6562.80'].data,
                            norm=LogNorm(vmin=0.1, vmax=np.nanpercentile(aps_maps['FLUX_HA_6562.80'].data, 90)),
                            origin='lower')
@@ -1864,7 +1870,7 @@ def html_plots(ob, redshift, args):
             ax.set_ylabel('Y [px]')
             plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'flux')
 
-        ax = plt.subplot(gs[6, 1])
+        ax = plt.subplot(gs[subplots_rows[3], 1])
         im = ax.imshow(aps_maps['V_HA_6562.80'].data, origin='lower', cmap='bwr',
                        vmin=np.nanpercentile(aps_maps['V_HA_6562.80'].data, 10),
                        vmax=np.nanpercentile(aps_maps['V_HA_6562.80'].data, 90))
@@ -1875,7 +1881,7 @@ def html_plots(ob, redshift, args):
                    alpha=0.3)
         plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'V')
 
-        ax = plt.subplot(gs[6, 2])
+        ax = plt.subplot(gs[subplots_rows[3], 2])
         im = ax.imshow(aps_maps['SIGMA_HA_6562.80'].data, origin='lower', vmin=0,
                        vmax=np.nanpercentile(aps_maps['SIGMA_HA_6562.80'].data, 90))
         ax.set_title(r'APS SIGMA(HA)')
@@ -1979,7 +1985,7 @@ def html_plots(ob, redshift, args):
     f.close()
 
     if args.aps_flag == 1:
-        qc_plot_dir = 'CPSv' + blue_cube[0].header['CASUVERS'] + '_APSv' + aps_vers
+        qc_plot_dir = 'CPSv' + blue_cube[0].header['CASUVERS'] + '_APSv' + aps_cube[1].header['APSVERS']
     else:
         qc_plot_dir = 'CPSv' + blue_cube[0].header['CASUVERS']
 
