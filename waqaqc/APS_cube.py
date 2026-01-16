@@ -8,6 +8,7 @@ import configparser
 from astropy.wcs import WCS
 import tqdm
 from collections import defaultdict, Counter
+import traceback
 
 _wave = None
 _n_wave = None
@@ -71,9 +72,10 @@ def process_vorbin_pixel(idx_i, pix, vorbin_map, r_bin_id, bin_id,
 
         return x, y, data_slice, err_slice, vel_val
 
-    except Exception:
-        breakpoint()
-        print("Failed pixel:", x, y, "bin:", bin_val)
+    except Exception as e:
+        print(f"Failed pixel (x={x}, y={y}), bin={bin_val}, "
+              f"idx_i={idx_i}, error={type(e).__name__}: {e}")
+        traceback.print_exc()
         return None
 
 
@@ -109,6 +111,7 @@ def process_aps_maps_pixel(idx, pix, vorbin_map, bin_id, r_bin_id, data4, map_na
 
     return results
 
+
 def cube_creator(ob, args):
     # config = configparser.ConfigParser()
     # config.read(self)
@@ -134,14 +137,6 @@ def cube_creator(ob, args):
     elif wcs_c[0].header['MODE'] == 'LOWRES':
         n_wave = np.arange(min(wave) + 0.5, max(wave), 0.5)
 
-
-
-
-
-
-
-
-
     x = cube['PATCH_TABLE'].data['X']
 
     counts = Counter(np.round(x, 2))
@@ -156,7 +151,6 @@ def cube_creator(ob, args):
     x0 = np.round(np.median(np.mod(x, dx)), 2)  # 0.25
 
     xr = x0 + dx * np.round((x - x0) / dx)
-
 
     y = cube['PATCH_TABLE'].data['Y']
 
@@ -174,14 +168,6 @@ def cube_creator(ob, args):
     yr = y0 + dy * np.round((y - y0) / dy)
 
     # breakpoint()
-
-
-
-
-
-
-
-
 
     axis_header = fits.Header()
     # axis_header['NAXIS1'] = wcs_c[1].header['NAXIS1']
