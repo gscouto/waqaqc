@@ -72,7 +72,7 @@ def process_vorbin_pixel(idx_i, pix, vorbin_map, r_bin_id, bin_id,
         return x, y, data_slice, err_slice, vel_val
 
     except Exception:
-        print("Failed pixel:", x, y, "bin:", bin_val)
+        print("Failed pixel:", x, y, "bin:", bin_val, "r_bin_id:", r_bin_id)
         return None
 
 
