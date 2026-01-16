@@ -1614,8 +1614,6 @@ def html_plots(ob, redshift, args):
 
         # ------
 
-        breakpoint()
-
         ax = plt.subplot(gs[0, 1:])
         ax.plot(lam_a, aps_cube[1].data[:, ypmax_a, xpmax_a])
         ax.set_xlabel(r'$\lambda$ [$\AA$]')
@@ -1843,8 +1841,6 @@ def html_plots(ob, redshift, args):
                 ax.set_xlabel('X [px]')
                 ax.set_ylabel('Y [px]')
                 plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'flux')
-
-            breakpoint()
 
             ax = plt.subplot(gs[subplots_rows[2], 1])
             im = ax.imshow(aps_maps['V_[OIII]_5006.77'].data, origin='lower', cmap='bwr',
