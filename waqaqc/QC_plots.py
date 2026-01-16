@@ -1810,61 +1810,65 @@ def html_plots(ob, redshift, args):
 
         # ------
 
-        ax = plt.subplot(gs[subplots_rows[1], 0])
-        im = ax.imshow(aps_maps['V'].data, origin='lower', cmap='bwr', vmin=np.nanpercentile(aps_maps['V'].data, 10),
-                       vmax=np.nanpercentile(aps_maps['V'].data, 90))
-        ax.set_title(r'APS V')
-        ax.set_xlabel('X [px]')
-        ax.set_ylabel('Y [px]')
-        ax.contour(aps_maps['V'].data, levels=[-300, -200, -100, 0, 100, 200, 300], colors=['black'], alpha=0.3)
-        plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'V')
+        ext_names = [ext.name.lower() for ext in aps_maps]
 
-        ax = plt.subplot(gs[subplots_rows[1], 1])
-        im = ax.imshow(aps_maps['sigma'].data, origin='lower', vmin=0,
-                       vmax=np.nanpercentile(aps_maps['sigma'].data, 90))
-        ax.set_title(r'APS sigma')
-        ax.set_xlabel('X [px]')
-        ax.set_ylabel('Y [px]')
-        ax.contour(aps_maps['sigma'].data, levels=[0, 100, 200, 300], colors=['black'], alpha=0.3)
-        plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'sigma')
-
-        # ------
-
-        if np.nanmax(aps_maps['FLUX_[OIII]_5006.77'].data) > 0:
-            ax = plt.subplot(gs[subplots_rows[2], 0])
-            im = ax.imshow(aps_maps['FLUX_[OIII]_5006.77'].data,
-                           norm=LogNorm(vmin=0.1, vmax=np.nanpercentile(aps_maps['FLUX_[OIII]_5006.77'].data, 90)),
-                           origin='lower')
-            ax.set_title(r'APS F([OIII]5007)')
+        if 'V' in ext_names:
+            ax = plt.subplot(gs[subplots_rows[1], 0])
+            im = ax.imshow(aps_maps['V'].data, origin='lower', cmap='bwr', vmin=np.nanpercentile(aps_maps['V'].data, 10),
+                           vmax=np.nanpercentile(aps_maps['V'].data, 90))
+            ax.set_title(r'APS V')
             ax.set_xlabel('X [px]')
             ax.set_ylabel('Y [px]')
-            plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'flux')
+            ax.contour(aps_maps['V'].data, levels=[-300, -200, -100, 0, 100, 200, 300], colors=['black'], alpha=0.3)
+            plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'V')
 
-        breakpoint()
-
-        ax = plt.subplot(gs[subplots_rows[2], 1])
-        im = ax.imshow(aps_maps['V_[OIII]_5006.77'].data, origin='lower', cmap='bwr',
-                       vmin=np.nanpercentile(aps_maps['V_[OIII]_5006.77'].data, 10),
-                       vmax=np.nanpercentile(aps_maps['V_[OIII]_5006.77'].data, 90))
-        ax.set_title(r'APS V([OIII]5007)')
-        ax.set_xlabel('X [px]')
-        ax.set_ylabel('Y [px]')
-        ax.contour(aps_maps['V_[OIII]_5006.77'].data, levels=[-300, -200, -100, 0, 100, 200, 300], colors=['black'],
-                   alpha=0.3)
-        plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'V')
-
-        ax = plt.subplot(gs[subplots_rows[2], 2])
-        im = ax.imshow(aps_maps['SIGMA_[OIII]_5006.77'].data, origin='lower', vmin=0,
-                       vmax=np.nanpercentile(aps_maps['SIGMA_[OIII]_5006.77'].data, 90))
-        ax.set_title(r'APS SIGMA([OIII]5007)')
-        ax.set_xlabel('X [px]')
-        ax.set_ylabel('Y [px]')
-        ax.contour(aps_maps['SIGMA_[OIII]_5006.77'].data, levels=[0, 100, 200, 300], colors=['black'], alpha=0.3)
-        plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'sigma')
+            ax = plt.subplot(gs[subplots_rows[1], 1])
+            im = ax.imshow(aps_maps['sigma'].data, origin='lower', vmin=0,
+                           vmax=np.nanpercentile(aps_maps['sigma'].data, 90))
+            ax.set_title(r'APS sigma')
+            ax.set_xlabel('X [px]')
+            ax.set_ylabel('Y [px]')
+            ax.contour(aps_maps['sigma'].data, levels=[0, 100, 200, 300], colors=['black'], alpha=0.3)
+            plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'sigma')
 
         # ------
 
-        if 'FLUX_HA_6562.80' in aps_maps.data.names:
+        if 'FLUX_[OIII]_5006.77' in ext_names:
+            if np.nanmax(aps_maps['FLUX_[OIII]_5006.77'].data) > 0:
+                ax = plt.subplot(gs[subplots_rows[2], 0])
+                im = ax.imshow(aps_maps['FLUX_[OIII]_5006.77'].data,
+                               norm=LogNorm(vmin=0.1, vmax=np.nanpercentile(aps_maps['FLUX_[OIII]_5006.77'].data, 90)),
+                               origin='lower')
+                ax.set_title(r'APS F([OIII]5007)')
+                ax.set_xlabel('X [px]')
+                ax.set_ylabel('Y [px]')
+                plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'flux')
+
+            breakpoint()
+
+            ax = plt.subplot(gs[subplots_rows[2], 1])
+            im = ax.imshow(aps_maps['V_[OIII]_5006.77'].data, origin='lower', cmap='bwr',
+                           vmin=np.nanpercentile(aps_maps['V_[OIII]_5006.77'].data, 10),
+                           vmax=np.nanpercentile(aps_maps['V_[OIII]_5006.77'].data, 90))
+            ax.set_title(r'APS V([OIII]5007)')
+            ax.set_xlabel('X [px]')
+            ax.set_ylabel('Y [px]')
+            ax.contour(aps_maps['V_[OIII]_5006.77'].data, levels=[-300, -200, -100, 0, 100, 200, 300], colors=['black'],
+                       alpha=0.3)
+            plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'V')
+
+            ax = plt.subplot(gs[subplots_rows[2], 2])
+            im = ax.imshow(aps_maps['SIGMA_[OIII]_5006.77'].data, origin='lower', vmin=0,
+                           vmax=np.nanpercentile(aps_maps['SIGMA_[OIII]_5006.77'].data, 90))
+            ax.set_title(r'APS SIGMA([OIII]5007)')
+            ax.set_xlabel('X [px]')
+            ax.set_ylabel('Y [px]')
+            ax.contour(aps_maps['SIGMA_[OIII]_5006.77'].data, levels=[0, 100, 200, 300], colors=['black'], alpha=0.3)
+            plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'sigma')
+
+        # ------
+
+        if 'FLUX_HA_6562.80' in ext_names:
             if np.nanmax(aps_maps['FLUX_HA_6562.80'].data) > 0:
                 ax = plt.subplot(gs[subplots_rows[3], 0])
                 im = ax.imshow(aps_maps['FLUX_HA_6562.80'].data,
