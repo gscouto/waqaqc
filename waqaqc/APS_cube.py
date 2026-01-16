@@ -52,8 +52,10 @@ def process_aps_pixel(pix, apsid_map, aps_id, rss_data, rss_err):
         return None
 
 
+# def process_vorbin_pixel(idx_i, pix, vorbin_map, r_bin_id, bin_id,
+#                          vorbin_cube_data, vorbin_cube_err, data4_V, bin_pixel_counts):
 def process_vorbin_pixel(idx_i, pix, vorbin_map, r_bin_id, bin_id,
-                         vorbin_cube_data, vorbin_cube_err, data4_V, bin_pixel_counts):
+                         vorbin_cube_data, vorbin_cube_err, bin_pixel_counts):
     y, x = pix[1], pix[0]
     bin_val = vorbin_map[y, x]
 
@@ -75,13 +77,14 @@ def process_vorbin_pixel(idx_i, pix, vorbin_map, r_bin_id, bin_id,
         err_slice = vorbin_cube_err[bin_mask][0] / factor
         # data_slice = vorbin_cube_data[bin_mask][0]
         # err_slice = vorbin_cube_err[bin_mask][0]
-        vel_val = data4_V[r_bin_id == bin_id[idx_i]][0]
 
-        vel_mask = (r_bin_id == bin_id[idx_i])
-        if not vel_mask.any():
-            raise ValueError(f"No velocity entry for idx_i={idx_i}")
+        # vel_val = data4_V[r_bin_id == bin_id[idx_i]][0]
+        # vel_mask = (r_bin_id == bin_id[idx_i])
+        # if not vel_mask.any():
+        #     raise ValueError(f"No velocity entry for idx_i={idx_i}")
 
-        return x, y, data_slice, err_slice, vel_val
+        # return x, y, data_slice, err_slice, vel_val
+        return x, y, data_slice, err_slice
 
     except Exception as e:
         print(f"Failed pixel (x={x}, y={y}), bin={bin_val}, "
@@ -414,10 +417,11 @@ def cube_creator(ob, args):
         results = pool.starmap(process_vorbin_pixel, tqdm.tqdm(args_vorbin, total=len(args_vorbin)))
 
     valid_results = [r for r in results if r is not None]
-    for x, y, data_slice, err_slice, vel_val in valid_results:
+    for x, y, data_slice, err_slice in valid_results:
+    # for x, y, data_slice, err_slice, vel_val in valid_results:
         vorbin_data[:, y, x] = data_slice
         vorbin_err[:, y, x] = err_slice
-        stel_vel_map[y, x] = vel_val
+        # stel_vel_map[y, x] = vel_val
 
     del vorbin_cube_data, vorbin_cube_err
 
