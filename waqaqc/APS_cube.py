@@ -391,6 +391,8 @@ def cube_creator(ob, args):
     for bin_val in unique_bins:
         bin_pixel_counts[bin_val] = np.count_nonzero(vorbin_map == bin_val)
 
+    breakpoint()
+
     args_vorbin = [
         (i, pix_mapt[i], vorbin_map, r_bin_id, bin_id,
          vorbin_cube_data, vorbin_cube_err, cube['GALAXY_TABLE'].data['V'], bin_pixel_counts)
