@@ -62,13 +62,24 @@ def process_vorbin_pixel(idx_i, pix, vorbin_map, r_bin_id, bin_id,
 
     try:
         bin_mask = (r_bin_id == bin_val)
+
+        if not bin_mask.any():
+            raise ValueError(f"Empty bin_mask for bin_val={bin_val}")
+
         factor = bin_pixel_counts.get(bin_val, 1)  # avoid division by 0
+
+        if factor == 0:
+            raise ZeroDivisionError(f"factor=0 for bin_val={bin_val}")
 
         data_slice = vorbin_cube_data[bin_mask][0] / factor
         err_slice = vorbin_cube_err[bin_mask][0] / factor
         # data_slice = vorbin_cube_data[bin_mask][0]
         # err_slice = vorbin_cube_err[bin_mask][0]
         vel_val = data4_V[r_bin_id == bin_id[idx_i]][0]
+
+        vel_mask = (r_bin_id == bin_id[idx_i])
+        if not vel_mask.any():
+            raise ValueError(f"No velocity entry for idx_i={idx_i}")
 
         return x, y, data_slice, err_slice, vel_val
 
