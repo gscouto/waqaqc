@@ -157,7 +157,7 @@ def cube_creator(ob, args):
     elif wcs_c[0].header['MODE'] == 'LOWRES':
         n_wave = np.arange(min(wave) + 0.5, max(wave), 0.5)
 
-    # x = cube['PATCH_TABLE'].data['X']
+    x = cube['PATCH_TABLE'].data['X']
     #
     # counts = Counter(np.round(x, 2))
     #
@@ -203,13 +203,18 @@ def cube_creator(ob, args):
     # axis_header['CUNIT1'] = wcs_c[1].header['CUNIT1']
     # axis_header['CUNIT2'] = wcs_c[1].header['CUNIT2']
 
+
+    new_x = np.round(x / 0.7) * 0.5
+
     axis_header['NAXIS1'] = len(np.unique(np.round(cube['PATCH_TABLE'].data['X'], 1)))
+    # axis_header['NAXIS1'] = len(np.unique(new_x))
     axis_header['NAXIS2'] = len(np.unique(np.round(cube['PATCH_TABLE'].data['Y'], 1)))
     print(axis_header['NAXIS1'], axis_header['NAXIS2'])
     # axis_header['NAXIS1'] = len(xr)
     # axis_header['NAXIS2'] = len(yr)
     axis_header['CD1_1'] = (np.unique(np.round(cube['PATCH_TABLE'].data['X'], 1))[1] -
                             np.unique(np.round(cube['PATCH_TABLE'].data['X'], 1))[0]) / 3600.
+    # axis_header['CD1_1'] = 0.5 / 3600.
     axis_header['CD2_2'] = (np.unique(np.round(cube['PATCH_TABLE'].data['Y'], 1))[1] -
                             np.unique(np.round(cube['PATCH_TABLE'].data['Y'], 1))[0]) / 3600.
     # axis_header['CD1_1'] = dx / 3600.
@@ -217,6 +222,7 @@ def cube_creator(ob, args):
     axis_header['CRPIX1'] = 1
     axis_header['CRPIX2'] = 1
     axis_header['CRVAL1'] = cube['PATCH_TABLE'].data['X_0'][0] + (np.min(cube['PATCH_TABLE'].data['X'] / 3600.))
+    # axis_header['CRVAL1'] = cube['PATCH_TABLE'].data['X_0'][0] + (np.min(new_x / 3600.))
     axis_header['CRVAL2'] = cube['PATCH_TABLE'].data['Y_0'][0] + (np.min(cube['PATCH_TABLE'].data['Y'] / 3600.))
     # axis_header['CRVAL1'] = cube['PATCH_TABLE'].data['X_0'][0] + (x0 / 3600.)
     # axis_header['CRVAL2'] = cube['PATCH_TABLE'].data['Y_0'][0] + (y0 / 3600.)
@@ -227,10 +233,9 @@ def cube_creator(ob, args):
 
     wcs = WCS(axis_header)
 
-    aps_ra = cube['PATCH_TABLE'].data['X_0'] + (np.round(cube['PATCH_TABLE'].data['X'], 1) / 3600)
-    aps_dec = cube['PATCH_TABLE'].data['Y_0'] + (np.round(cube['PATCH_TABLE'].data['Y'], 1) / 3600)
-    # aps_ra = cube['PATCH_TABLE'].data['X_0'] + (cube['PATCH_TABLE'].data['X'] / 3600)
-    # aps_dec = cube['PATCH_TABLE'].data['Y_0'] + (cube['PATCH_TABLE'].data['Y'] / 3600)
+    aps_ra = cube['PATCH_TABLE'].data['X_0'] + (cube['PATCH_TABLE'].data['X'] / 3600)
+    # aps_ra = cube['PATCH_TABLE'].data['X_0'] + (new_x / 3600)
+    aps_dec = cube['PATCH_TABLE'].data['Y_0'] + (cube['PATCH_TABLE'].data['Y'] / 3600)
     # aps_ra = cube['PATCH_TABLE'].data['X_0'] + (xr / 3600)
     # aps_dec = cube['PATCH_TABLE'].data['Y_0'] + (yr / 3600)
 
@@ -245,7 +250,7 @@ def cube_creator(ob, args):
 
     pix_mapt = pix_mapt.T
 
-    x_pix, y_pix = pix_map.T.astype(int)
+    x_pix, y_pix = pix_mapt.T.astype(int)
     print(min(x_pix), max(x_pix))
     print(min(y_pix), max(y_pix))
 
