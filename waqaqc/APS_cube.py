@@ -227,8 +227,10 @@ def cube_creator(ob, args):
 
     wcs = WCS(axis_header)
 
-    aps_ra = cube['PATCH_TABLE'].data['X_0'] + (cube['PATCH_TABLE'].data['X'] / 3600)
-    aps_dec = cube['PATCH_TABLE'].data['Y_0'] + (cube['PATCH_TABLE'].data['Y'] / 3600)
+    aps_ra = cube['PATCH_TABLE'].data['X_0'] + (np.round(cube['PATCH_TABLE'].data['X'], 1) / 3600)
+    aps_dec = cube['PATCH_TABLE'].data['Y_0'] + (np.round(cube['PATCH_TABLE'].data['Y'], 1) / 3600)
+    # aps_ra = cube['PATCH_TABLE'].data['X_0'] + (cube['PATCH_TABLE'].data['X'] / 3600)
+    # aps_dec = cube['PATCH_TABLE'].data['Y_0'] + (cube['PATCH_TABLE'].data['Y'] / 3600)
     # aps_ra = cube['PATCH_TABLE'].data['X_0'] + (xr / 3600)
     # aps_dec = cube['PATCH_TABLE'].data['Y_0'] + (yr / 3600)
 
@@ -244,6 +246,8 @@ def cube_creator(ob, args):
     pix_mapt = pix_mapt.T
 
     x_pix, y_pix = pix_map.T.astype(int)
+    print(min(x_pix), max(x_pix))
+    print(min(y_pix), max(y_pix))
 
     # apsid_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan (c1)
     vorbin_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
