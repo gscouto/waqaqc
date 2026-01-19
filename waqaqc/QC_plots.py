@@ -431,7 +431,7 @@ def html_plots(ob, redshift, args):
 
     fig.suptitle('L0 QC plots', size=22, weight='bold')
 
-    gs = gridspec.GridSpec(rows, 3, height_ratios=np.concatenate((np.array([1]), np.zeros(16) + 0.5)),
+    gs = gridspec.GridSpec(rows, 3, height_ratios=np.concatenate((np.array([1]), np.zeros(rows-1) + 0.5)),
                            width_ratios=[1, 1, 1])
     gs.update(left=0.07, right=0.95, bottom=0.02, top=0.95, wspace=0.3, hspace=0.3)
 
