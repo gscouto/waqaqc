@@ -1341,7 +1341,8 @@ def html_plots(ob, redshift, args):
 
     breakpoint()
 
-    rad = np.sqrt((xBar - xpmax_b) ** 2 + (yBar - ypmax_b) ** 2)  # Use centroids, NOT generators
+    rad = np.sqrt((xNode - xpmax_b) ** 2 + (yNode - ypmax_b) ** 2)  # Use centroids, NOT generators
+    # rad = np.sqrt((xBar - xpmax_b) ** 2 + (yBar - ypmax_b) ** 2)  # Use centroids, NOT generators
     ax.plot(np.sqrt((x_t_b - xpmax_b) ** 2 + (y_t_b - ypmax_b) ** 2), sgn_tt_b / rms_tt_b, ',k')
     ax.plot(rad[nPixels < 2], sn[nPixels < 2], 'xb', label='Not binned')
     ax.plot(rad[nPixels > 1], sn[nPixels > 1], 'or', label='Voronoi bins')
@@ -1456,7 +1457,8 @@ def html_plots(ob, redshift, args):
 
     ax = plt.subplot(gs[18, 1])
 
-    rad = np.sqrt((xBar - xpmax_r) ** 2 + (yBar - ypmax_r) ** 2)  # Use centroids, NOT generators
+    # rad = np.sqrt((xBar - xpmax_r) ** 2 + (yBar - ypmax_r) ** 2)  # Use centroids, NOT generators
+    rad = np.sqrt((xNode - xpmax_b) ** 2 + (yNode - ypmax_b) ** 2)  # Use centroids, NOT generators
     ax.plot(np.sqrt((x_t_b - xpmax_r) ** 2 + (y_t_b - ypmax_r) ** 2), sgn_tt_b / rms_tt_b, ',k')
     ax.plot(rad[nPixels < 2], sn[nPixels < 2], 'xb', label='Not binned')
     ax.plot(rad[nPixels > 1], sn[nPixels > 1], 'or', label='Voronoi bins')
@@ -1738,7 +1740,8 @@ def html_plots(ob, redshift, args):
 
             ax = plt.subplot(gs[2, 1:])
 
-            rad = np.sqrt((xBar - xpmax_a) ** 2 + (yBar - ypmax_a) ** 2)  # Use centroids, NOT generators
+            # rad = np.sqrt((xBar - xpmax_a) ** 2 + (yBar - ypmax_a) ** 2)  # Use centroids, NOT generators
+            rad = np.sqrt((xNode - xpmax_b) ** 2 + (yNode - ypmax_b) ** 2)  # Use centroids, NOT generators
             ax.plot(np.sqrt((x_t_a - xpmax_a) ** 2 + (y_t_a - ypmax_a) ** 2), sgn_tt_a / rms_tt_a, ',k')
             ax.plot(rad[nPixels < 2], sn[nPixels < 2], 'xb', label='Not binned')
             ax.plot(rad[nPixels > 1], sn[nPixels > 1], 'or', label='Voronoi bins')
