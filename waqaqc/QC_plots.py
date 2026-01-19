@@ -419,14 +419,19 @@ def html_plots(ob, redshift, args):
     axis_header['CUNIT1'] = blue_cube[1].header['CUNIT1']
     axis_header['CUNIT2'] = blue_cube[1].header['CUNIT2']
 
+    file_list = np.sort([x for x in os.listdir(file_dir) if ("APS" not in x) & ('single' in x)])  # single files list
+    warc_list = np.sort([x for x in os.listdir(file_dir) if ('warc' in x)])  # WARC files list
+
     # Start doing the L0 plots
     print('Doing L0 raw data plots')
 
-    fig = plt.figure(figsize=(14, 61))
+    rows = 11 + len(file_list)
+
+    fig = plt.figure(figsize=(14, 3.5*rows))
 
     fig.suptitle('L0 QC plots', size=22, weight='bold')
 
-    gs = gridspec.GridSpec(17, 3, height_ratios=np.concatenate((np.array([1]), np.zeros(16) + 0.5)),
+    gs = gridspec.GridSpec(rows, 3, height_ratios=np.concatenate((np.array([1]), np.zeros(16) + 0.5)),
                            width_ratios=[1, 1, 1])
     gs.update(left=0.07, right=0.95, bottom=0.02, top=0.95, wspace=0.3, hspace=0.3)
 
@@ -473,9 +478,6 @@ def html_plots(ob, redshift, args):
     # ------
 
     # LSF plots
-
-    file_list = np.sort([x for x in os.listdir(file_dir) if ("APS" not in x) & ('single' in x)])  # single files list
-    warc_list = np.sort([x for x in os.listdir(file_dir) if ('warc' in x)])  # WARC files list
 
     sky_plot_flag = args.sky_plot_flag
 
