@@ -1339,8 +1339,6 @@ def html_plots(ob, redshift, args):
 
     ax = plt.subplot(gs[18, 0])
 
-    breakpoint()
-
     rad = np.sqrt((xNode - xpmax_b) ** 2 + (yNode - ypmax_b) ** 2)  # Use centroids, NOT generators
     # rad = np.sqrt((xBar - xpmax_b) ** 2 + (yBar - ypmax_b) ** 2)  # Use centroids, NOT generators
     ax.plot(np.sqrt((x_t_b - xpmax_b) ** 2 + (y_t_b - ypmax_b) ** 2), sgn_tt_b / rms_tt_b, ',k')
