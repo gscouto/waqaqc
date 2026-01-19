@@ -133,7 +133,12 @@ def cube_creator(ob, args):
     file_dir = args.data_path + ob + '/'
 
     wcs_c = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('stackcube' in x)])[1])
-    cube = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('LWVE' in x)])[0])
+
+    breakpoint()
+
+    files = file_dir + [x for x in os.listdir(file_dir) if ('LWVE' in x)]
+    heaviest_file = max(files, key=lambda f: os.path.getsize(files))
+    cube = fits.open(file_dir + heaviest_file)
 
     gal_id = cube['PATCH_TABLE'].data['CNAME'][0]
     # gal_dir = gal_id + '_' + wcs_c[0].header['MODE'] + '_' + str(wcs_c[0].header['OBID'])
