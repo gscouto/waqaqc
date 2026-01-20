@@ -544,7 +544,7 @@ def pp(ob, redshift, args):
         f.write(
             'disp_min           40.0                                        '
             '!minimum velocity dispersion in km/s (float)\n')
-        f.write('disp_max           ' + args.disp_max +
+        f.write('disp_max           ' + str(args.disp_max) +
                 '                                       !maximum velocity  dispersion in km/s (float)\n')
         f.write(
             'kin_fix            0                                           '
