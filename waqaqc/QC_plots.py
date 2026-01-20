@@ -1655,8 +1655,6 @@ def html_plots(ob, redshift, args):
         in_ax.axvline(aps_cen_wave - sgn_wind * aps_cube[1].header['CDELT3'], linestyle='--', color='black')
         in_ax.axvline(aps_cen_wave + sgn_wind * aps_cube[1].header['CDELT3'], linestyle='--', color='black')
 
-        breakpoint()
-
         # doing voronoi binning
 
         if os.path.exists(gal_dir + '/' + gal_name + '_cube.fits'):
