@@ -212,9 +212,9 @@ def cube_creator(ob, args):
     print(axis_header['NAXIS1'], axis_header['NAXIS2'])
     # axis_header['NAXIS1'] = len(xr)
     # axis_header['NAXIS2'] = len(yr)
-    axis_header['CD1_1'] = (np.unique(np.round(cube['PATCH_TABLE'].data['X'], 1))[1] -
-                            np.unique(np.round(cube['PATCH_TABLE'].data['X'], 1))[0]) / 3600.
-    # axis_header['CD1_1'] = 0.5 / 3600.
+    # axis_header['CD1_1'] = (np.unique(np.round(cube['PATCH_TABLE'].data['X'], 1))[1] -
+    #                         np.unique(np.round(cube['PATCH_TABLE'].data['X'], 1))[0]) / 3600.
+    axis_header['CD1_1'] = 0.5 / 3600.
     axis_header['CD2_2'] = (np.unique(np.round(cube['PATCH_TABLE'].data['Y'], 1))[1] -
                             np.unique(np.round(cube['PATCH_TABLE'].data['Y'], 1))[0]) / 3600.
     # axis_header['CD1_1'] = dx / 3600.
@@ -253,6 +253,13 @@ def cube_creator(ob, args):
     x_pix, y_pix = pix_mapt.T.astype(int)
     print(min(x_pix), max(x_pix))
     print(min(y_pix), max(y_pix))
+
+    # axis_header['NAXIS1'] = len(np.unique(np.round(cube['PATCH_TABLE'].data['X'], 1)))
+    # # axis_header['NAXIS1'] = len(np.unique(new_x))
+    # axis_header['NAXIS2'] = len(np.unique(np.round(cube['PATCH_TABLE'].data['Y'], 1)))
+
+    axis_header['NAXIS1'] = x_pix.max() + 1
+    axis_header['NAXIS2'] = y_pix.max() + 1
 
     # apsid_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan (c1)
     vorbin_map = np.zeros((np.max(y_pix) - np.min(y_pix) + 1, np.max(x_pix) - np.min(x_pix) + 1)) * np.nan
