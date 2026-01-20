@@ -214,7 +214,7 @@ def cube_creator(ob, args):
     # axis_header['NAXIS2'] = len(yr)
     # axis_header['CD1_1'] = (np.unique(np.round(cube['PATCH_TABLE'].data['X'], 1))[1] -
     #                         np.unique(np.round(cube['PATCH_TABLE'].data['X'], 1))[0]) / 3600.
-    axis_header['CD1_1'] = 0.5 / 3600.
+    axis_header['CD1_1'] = -0.5 / 3600.
     axis_header['CD2_2'] = (np.unique(np.round(cube['PATCH_TABLE'].data['Y'], 1))[1] -
                             np.unique(np.round(cube['PATCH_TABLE'].data['Y'], 1))[0]) / 3600.
     # axis_header['CD1_1'] = dx / 3600.
