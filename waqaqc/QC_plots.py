@@ -379,8 +379,10 @@ def html_plots(ob, redshift, args):
     lam_r = red_cube[1].header['CRVAL3'] + (np.arange(red_cube[1].header['NAXIS3']) * red_cube[1].header['CD3_3'])
     lam_b = blue_cube[1].header['CRVAL3'] + (np.arange(blue_cube[1].header['NAXIS3']) * blue_cube[1].header['CD3_3'])
 
-    blue_cen_wave = lam_b[(np.abs(lam_b - args.blue_wav * (1 + redshift))).argmin()]
-    red_cen_wave = lam_r[(np.abs(lam_r - args.red_wav * (1 + redshift))).argmin()]
+    # blue_cen_wave = lam_b[(np.abs(lam_b - args.blue_wav * (1 + redshift))).argmin()]
+    # red_cen_wave = lam_r[(np.abs(lam_r - args.red_wav * (1 + redshift))).argmin()]
+    blue_cen_wave = lam_b[(np.abs(lam_b - args.blue_wav)).argmin()]
+    red_cen_wave = lam_r[(np.abs(lam_r - args.red_wav)).argmin()]
 
     if blue_cube[0].header['MODE'] == 'LOWRES':
         sgn_wind = 50
