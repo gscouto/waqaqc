@@ -157,7 +157,7 @@ def cube_creator(ob, args):
     elif wcs_c[0].header['MODE'] == 'LOWRES':
         n_wave = np.arange(min(wave) + 0.5, max(wave), 0.5)
 
-    x = cube['PATCH_TABLE'].data['X']
+    # x = cube['PATCH_TABLE'].data['X']
     #
     # counts = Counter(np.round(x, 2))
     #
@@ -169,23 +169,20 @@ def cube_creator(ob, args):
     #
     # dx = np.median(x_diffs)  # 1.0
     # x0 = np.round(np.median(np.mod(x, dx)), 2)  # 0.25
-    #
-    # xr = x0 + dx * np.round((x - x0) / dx)
-    #
-    # y = cube['PATCH_TABLE'].data['Y']
-    #
-    # counts = Counter(np.round(y, 2))
-    #
-    # y_vals = np.array([v for v, _ in counts.most_common(50)])
-    # y_vals = np.sort(y_vals)
-    #
-    # y_diffs = np.diff(y_vals)
-    # y_diffs = y_diffs[y_diffs > 1e-3]
-    #
-    # dy = np.median(y_diffs)  # 1.0
+
+    y = cube['PATCH_TABLE'].data['Y']
+
+    counts = Counter(np.round(y, 2))
+
+    y_vals = np.array([v for v, _ in counts.most_common(50)])
+    y_vals = np.sort(y_vals)
+
+    y_diffs = np.diff(y_vals)
+    y_diffs = y_diffs[y_diffs > 1e-3]
+
+    dy = np.median(y_diffs)  # 1.0
     # y0 = np.round(np.median(np.mod(y, dy)), 2)  # 0.25
-    #
-    # yr = y0 + dy * np.round((y - y0) / dy)
+
 
     # breakpoint()
 
@@ -203,9 +200,6 @@ def cube_creator(ob, args):
     # axis_header['CUNIT1'] = wcs_c[1].header['CUNIT1']
     # axis_header['CUNIT2'] = wcs_c[1].header['CUNIT2']
 
-
-    new_x = np.round(x / 0.7) * 0.5
-
     axis_header['NAXIS1'] = len(np.unique(np.round(cube['PATCH_TABLE'].data['X'], 1)))
     # axis_header['NAXIS1'] = len(np.unique(new_x))
     axis_header['NAXIS2'] = len(np.unique(np.round(cube['PATCH_TABLE'].data['Y'], 1)))
@@ -216,17 +210,17 @@ def cube_creator(ob, args):
     #                         np.unique(np.round(cube['PATCH_TABLE'].data['X'], 1))[0]) / 3600.
     # axis_header['CD2_2'] = (np.unique(np.round(cube['PATCH_TABLE'].data['Y'], 1))[1] -
     #                         np.unique(np.round(cube['PATCH_TABLE'].data['Y'], 1))[0]) / 3600.
-    axis_header['CD1_1'] = -1 / 3600.
-    axis_header['CD2_2'] = 1 / 3600.
+    axis_header['CD1_1'] = -dy / 3600.
+    axis_header['CD2_2'] = dy / 3600.
     # axis_header['CD1_1'] = dx / 3600.
     # axis_header['CD2_2'] = dy / 3600.
     axis_header['CRPIX1'] = 1
     axis_header['CRPIX2'] = 1
-    # axis_header['CRVAL1'] = cube['PATCH_TABLE'].data['X_0'][0] + (np.min(cube['PATCH_TABLE'].data['X'] / 3600.))
-    axis_header['CRVAL1'] = cube['PATCH_TABLE'].data['X_0'][0] + (0.25 / 3600.)
+    axis_header['CRVAL1'] = cube['PATCH_TABLE'].data['X_0'][0] + (np.min(cube['PATCH_TABLE'].data['X'] / 3600.))
+    # axis_header['CRVAL1'] = cube['PATCH_TABLE'].data['X_0'][0] + (0.25 / 3600.)
     # axis_header['CRVAL1'] = cube['PATCH_TABLE'].data['X_0'][0] + (np.min(new_x / 3600.))
-    # axis_header['CRVAL2'] = cube['PATCH_TABLE'].data['Y_0'][0] + (np.min(cube['PATCH_TABLE'].data['Y'] / 3600.))
-    axis_header['CRVAL2'] = cube['PATCH_TABLE'].data['Y_0'][0] + (-0.25 / 3600.)
+    axis_header['CRVAL2'] = cube['PATCH_TABLE'].data['Y_0'][0] + (np.min(cube['PATCH_TABLE'].data['Y'] / 3600.))
+    # axis_header['CRVAL2'] = cube['PATCH_TABLE'].data['Y_0'][0] + (-0.25 / 3600.)
     # axis_header['CRVAL1'] = cube['PATCH_TABLE'].data['X_0'][0] + (x0 / 3600.)
     # axis_header['CRVAL2'] = cube['PATCH_TABLE'].data['Y_0'][0] + (y0 / 3600.)
     axis_header['CTYPE1'] = wcs_c[1].header['CTYPE1']
