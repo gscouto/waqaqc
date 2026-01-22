@@ -64,7 +64,7 @@ def specs(ob, args):
         if args.resol_flag == 1:
             fwhm_str = gal_dir + '/resol_table_red.txt'
         if args.resol_flag == 0:
-            fwhm_str = args.fwhm_red
+            fwhm_str = str(args.fwhm_red)
 
         rss_head = fits.Header()
         rss_head['SIMPLE'] = True
@@ -139,7 +139,7 @@ def specs(ob, args):
         if args.resol_flag == 1:
             fwhm_str = gal_dir + '/resol_table_blue.txt'
         if args.resol_flag == 0:
-            fwhm_str = args.fwhm_blue
+            fwhm_str = str(args.fwhm_blue)
 
         # create RSS file
 
@@ -289,7 +289,7 @@ def specs(ob, args):
         if args.resol_flag == 1:
             fwhm_str = gal_dir + '/resol_table_aps.txt'
         if args.resol_flag == 0:
-            fwhm_str = args.fwhm_aps
+            fwhm_str = str(args.fwhm_aps)
 
         # create RSS file
 
