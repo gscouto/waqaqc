@@ -1819,6 +1819,8 @@ def html_plots(ob, redshift, args):
 
         ext_names = [ext.name.lower() for ext in aps_maps]
 
+        breakpoint()
+
         if 'V' in ext_names:
             ax = plt.subplot(gs[subplots_rows[1], 0])
             im = ax.imshow(aps_maps['V'].data, origin='lower', cmap='bwr', vmin=np.nanpercentile(aps_maps['V'].data, 10),
