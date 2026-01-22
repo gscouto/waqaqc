@@ -15,8 +15,9 @@ def specs(ob, args):
 
     gal = blue_cube[0].header['CCNAME1']
 
-    gal_dir = blue_cube[0].header['CCNAME1'] + '_' + blue_cube[0].header['MODE'] + '_' + str(
-        blue_cube[0].header['OBID'])
+    # gal_dir = blue_cube[0].header['CCNAME1'] + '_' + blue_cube[0].header['MODE'] + '_' + str(
+    #     blue_cube[0].header['OBID'])
+    gal_dir = str(blue_cube[0].header['OBID']) + '_' + gal + '_' + blue_cube[0].header['MODE'] + '/'
 
     # =================== running for red cube ===========================
 
