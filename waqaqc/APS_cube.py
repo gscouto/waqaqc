@@ -222,9 +222,11 @@ def cube_creator(ob, args):
     # axis_header['CD2_2'] = dy / 3600.
     axis_header['CRPIX1'] = 1
     axis_header['CRPIX2'] = 1
-    axis_header['CRVAL1'] = cube['PATCH_TABLE'].data['X_0'][0] + (np.min(cube['PATCH_TABLE'].data['X'] / 3600.))
+    # axis_header['CRVAL1'] = cube['PATCH_TABLE'].data['X_0'][0] + (np.min(cube['PATCH_TABLE'].data['X'] / 3600.))
+    axis_header['CRVAL1'] = cube['PATCH_TABLE'].data['X_0'][0] + (0.25 / 3600.)
     # axis_header['CRVAL1'] = cube['PATCH_TABLE'].data['X_0'][0] + (np.min(new_x / 3600.))
-    axis_header['CRVAL2'] = cube['PATCH_TABLE'].data['Y_0'][0] + (np.min(cube['PATCH_TABLE'].data['Y'] / 3600.))
+    # axis_header['CRVAL2'] = cube['PATCH_TABLE'].data['Y_0'][0] + (np.min(cube['PATCH_TABLE'].data['Y'] / 3600.))
+    axis_header['CRVAL2'] = cube['PATCH_TABLE'].data['Y_0'][0] + (-0.25 / 3600.)
     # axis_header['CRVAL1'] = cube['PATCH_TABLE'].data['X_0'][0] + (x0 / 3600.)
     # axis_header['CRVAL2'] = cube['PATCH_TABLE'].data['Y_0'][0] + (y0 / 3600.)
     axis_header['CTYPE1'] = wcs_c[1].header['CTYPE1']
