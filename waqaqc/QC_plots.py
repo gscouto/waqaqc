@@ -848,13 +848,13 @@ def html_plots(ob, redshift, args):
 
         seeing = np.round((single_file[0].header['SEEINGB'] + single_file[0].header['SEEINGE']) / 2, 2)
         exp_time = np.round(single_file[0].header['EXPTIME'], 2)
-        if single_file[0].header['SKYBRTEL'] == -99:
+        if (single_file[0].header['SKYBRTEL'] == -99) & (single_file[0].header['SKYBRZEN'] == -99):
+            sky_bright = np.round(single_file[0].header['SKBRMODB'], 2)
+        elif single_file[0].header['SKYBRTEL'] == -99:
             sky_bright = np.round(single_file[0].header['SKYBRZEN'], 2)
         else:
             sky_bright = np.round(single_file[0].header['SKYBRTEL'], 2)
         air_mass = np.round(single_file[0].header['AIRMASS'], 2)
-
-        breakpoint()
 
         for i in etc_mag:
             result = signalWEAVE(mag=i, time=exp_time, band=band, seeing_input=seeing, instrument_mode=ins_mode,
