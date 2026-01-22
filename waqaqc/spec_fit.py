@@ -85,21 +85,21 @@ def specs(ob, args):
                                 fits.ImageHDU(data=rss_err, header=rss_head, name='ERROR')])
 
         if args.vorbin_flag == 1:
-            fname = 'red_vorbin'
+            f_name = 'red_vorbin'
         if args.vorbin_flag == 0:
-            fname = 'red'
+            f_name = 'red'
 
-        rss_ima.writeto(gal + '_' + fname + '_RSS.fits', overwrite=True)
+        rss_ima.writeto(gal + '_' + f_name + '_RSS.fits', overwrite=True)
 
         print('')
         print('Running PyParadise best fit')
 
         if args.el_flag:
-            os.system('ParadiseApp.py ' + gal + '_' + fname + '_RSS.fits ' + gal + '_' + fname + ' ' +
+            os.system('ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' +
                       fwhm_str + ' --SSP_par parameters_stellar_red --line_par parameters_eline_red --parallel ' +
                       args.nproc + ' --verbose')
         else:
-            os.system('ParadiseApp.py ' + gal + '_' + fname + '_RSS.fits ' + gal + '_' + fname + ' ' + fwhm_str +
+            os.system('ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' + fwhm_str +
                       ' --SSP_par parameters_stellar_red --parallel ' + args.nproc + ' --verbose')
 
         if args.boot_flag:
@@ -107,12 +107,12 @@ def specs(ob, args):
             print('Running bootstrap models')
 
             os.system(
-                'ParadiseApp.py ' + gal + '_' + fname + '_RSS.fits ' + gal + '_' + fname + ' ' + fwhm_str +
+                'ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' + fwhm_str +
                 ' --SSP_par parameters_stellar_red --line_par parameters_eline_red --bootstraps 100 --modkeep 80 '
                 '--parallel ' + args.nproc + ' --verbose')
 
         os.system('mv ' + gal + '*.fits ' + res_dir + '/.')
-        os.system('cp ' + self + ' excl_red* lines_red.fit par_red.lines parameters_eline_red '
+        os.system('cp excl_red* lines_red.fit par_red.lines parameters_eline_red '
                                  'parameters_stellar_red ' + res_dir + '/.')
 
 
@@ -182,21 +182,21 @@ def specs(ob, args):
                                 fits.ImageHDU(data=rss_err, header=rss_head, name='ERROR')])
 
         if args.vorbin_flag == 1:
-            fname = 'blue_vorbin'
+            f_name = 'blue_vorbin'
         if args.vorbin_flag == 0:
-            fname = 'blue'
+            f_name = 'blue'
 
-        rss_ima.writeto(gal + '_' + fname + '_RSS.fits', overwrite=True)
+        rss_ima.writeto(gal + '_' + f_name + '_RSS.fits', overwrite=True)
 
         print('')
         print('Running PyParadise best fit')
 
         if args.el_flag:
-            os.system('ParadiseApp.py ' + gal + '_' + fname + '_RSS.fits ' + gal + '_' + fname + ' ' +
+            os.system('ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' +
                       fwhm_str + ' --SSP_par parameters_stellar_blue --line_par parameters_eline_blue --parallel ' +
                       args.nproc + ' --verbose')
         else:
-            os.system('ParadiseApp.py ' + gal + '_' + fname + '_RSS.fits ' + gal + '_' + fname + ' ' + fwhm_str +
+            os.system('ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' + fwhm_str +
                       ' --SSP_par parameters_stellar_blue --parallel ' + args.nproc + ' --verbose')
 
         if args.boot_flag:
@@ -204,12 +204,12 @@ def specs(ob, args):
             print('Running bootstrap models')
 
             os.system(
-                'ParadiseApp.py ' + gal + '_' + fname + '_RSS.fits ' + gal + '_' + fname + ' ' + fwhm_str +
+                'ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' + fwhm_str +
                 ' --SSP_par parameters_stellar_blue --line_par parameters_eline_blue --bootstraps 100 --modkeep 80 '
                 '--parallel ' + args.nproc + ' --verbose')
 
         os.system('mv ' + gal + '*.fits ' + res_dir + '/.')
-        os.system('cp ' + self + ' excl_blue* lines_blue.fit par_blue.lines parameters_eline_blue '
+        os.system('cp excl_blue* lines_blue.fit par_blue.lines parameters_eline_blue '
                                  'parameters_stellar_blue ' + res_dir + '/.')
 
     # =================== running for APS ===========================
@@ -219,11 +219,71 @@ def specs(ob, args):
         res_dir = gal_dir + '/' + 'pyp_results/APS_' + datetime.now().strftime('%Y-%m-%d_%H.%M.%S')
         os.makedirs(res_dir, exist_ok=True)
 
+        if args.vorbin_flag == 1:
+            c = fits.open(gal_dir + '/' + gal + '_vorbin_cube.fits')
+            vorbin_map = fits.getdata(gal_dir + '/vorbin_map.fits')
+            rss_data = np.zeros((len(np.unique(vorbin_map[vorbin_map >= 0])), c[1].data.shape[0]), dtype=np.float32)
+            rss_err = np.zeros((len(np.unique(vorbin_map[vorbin_map >= 0])), c[1].data.shape[0]), dtype=np.float32)
+
+            for i in np.unique(vorbin_map[vorbin_map >= 0]).astype(int):
+                rss_data[i] = c[1].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]]
+                rss_err[i] = c[2].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]]
+                if args.sigmaclip_flag == 1:
+                    diff = np.diff(rss_data[i])
+                    limit = args.sigmaclip_limit * np.nanstd(diff)
+                    for j in np.where(diff > limit)[0]:
+                        rss_data[i][j - 4:j + 5] = (np.nanmedian(rss_data[i][j - 10:j - 5]) +
+                                                    np.nanmedian(rss_data[i][j + 5:j + 10])) / 2.
+
+        elif args.vorbin_flag == 0:
+            c = fits.open(gal_dir + '/' + gal + '_cube.fits')
+            snr_map = fits.getdata(gal_dir + '/SNR_map_aps.fits')
+
+            flux = c[1].data  # shape: (nlambda, ny, nx)
+            err = c[2].data
+
+            nl, ny, nx = flux.shape
+
+            yy, xx = np.indices((ny, nx))
+
+            flux_rss = flux.reshape(nl, ny * nx).T
+            err_rss = err.reshape(nl, ny * nx).T
+
+            snr_flat = snr_map.reshape(ny * nx)
+
+            x_flat = xx.reshape(ny * nx)
+            y_flat = yy.reshape(ny * nx)
+
+            snr_min = 5.0
+            mask = snr_flat >= snr_min
+
+            rss_data = flux_rss[mask]
+            rss_err = err_rss[mask]
+
+            x_sel = x_flat[mask]
+            y_sel = y_flat[mask]
+
+            # rss_data = c[1].data.reshape(c[1].data.shape[2] * c[1].data.shape[1],
+            #                              c[1].data.shape[0]) * np.mean(c[5].data[:], axis=0)
+            # rss_err = c[2].data.reshape(c[1].data.shape[2] * c[1].data.shape[1],
+            #                             c[1].data.shape[0]) * np.mean(c[5].data[:], axis=0)
+
+            for i in np.arange(len(rss_data)):
+                if args.sigmaclip_flag == 1:
+                    diff = np.diff(rss_data[i])
+                    limit = args.sigmaclip_limit * np.nanstd(diff)
+                    for j in np.where(diff > limit)[0]:
+                        rss_data[i][j - 4:j + 5] = (np.nanmedian(rss_data[i][j - 10:j - 5]) +
+                                                    np.nanmedian(rss_data[i][j + 5:j + 10])) / 2.
+        else:
+            raise ValueError(f"Invalid input: {value}. Expected 0 or 1.")
+
+
         # c = fits.open(gal_dir + '/aps_cube_vorbin.fits')
         # vorbin_map = fits.getdata(gal_dir + '/vorbin_map_aps.fits')
 
-        c = fits.open(gal_dir + '/' + gal + '_vorbin_cube.fits')
-        vorbin_map = fits.getdata(gal_dir + '/vorbin_map.fits')
+        # c = fits.open(gal_dir + '/' + gal + '_vorbin_cube.fits')
+        # vorbin_map = fits.getdata(gal_dir + '/vorbin_map.fits')
 
         if args.resol_flag == 1:
             fwhm_str = gal_dir + '/resol_table_aps.txt'
@@ -237,18 +297,18 @@ def specs(ob, args):
         # rss_data = np.zeros((len(np.unique(vorbin_map[vorbin_map >= 0])), len(wave)), dtype=np.float32)
         # rss_err = np.zeros((len(np.unique(vorbin_map[vorbin_map >= 0])), len(wave)), dtype=np.float32)
 
-        rss_data = np.zeros((int(np.max(np.unique(vorbin_map[vorbin_map >= 0]))) + 1, len(wave)), dtype=np.float32)
-        rss_err = np.zeros((int(np.max(np.unique(vorbin_map[vorbin_map >= 0]))) + 1, len(wave)), dtype=np.float32)
+        # rss_data = np.zeros((int(np.max(np.unique(vorbin_map[vorbin_map >= 0]))) + 1, len(wave)), dtype=np.float32)
+        # rss_err = np.zeros((int(np.max(np.unique(vorbin_map[vorbin_map >= 0]))) + 1, len(wave)), dtype=np.float32)
 
-        for i in np.unique(vorbin_map[vorbin_map >= 0]).astype(int):
-            rss_data[i] = c[1].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]]
-            rss_err[i] = c[2].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]]
-            if args.sigmaclip_flag == 1:
-                diff = np.diff(rss_data[i])
-                limit = args.sigmaclip_limit * np.nanstd(diff)
-                for j in np.where(diff > limit)[0]:
-                    rss_data[i][j - 4:j + 5] = (np.nanmedian(rss_data[i][j - 10:j - 5]) +
-                                                np.nanmedian(rss_data[i][j + 5:j + 10])) / 2.
+        # for i in np.unique(vorbin_map[vorbin_map >= 0]).astype(int):
+        #     rss_data[i] = c[1].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]]
+        #     rss_err[i] = c[2].data[:, np.where(vorbin_map == i)[0][0], np.where(vorbin_map == i)[1][0]]
+        #     if args.sigmaclip_flag == 1:
+        #         diff = np.diff(rss_data[i])
+        #         limit = args.sigmaclip_limit * np.nanstd(diff)
+        #         for j in np.where(diff > limit)[0]:
+        #             rss_data[i][j - 4:j + 5] = (np.nanmedian(rss_data[i][j - 10:j - 5]) +
+        #                                         np.nanmedian(rss_data[i][j + 5:j + 10])) / 2.
 
         rss_head = fits.Header()
         rss_head['SIMPLE'] = True
@@ -265,18 +325,30 @@ def specs(ob, args):
 
         rss_ima = fits.HDUList([fits.PrimaryHDU(data=rss_data, header=rss_head),
                                 fits.ImageHDU(data=rss_err, header=rss_head, name='ERROR')])
+        
+        if args.vorbin_flag == 1:
+            f_name = 'aps_vorbin'
+        if args.vorbin_flag == 0:
+            f_name = 'aps'
 
-        rss_ima.writeto(gal + '_APS_vorbin_RSS.fits', overwrite=True)
+        rss_ima.writeto(gal + '_' + f_name + '_RSS.fits', overwrite=True)
+
+        if args.vorbin_flag == 0:
+            col_x = fits.Column(name='X', format='J', array=x_sel)
+            col_y = fits.Column(name='Y', format='J', array=y_sel)
+
+            coords_hdu = fits.BinTableHDU.from_columns([col_x, col_y], name='SPAXEL_COORDS')
+            coords_hdu.writeto(gal + '_' + f_name + '_RSS_coords.fits', overwrite=True)
 
         print('')
         print('Running PyParadise best fit')
 
         if args.el_flag:
-            os.system('ParadiseApp.py ' + gal + '_APS_vorbin_RSS.fits ' + gal + '_APS_vorbin ' + fwhm_str +
+            os.system('ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' + fwhm_str +
                       ' --SSP_par parameters_stellar_aps --line_par parameters_eline_aps --parallel ' +
                       args.nproc + ' --verbose')
         else:
-            os.system('ParadiseApp.py ' + gal + '_APS_vorbin_RSS.fits ' + gal + '_APS_vorbin ' + fwhm_str +
+            os.system('ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' + fwhm_str +
                       ' --SSP_par parameters_stellar_aps --parallel ' + args.nproc + ' --verbose')
 
         if args.boot_flag:
@@ -284,10 +356,10 @@ def specs(ob, args):
             print('Running bootstrap models')
 
             os.system(
-                'ParadiseApp.py ' + gal + '_APS_vorbin_RSS.fits ' + gal + '_APS_vorbin ' + fwhm_str +
+                'ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' + fwhm_str +
                 ' --SSP_par parameters_stellar_aps --line_par parameters_eline_aps --bootstraps 100 --modkeep 80 '
                 '--parallel ' + args.nproc + ' --verbose')
 
         os.system('mv ' + gal + '*.fits ' + res_dir + '/.')
-        os.system('cp ' + self + ' excl_aps* lines_aps.fit par_aps.lines parameters_eline_aps parameters_stellar_aps '
+        os.system('cp excl_aps* lines_aps.fit par_aps.lines parameters_eline_aps parameters_stellar_aps '
                   + res_dir + '/.')
