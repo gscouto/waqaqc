@@ -344,8 +344,6 @@ def specs(ob, args):
         print('')
         print('Running PyParadise best fit')
 
-        breakpoint()
-
         if args.el_flag == 1:
             os.system('ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' + fwhm_str +
                       ' --SSP_par parameters_stellar_aps --line_par parameters_eline_aps --parallel ' +
