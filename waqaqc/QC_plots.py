@@ -1598,7 +1598,12 @@ def html_plots(ob, redshift, args):
 
         fig.suptitle('L2/APS QC plots / APSVERS = ' + aps_cube[1].header['APSVERS'], size=22, weight='bold')
 
-        gs = gridspec.GridSpec(7, 3, height_ratios=[1, 1, 1, 0.5, 1, 1, 1], width_ratios=[1, 1, 1])
+        if os.path.exists(gal_dir + '/' + gal_name + '_cube.fits'):
+            subplots_rows = np.array([3, 4, 5, 6])
+            gs = gridspec.GridSpec(7, 3, height_ratios=[1, 1, 1, 0.5, 1, 1, 1], width_ratios=[1, 1, 1])
+        else:
+            subplots_rows = np.array([2, 3, 4, 5])
+            gs = gridspec.GridSpec(6, 3, height_ratios=[1, 1, 0.5, 1, 1, 1], width_ratios=[1, 1, 1])
         gs.update(left=0.09, right=0.95, bottom=0.02, top=0.95, wspace=0.3, hspace=0.25)
         props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
 
@@ -1793,11 +1798,6 @@ def html_plots(ob, redshift, args):
             n_cube.writeto(gal_dir + 'aps_vorbin_RSS.fits', overwrite=True)
 
         # ------
-
-        if os.path.exists(gal_dir + '/' + gal_name + '_cube.fits'):
-            subplots_rows = np.array([3, 4, 5, 6])
-        else:
-            subplots_rows = np.array([2, 3, 4, 5])
 
         central_waves, x_peaks, y_peaks = get_xy_peak_positions(aps_cube[1].data, lam_a)
 
