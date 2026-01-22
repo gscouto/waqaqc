@@ -95,22 +95,22 @@ def specs(ob, args):
         print('')
         print('Running PyParadise best fit')
 
-        if args.el_flag:
+        if args.el_flag == 1:
             os.system('ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' +
                       fwhm_str + ' --SSP_par parameters_stellar_red --line_par parameters_eline_red --parallel ' +
-                      args.nproc + ' --verbose')
+                      str(args.nproc) + ' --verbose')
         else:
             os.system('ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' + fwhm_str +
-                      ' --SSP_par parameters_stellar_red --parallel ' + args.nproc + ' --verbose')
+                      ' --SSP_par parameters_stellar_red --parallel ' + str(args.nproc) + ' --verbose')
 
-        if args.boot_flag:
+        if args.boot_flag == 1:
             print('')
             print('Running bootstrap models')
 
             os.system(
                 'ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' + fwhm_str +
                 ' --SSP_par parameters_stellar_red --line_par parameters_eline_red --bootstraps 100 --modkeep 80 '
-                '--parallel ' + args.nproc + ' --verbose')
+                '--parallel ' + str(args.nproc) + ' --verbose')
 
         os.system('mv ' + gal + '*.fits ' + res_dir + '/.')
         os.system('cp excl_red* lines_red.fit par_red.lines parameters_eline_red '
@@ -192,22 +192,22 @@ def specs(ob, args):
         print('')
         print('Running PyParadise best fit')
 
-        if args.el_flag:
+        if args.el_flag == 1:
             os.system('ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' +
                       fwhm_str + ' --SSP_par parameters_stellar_blue --line_par parameters_eline_blue --parallel ' +
-                      args.nproc + ' --verbose')
+                      str(args.nproc) + ' --verbose')
         else:
             os.system('ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' + fwhm_str +
-                      ' --SSP_par parameters_stellar_blue --parallel ' + args.nproc + ' --verbose')
+                      ' --SSP_par parameters_stellar_blue --parallel ' + str(args.nproc) + ' --verbose')
 
-        if args.boot_flag:
+        if args.boot_flag == 1:
             print('')
             print('Running bootstrap models')
 
             os.system(
                 'ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' + fwhm_str +
                 ' --SSP_par parameters_stellar_blue --line_par parameters_eline_blue --bootstraps 100 --modkeep 80 '
-                '--parallel ' + args.nproc + ' --verbose')
+                '--parallel ' + str(args.nproc) + ' --verbose')
 
         os.system('mv ' + gal + '*.fits ' + res_dir + '/.')
         os.system('cp excl_blue* lines_blue.fit par_blue.lines parameters_eline_blue '
@@ -346,22 +346,22 @@ def specs(ob, args):
 
         breakpoint()
 
-        if args.el_flag:
+        if args.el_flag == 1:
             os.system('ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' + fwhm_str +
                       ' --SSP_par parameters_stellar_aps --line_par parameters_eline_aps --parallel ' +
-                      args.nproc + ' --verbose')
+                      str(args.nproc) + ' --verbose')
         else:
             os.system('ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' + fwhm_str +
-                      ' --SSP_par parameters_stellar_aps --parallel ' + args.nproc + ' --verbose')
+                      ' --SSP_par parameters_stellar_aps --parallel ' + str(args.nproc) + ' --verbose')
 
-        if args.boot_flag:
+        if args.boot_flag == 1:
             print('')
             print('Running bootstrap models')
 
             os.system(
                 'ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' + fwhm_str +
                 ' --SSP_par parameters_stellar_aps --line_par parameters_eline_aps --bootstraps 100 --modkeep 80 '
-                '--parallel ' + args.nproc + ' --verbose')
+                '--parallel ' + str(args.nproc) + ' --verbose')
 
         os.system('mv ' + gal + '*.fits ' + res_dir + '/.')
         os.system('cp excl_aps* lines_aps.fit par_aps.lines parameters_eline_aps parameters_stellar_aps '
