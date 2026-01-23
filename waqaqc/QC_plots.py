@@ -854,6 +854,8 @@ def html_plots(ob, redshift, args):
             sky_bright = np.round(single_file[0].header['SKYBRZEN'], 2)
         else:
             sky_bright = np.round(single_file[0].header['SKYBRTEL'], 2)
+        if (sky_bright == -99) | (sky_bright == 0):
+            sky_bright = 21.0
         air_mass = np.round(single_file[0].header['AIRMASS'], 2)
 
         breakpoint()
