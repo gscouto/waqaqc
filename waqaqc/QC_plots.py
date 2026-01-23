@@ -534,7 +534,7 @@ def html_plots(ob, redshift, args):
                                     4765., 4806., 4965., 5187., 5410.])
             else:
                 # cen_lam = np.array([7724., 7948., 8103., 8115., 8264., 8408., 8424., 8521., 8668., 9123., 9224.])
-                cen_lam = np.array([7788., 7979., 8046., 8159., 8384., 8450., 8606., 8748., 8850., 9008., 9180.])
+                cen_lam = np.array([7788., 7979., 8046., 8159., 8384., 8606., 8748., 8850., 9008., 9180.])
         else:
             if file_cam == 'WEAVEBLUE':
                 cen_lam = np.array([4727., 4765., 4806., 4848., 4880., 4965., 5017., 5091., 5159., 5231.])
@@ -691,6 +691,7 @@ def html_plots(ob, redshift, args):
             ax.annotate(r'FWHM = ' + ('%.2g' % popt[0]) + ' + ' + ('%.2g' % popt[1]) + '$\lambda$ + ' + (
                     '%.2g' % popt[2]) + '$\lambda^2$', (0.02, 0.95), xycoords='axes fraction')
         ax.set_xlim([min(sky_lam), max(sky_lam)])
+        ax.set_ylim([min(sky_lam), max(sky_lam)])
         ax.set_xlabel(r'$\lambda$ [$\AA$]')
         ax.set_ylabel('FWHM [A]')
 
