@@ -691,7 +691,6 @@ def html_plots(ob, redshift, args):
             ax.annotate(r'FWHM = ' + ('%.2g' % popt[0]) + ' + ' + ('%.2g' % popt[1]) + '$\lambda$ + ' + (
                     '%.2g' % popt[2]) + '$\lambda^2$', (0.02, 0.95), xycoords='axes fraction')
         ax.set_xlim([min(sky_lam), max(sky_lam)])
-        ax.set_ylim([min(sky_lam), max(sky_lam)])
         ax.set_xlabel(r'$\lambda$ [$\AA$]')
         ax.set_ylabel('FWHM [A]')
 
