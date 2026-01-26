@@ -2014,13 +2014,21 @@ def html_plots(ob, redshift, args):
     )
 
     res = Ned.query_region(coord, radius=10 * u.arcsec)
-    obj_nme = res['Object Name'][0]
+
+    gal = res[res["Type"].astype(str) == "G"]
+
+    if len(gal) == 0:
+        print("No galaxy found in NED within the search radius.")
+        obj_nme = ''
+    else:
+        closest_gal = gal[gal["Separation"] == gal["Separation"].min()]
+        obj_nme = closest_gal['Object Name']
 
     with open(output_str + ".txt", "w") as f:
         f.write(gal_name+'\n')
         f.write(obj_nme + '\n')
         f.write(str(blue_cube[0].header['OBID'])+'\n')
-        f.write(blue_cube[0].header['MODE']+'f\n')
+        f.write(blue_cube[0].header['MODE']+'\n')
         f.write(date+'\n')
         f.write(blue_cube[0].header['TRIMESTE']+'\n')
 
