@@ -128,20 +128,13 @@ def fiber_lines(args):
         w_lam = lamp_lam[lam_wind_c - lam_wind: lam_wind_c + lam_wind]
         w_spec = lamp_spec[fiber][lam_wind_c - lam_wind: lam_wind_c + lam_wind]
 
-        # if (w_spec[int(w_spec.size / 2)] / 4 > w_spec[0]) and (w_spec[int(w_spec.size / 2)] / 4 > w_spec[-1]):
-        # try:
         popt, pcov = curve_fit(gauss, w_lam, w_spec, p0=[0, 0, max(w_spec), cen_lam[i], 1],
                                bounds=([-np.inf, -np.inf, 0, 0, 0],
                                        [np.inf, np.inf, np.inf, np.inf, np.inf]))
-        # popt, pcov = curve_fit(gauss_hermite, w_lam, w_spec, p0=[0, 0, max(w_spec) / 2, cen_lam[i], 3, 0, 0],
-        #                        bounds=([-np.inf, -np.inf, 0, 0, 0, -1, -1],
-        #                                [np.inf, np.inf, np.inf, np.inf, np.inf, 1, 1]))
 
-        # if (popt[4] * 2.355 > 0.1) & (popt[4] * 2.355 < 5.0):
         f_fit = np.sum(gauss(w_lam, *popt)) - np.nanmedian([gauss(w_lam, *popt)[0],
                                                             gauss(w_lam, *popt)[-1]])
-        # f_fit = np.sum(gauss_hermite(w_lam, *popt)) - np.nanmedian([gauss_hermite(w_lam, *popt)[0],
-        #                                                             gauss_hermite(w_lam, *popt)[-1]])
+
         fib_flux.append(f_fit)
         fib_cen.append(popt[3])
         fib_sigma.append(popt[4] * 2.355)
@@ -150,7 +143,6 @@ def fiber_lines(args):
             fig_skyline = plt.figure(figsize=(5, 4))
             plt.plot(w_lam, w_spec, color='black')
             plt.plot(w_lam, gauss(w_lam, *popt), color='red')
-            # plt.plot(w_lam, gauss_hermite(w_lam, *popt), color='red')
             plt.xlabel(r'$\lambda$ [$\AA$]')
             plt.ylabel(r'flux')
             plt.annotate('cenlam = ' + str(round(popt[3], 2)), (0.01, 0.9), xycoords='axes fraction',
@@ -159,26 +151,8 @@ def fiber_lines(args):
                          fontsize=10)
             plt.annotate('flux = ' + str(round(f_fit, 1)), (0.01, 0.8), xycoords='axes fraction',
                          fontsize=10)
-            # plt.annotate('h3 = ' + str(round(popt[5], 1)), (0.01, 0.75), xycoords='axes fraction',
-            #              fontsize=10)
-            # plt.annotate('h4 = ' + str(round(popt[6], 1)), (0.01, 0.70), xycoords='axes fraction',
-            #              fontsize=10)
             fig_skyline.savefig(fiber_dir + str(round(popt[3])) + '.pdf')
             plt.close(fig_skyline)
-        # else:
-        #     fib_flux.append(np.nan)
-        #     fib_cen.append(np.nan)
-        #     fib_sigma.append(np.nan)
-
-        # except:
-        #     fib_flux.append(np.nan)
-        #     fib_cen.append(np.nan)
-        #     fib_sigma.append(np.nan)
-
-        # else:
-        #     fib_flux.append(np.nan)
-        #     fib_cen.append(np.nan)
-        #     fib_sigma.append(np.nan)
 
     warc_flux = np.ravel(fib_flux)
     warc_flux_med = np.nanmedian(np.ravel(fib_flux))
@@ -298,9 +272,6 @@ def get_xy_peak_positions(
 def html_plots(ob, redshift, args):
     warnings.filterwarnings("ignore")
 
-    # config = configparser.ConfigParser()
-    # config.read(self)
-
     file_dir = args.data_path + ob + '/'
 
     if len([x for x in os.listdir(file_dir) if ('LWVE' in x)]) > 0:
@@ -378,8 +349,6 @@ def html_plots(ob, redshift, args):
     lam_r = red_cube[1].header['CRVAL3'] + (np.arange(red_cube[1].header['NAXIS3']) * red_cube[1].header['CD3_3'])
     lam_b = blue_cube[1].header['CRVAL3'] + (np.arange(blue_cube[1].header['NAXIS3']) * blue_cube[1].header['CD3_3'])
 
-    # blue_cen_wave = lam_b[(np.abs(lam_b - args.blue_wav * (1 + redshift))).argmin()]
-    # red_cen_wave = lam_r[(np.abs(lam_r - args.red_wav * (1 + redshift))).argmin()]
     blue_cen_wave = lam_b[(np.abs(lam_b - args.blue_wav)).argmin()]
     red_cen_wave = lam_r[(np.abs(lam_r - args.red_wav)).argmin()]
 
@@ -539,8 +508,6 @@ def html_plots(ob, redshift, args):
                 cen_lam = np.array([4727., 4765., 4806., 4848., 4880., 4965., 5017., 5091., 5159., 5231.])
             else:
                 cen_lam = np.array([6457., 6531., 6584., 6644., 6677., 6684., 6753., 6767.])
-            # cen_lam = lamp_lam[lam_wind + 1:-(lam_wind + 2)][
-            #     np.diff(lamp_spec[300])[lam_wind + 1:-(lam_wind + 1)] < -1500]
 
         with mp.Pool(args.nproc) as pool:
             warc_stats = pool.starmap(fiber_lines,
@@ -619,8 +586,6 @@ def html_plots(ob, redshift, args):
                 cen_lam = np.array([5198., 5239., 5256.])
             else:
                 cen_lam = np.array([6170., 6258., 6287., 6300., 6330., 6363., 6533., 6553., 6577., ])
-            # cen_lam = sky_lam[lam_wind + 1:-(lam_wind + 2)][
-            #     np.diff(sky_spec[300])[lam_wind + 1:-(lam_wind + 1)] < -0.03]
 
         with mp.Pool(args.nproc) as pool:
             warc_stats = pool.starmap(fiber_lines,
@@ -1345,7 +1310,6 @@ def html_plots(ob, redshift, args):
     ax = plt.subplot(gs[18, 0])
 
     rad = np.sqrt((xNode - xpmax_b) ** 2 + (yNode - ypmax_b) ** 2)  # Use centroids, NOT generators
-    # rad = np.sqrt((xBar - xpmax_b) ** 2 + (yBar - ypmax_b) ** 2)  # Use centroids, NOT generators
     ax.plot(np.sqrt((x_t_b - xpmax_b) ** 2 + (y_t_b - ypmax_b) ** 2), sgn_tt_b / rms_tt_b, ',k')
     ax.plot(rad[nPixels < 2], sn[nPixels < 2], 'xb', label='Not binned')
     ax.plot(rad[nPixels > 1], sn[nPixels > 1], 'or', label='Voronoi bins')
@@ -1406,7 +1370,6 @@ def html_plots(ob, redshift, args):
 
     def sn_func_red(index, signal, noise):
 
-        # factor = 1 + 1.77 * np.log10(index.size) ** 1.54  # this would be the correct function, but it does not work
         factor = 1 + 1.53 * np.log10(index.size) ** 1.19
 
         sn_cov = np.sum(signal[index]) / np.sqrt(np.sum((noise[index] * factor) ** 2))
@@ -1460,7 +1423,6 @@ def html_plots(ob, redshift, args):
 
     ax = plt.subplot(gs[18, 1])
 
-    # rad = np.sqrt((xBar - xpmax_r) ** 2 + (yBar - ypmax_r) ** 2)  # Use centroids, NOT generators
     rad = np.sqrt((xNode - xpmax_b) ** 2 + (yNode - ypmax_b) ** 2)  # Use centroids, NOT generators
     ax.plot(np.sqrt((x_t_b - xpmax_r) ** 2 + (y_t_b - ypmax_r) ** 2), sgn_tt_b / rms_tt_b, ',k')
     ax.plot(rad[nPixels < 2], sn[nPixels < 2], 'xb', label='Not binned')
@@ -1606,7 +1568,6 @@ def html_plots(ob, redshift, args):
             subplots_rows = np.array([2, 3, 4, 5])
             gs = gridspec.GridSpec(6, 3, height_ratios=[1, 1, 0.5, 1, 1, 1], width_ratios=[1, 1, 1])
         gs.update(left=0.09, right=0.95, bottom=0.02, top=0.95, wspace=0.3, hspace=0.25)
-        props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
 
         wcs = WCS(axis_header)
 
@@ -1748,7 +1709,6 @@ def html_plots(ob, redshift, args):
 
             ax = plt.subplot(gs[2, 1:])
 
-            # rad = np.sqrt((xBar - xpmax_a) ** 2 + (yBar - ypmax_a) ** 2)  # Use centroids, NOT generators
             rad = np.sqrt((xNode - xpmax_b) ** 2 + (yNode - ypmax_b) ** 2)  # Use centroids, NOT generators
             ax.plot(np.sqrt((x_t_a - xpmax_a) ** 2 + (y_t_a - ypmax_a) ** 2), sgn_tt_a / rms_tt_a, ',k')
             ax.plot(rad[nPixels < 2], sn[nPixels < 2], 'xb', label='Not binned')
