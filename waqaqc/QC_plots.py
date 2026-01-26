@@ -1993,4 +1993,6 @@ def html_plots(ob, redshift, args):
         f.write(blue_cube[0].header['TRIMESTE']+'\n')
 
     os.makedirs(qc_plot_dir, exist_ok=True)
-    os.system('mv ' + str(blue_cube[0].header['OBID']) + '* ' + qc_plot_dir + '/.')
+    os.system('mv ' + str(blue_cube[0].header['OBID']) + '*.png ' + qc_plot_dir + '/.')
+    os.system('mv ' + str(blue_cube[0].header['OBID']) + '*.txt ' + qc_plot_dir + '/.')
+    os.system('mv ' + str(blue_cube[0].header['OBID']) + '*.html ' + qc_plot_dir + '/.')
