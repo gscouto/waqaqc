@@ -729,6 +729,7 @@ def tab_cre(ob, args):
         breakpoint()
 
         for k in np.arange(len(stelt_file[1].data['fiber'])):
+            print(k)
             if args.vorbin_flag == 1:
                 if np.sum(stelt_file[1].data['fiber'] == k) > 0:
                     tx.append(np.where(vorbin_map == k)[1])
@@ -742,7 +743,7 @@ def tab_cre(ob, args):
                 else:
                     tx.append([np.nan])
                     ty.append([np.nan])
-                if args.el_flag:
+                if args.el_flag == 1:
                     if np.sum(elint_file[1].data['fiber'] == k) > 0:
                         for i in np.arange(len(elint_maps)):
                             elint_maps[i][vorbin_map == k] = \
