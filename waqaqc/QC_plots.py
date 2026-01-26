@@ -858,8 +858,6 @@ def html_plots(ob, redshift, args):
             sky_bright = 21.0
         air_mass = np.round(single_file[0].header['AIRMASS'], 2)
 
-        breakpoint()
-
         for i in etc_mag:
             result = signalWEAVE(mag=i, time=exp_time, band=band, seeing_input=seeing, instrument_mode=ins_mode,
                                  skysb=sky_bright, airmass=air_mass, LIFU=True, verbose=False)
