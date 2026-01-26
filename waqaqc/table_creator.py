@@ -763,6 +763,8 @@ def tab_cre(ob, args):
             ttx = tx
             tty = ty
 
+        breakpoint()
+
         for k in np.arange(len(stelt_file[1].data['fiber'])):
             print(
                 'Organizing tables formats: ' + str(round(100. * k / np.nanmax(stelt_file[1].data['fiber']), 2)) + '%',
