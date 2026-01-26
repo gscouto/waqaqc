@@ -1,7 +1,4 @@
 import os
-import configparser
-import json
-
 import matplotlib
 import matplotlib.gridspec as gridspec
 import matplotlib.lines as mlines
@@ -14,6 +11,8 @@ from astropy.wcs import WCS
 from astropy.table import Table
 from astropy.coordinates import SkyCoord, FK5
 from astropy.stats import sigma_clip
+import astropy.units as u
+from astroquery.ipac.ned import Ned
 from vorbin.voronoi_2d_binning import voronoi_2d_binning
 import warnings
 import requests
@@ -2004,6 +2003,26 @@ def html_plots(ob, redshift, args):
         qc_plot_dir = 'CPSv' + blue_cube[0].header['CASUVERS'] + '_APSv' + aps_cube[1].header['APSVERS']
     else:
         qc_plot_dir = 'CPSv' + blue_cube[0].header['CASUVERS']
+
+    # ---- creating table for index.html
+
+    coord = SkyCoord(
+        ra=blue_cube[1].header['CRVAL1'],
+        dec=blue_cube[1].header['CRVAL2'],
+        unit=(u.deg, u.deg),
+        frame="icrs"
+    )
+
+    res = Ned.query_region(coord, radius=10 * u.arcsec)
+    obj_nme = res['Object Name'][0]
+
+    with open(output_str + ".txt", "w") as f:
+        f.write(gal_name+'\n')
+        f.write(obj_nme + '\n')
+        f.write(blue_cube[0].header['OBID']+'\n')
+        f.write(blue_cube[0].header['MODE']+'\n')
+        f.write(date+'\n')
+        f.write(blue_cube[0].header['TRIMESTE']+'\n')
 
     os.makedirs(qc_plot_dir, exist_ok=True)
     os.system('mv ' + str(blue_cube[0].header['OBID']) + '*.html ' + qc_plot_dir + '/.')
