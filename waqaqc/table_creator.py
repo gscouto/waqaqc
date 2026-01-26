@@ -756,10 +756,12 @@ def tab_cre(ob, args):
                     for i in np.arange(len(elint_maps)):
                         elint_maps[i][y[k], x[k]] = elint_file[1].data[elint_maps_n[i]][k]
 
-        breakpoint()
-
-        ttx = np.concatenate(tx)
-        tty = np.concatenate(ty)
+        if args.vorbin_flag == 1:
+            ttx = np.concatenate(tx)
+            tty = np.concatenate(ty)
+        else:
+            ttx = tx
+            tty = ty
 
         for k in np.arange(len(stelt_file[1].data['fiber'])):
             print(
