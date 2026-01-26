@@ -14,7 +14,7 @@ def tab_cre(ob, args):
     blue_cube = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('stackcube' in x)])[1])
 
     gal = blue_cube[0].header['CCNAME1']
-    gal_dir = gal + '_' + blue_cube[0].header['MODE'] + '_' + str(blue_cube[0].header['OBID'])
+    gal_dir = str(blue_cube[0].header['OBID']) + '_' + gal + '_' + blue_cube[0].header['MODE'] + '/'
 
     # =================== running for blue cube ===========================
 
