@@ -2019,8 +2019,8 @@ def html_plots(ob, redshift, args):
     with open(output_str + ".txt", "w") as f:
         f.write(gal_name+'\n')
         f.write(obj_nme + '\n')
-        f.write(blue_cube[0].header['OBID']+'\n')
-        f.write(blue_cube[0].header['MODE']+'\n')
+        f.write(str(blue_cube[0].header['OBID'])+'\n')
+        f.write(blue_cube[0].header['MODE']+'f\n')
         f.write(date+'\n')
         f.write(blue_cube[0].header['TRIMESTE']+'\n')
 
