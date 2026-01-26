@@ -767,17 +767,17 @@ def tab_cre(ob, args):
             for k in np.arange(len(stelt_file[1].data['fiber'])):
                 print('Organizing tables formats: ' +
                       str(round(100. * k / np.nanmax(stelt_file[1].data['fiber']), 2)) + '%', end='\r')
-                    for j in np.arange(len(np.where(vorbin_map == k)[0]) - 1):
-                        if args.el_flag == 1:
-                            if np.sum(elint_file[1].data['fiber'] == k) > 0:
-                                tab_el.add_row(tab_el[tab_el['fiber'] == k][0])
-                            else:
-                                new_row = tab_el[tab_el['fiber'] == 0][0]
-                                for i in np.arange(len(new_row)-1):
-                                    new_row[i+1] = np.nan
-                                new_row['fiber'] = k
-                                tab_el.add_row(new_row)
-                        tab_st.add_row(tab_st[tab_st['fiber'] == k][0])
+                for j in np.arange(len(np.where(vorbin_map == k)[0]) - 1):
+                    if args.el_flag == 1:
+                        if np.sum(elint_file[1].data['fiber'] == k) > 0:
+                            tab_el.add_row(tab_el[tab_el['fiber'] == k][0])
+                        else:
+                            new_row = tab_el[tab_el['fiber'] == 0][0]
+                            for i in np.arange(len(new_row)-1):
+                                new_row[i+1] = np.nan
+                            new_row['fiber'] = k
+                            tab_el.add_row(new_row)
+                    tab_st.add_row(tab_st[tab_st['fiber'] == k][0])
             print('')
 
         tab_st = tab_st[tab_st.argsort(['fiber'])]
