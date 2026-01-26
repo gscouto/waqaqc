@@ -726,6 +726,8 @@ def tab_cre(ob, args):
         base_coeff_maps = np.reshape(base_coeff_maps,
                                      (len(base_coeff_maps), base_coeff_maps[0].shape[0], base_coeff_maps[0].shape[1]))
 
+        breakpoint()
+
         for k in np.arange(len(stelt_file[1].data['fiber'])):
             if args.vorbin_flag == 1:
                 if np.sum(stelt_file[1].data['fiber'] == k) > 0:
