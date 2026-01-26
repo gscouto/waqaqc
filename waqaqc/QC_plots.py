@@ -2022,9 +2022,7 @@ def html_plots(ob, redshift, args):
         obj_nme = ''
     else:
         closest_gal = gal[gal["Separation"] == gal["Separation"].min()]
-        obj_nme = closest_gal['Object Name']
-
-    breakpoint()
+        obj_nme = closest_gal['Object Name'][0]
 
     with open(output_str + ".txt", "w") as f:
         f.write(gal_name+'\n')
