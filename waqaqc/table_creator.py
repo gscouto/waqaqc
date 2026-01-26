@@ -726,8 +726,6 @@ def tab_cre(ob, args):
         base_coeff_maps = np.reshape(base_coeff_maps,
                                      (len(base_coeff_maps), base_coeff_maps[0].shape[0], base_coeff_maps[0].shape[1]))
 
-        breakpoint()
-
         for k in np.arange(len(stelt_file[1].data['fiber'])):
             print(k)
             if args.vorbin_flag == 1:
@@ -752,12 +750,12 @@ def tab_cre(ob, args):
                 tx.append(x[k])
                 ty.append(y[k])
                 for i in np.arange(len(stelt_maps)):
-                    stelt_maps[i][y[k], x[k]] = stelt_file[1].data[stelt_maps_n[i]][k][0]
+                    stelt_maps[i][y[k], x[k]] = stelt_file[1].data[stelt_maps_n[i]][k]
                 for i in np.arange(len(base_coeff_maps)):
-                    base_coeff_maps[i][y[k], x[k]] = stelt_file[1].data['base_coeff'][k][0][i]
+                    base_coeff_maps[i][y[k], x[k]] = stelt_file[1].data['base_coeff'][k][i]
                 if args.el_flag == 1:
                     for i in np.arange(len(elint_maps)):
-                        elint_maps[i][y[k], x[k]] = elint_file[1].data[elint_maps_n[i]][k][0]
+                        elint_maps[i][y[k], x[k]] = elint_file[1].data[elint_maps_n[i]][k]
 
         ttx = np.concatenate(tx)
         tty = np.concatenate(ty)
