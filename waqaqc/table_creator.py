@@ -729,7 +729,7 @@ def tab_cre(ob, args):
         fiber = stelt_file[1].data['fiber']
         breakpoint()
 
-        for k in np.arange(len(fiber)):
+        for k, fib in enumerate(fiber):
             print(k)
             if args.vorbin_flag == 1:
                 if np.sum(stelt_file[1].data['fiber'] == k) > 0:
