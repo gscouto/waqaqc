@@ -786,6 +786,8 @@ def tab_cre(ob, args):
 
         print('')
 
+        breakpoint()
+
         tab_st = tab_st[tab_st.argsort(['fiber'])]
 
         tab_st.add_column(ttx, name='x_cor', index=0)
