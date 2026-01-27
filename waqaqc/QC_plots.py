@@ -509,6 +509,8 @@ def html_plots(ob, redshift, args):
             else:
                 cen_lam = np.array([6457., 6531., 6584., 6644., 6677., 6684., 6753., 6767.])
 
+        breakpoint()
+
         with mp.Pool(args.nproc) as pool:
             warc_stats = pool.starmap(fiber_lines,
                                       tqdm.tqdm(zip((fiber, cen_lam, lamp_spec, lamp_lam, lam_wind, sky_plot_flag,
