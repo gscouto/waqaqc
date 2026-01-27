@@ -275,7 +275,9 @@ def html_plots(ob, redshift, args):
     file_dir = args.data_path + ob + '/'
 
     if len([x for x in os.listdir(file_dir) if ('LWVE' in x)]) > 0:
-        aps_file = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('LWVE' in x)])[0])
+        aps_files = [x for x in os.listdir(file_dir) if 'LWVE' in x]
+        largest_file = max(aps_files, key=lambda fl: os.path.getsize(os.path.join(file_dir, fl)))
+        aps_file = fits.open(os.path.join(file_dir, largest_file))
         redshift = round(aps_file['PATCH_TABLE'].data['Z'][0],6)
 
     global blue_cube_data, blue_cube_err, red_cube_data, red_cube_err, aps_cube_data, aps_cube_err
