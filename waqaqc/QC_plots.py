@@ -390,7 +390,9 @@ def html_plots(ob, redshift, args):
     axis_header['CUNIT2'] = blue_cube[1].header['CUNIT2']
 
     file_list = np.sort([x for x in os.listdir(file_dir) if ("APS" not in x) & ('single' in x)])  # single files list
-    warc_list = np.sort([x for x in os.listdir(file_dir) if ('warc' in x)])  # WARC files list
+    mode = blue_cube[0].header['MODE']
+    warc_list = np.sort([x for x in os.listdir(file_dir) if ('warc' in x) and
+                        fits.getheader(os.path.join(file_dir, x), 0).get('MODE') == mode])  # WARC files list
 
     # Start doing the L0 plots
     print('Doing L0 raw data plots')
