@@ -23,6 +23,7 @@ from scipy.optimize import curve_fit
 import tqdm
 from waqaqc.signalWEAVE import signalWEAVE
 from scipy.interpolate import interp1d
+import re
 
 matplotlib.use("Agg")
 
@@ -1987,6 +1988,7 @@ def html_plots(ob, redshift, args):
     else:
         closest_gal = gal[gal["Separation"] == gal["Separation"].min()]
         obj_nme = closest_gal['Object Name'][0]
+        obj_nme = re.sub(r"\s+NED\d+$", "", obj_nme)
 
     with open(output_str + ".txt", "w") as f:
         f.write(gal_name+'\n')
