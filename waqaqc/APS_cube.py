@@ -106,6 +106,8 @@ def cube_creator(ob, args):
 
     files = [x for x in os.listdir(file_dir) if 'LWVE' in x]
 
+    breakpoint()
+
     largest_file = max(files, key=lambda f: os.path.getsize(os.path.join(file_dir, f)))
 
     cube = fits.open(os.path.join(file_dir, largest_file))
