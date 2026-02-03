@@ -818,11 +818,20 @@ def html_plots(ob, redshift, args):
         seeing = np.round((single_file[0].header['SEEINGB'] + single_file[0].header['SEEINGE']) / 2, 2)
         exp_time = np.round(single_file[0].header['EXPTIME'], 2)
         if (single_file[0].header['SKYBRTEL'] == -99) & (single_file[0].header['SKYBRZEN'] == -99):
-            sky_bright = np.round(single_file[0].header['SKBRMODB'], 2)
+            try:
+                sky_bright = np.round(single_file[0].header['SKBRMODB'], 2)
+            except:
+                sky_bright = 21.0
         elif single_file[0].header['SKYBRTEL'] == -99:
-            sky_bright = np.round(single_file[0].header['SKYBRZEN'], 2)
+            try:
+                sky_bright = np.round(single_file[0].header['SKYBRZEN'], 2)
+            except:
+                sky_bright = 21.0
         else:
-            sky_bright = np.round(single_file[0].header['SKYBRTEL'], 2)
+            try:
+                sky_bright = np.round(single_file[0].header['SKYBRTEL'], 2)
+            except:
+                sky_bright = 21.0
         if (sky_bright == -99) | (sky_bright == 0):
             sky_bright = 21.0
         air_mass = np.round(single_file[0].header['AIRMASS'], 2)
