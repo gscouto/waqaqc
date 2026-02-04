@@ -1848,6 +1848,8 @@ def html_plots(ob, redshift, args):
 
         # ------
 
+        breakpoint()
+
         if 'FLUX_HA_6562.80' in ext_names:
             if np.nanmax(aps_maps['FLUX_HA_6562.80'].data) > 0:
                 ax = plt.subplot(gs[subplots_rows[3], 0])
