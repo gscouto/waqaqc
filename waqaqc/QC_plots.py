@@ -1818,8 +1818,11 @@ def html_plots(ob, redshift, args):
         if 'FLUX_[OIII]_5006.77' in ext_names:
             if np.nanmax(aps_maps['FLUX_[OIII]_5006.77'].data) > 0:
                 ax = plt.subplot(gs[subplots_rows[2], 0])
+                cmax = np.nanpercentile(aps_maps['FLUX_[OIII]_5006.77'].data, 90)
+                if cmax < 0.1:
+                    cmax = 0.1
                 im = ax.imshow(aps_maps['FLUX_[OIII]_5006.77'].data,
-                               norm=LogNorm(vmin=0.1, vmax=np.nanpercentile(aps_maps['FLUX_[OIII]_5006.77'].data, 90)),
+                               norm=LogNorm(vmin=0.1, vmax=cmax),
                                origin='lower')
                 ax.set_title(r'APS F([OIII]5007)')
                 ax.set_xlabel('X [px]')
@@ -1848,13 +1851,14 @@ def html_plots(ob, redshift, args):
 
         # ------
 
-        breakpoint()
-
         if 'FLUX_HA_6562.80' in ext_names:
             if np.nanmax(aps_maps['FLUX_HA_6562.80'].data) > 0:
                 ax = plt.subplot(gs[subplots_rows[3], 0])
+                cmax = np.nanpercentile(aps_maps['FLUX_HA_6562.80'].data, 90)
+                if cmax < 0.1:
+                    cmax = 0.1
                 im = ax.imshow(aps_maps['FLUX_HA_6562.80'].data,
-                               norm=LogNorm(vmin=0.1, vmax=np.nanpercentile(aps_maps['FLUX_HA_6562.80'].data, 90)),
+                               norm=LogNorm(vmin=0.1, vmax=cmax),
                                origin='lower')
                 ax.set_title(r'APS F(HA)')
                 ax.set_xlabel('X [px]')
