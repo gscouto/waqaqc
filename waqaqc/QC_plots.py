@@ -1594,6 +1594,11 @@ def html_plots(ob, redshift, args):
         ypmax_a = round(cube_x_peaks[0])
         xpmax_a = round(cube_y_peaks[0])
 
+        if xpmax_a > aps_cube[1].data.shape[2] - 1:
+            xpmax_a = aps_cube[1].data.shape[2] - 1
+        if ypmax_a > aps_cube[1].data.shape[1] - 1:
+            ypmax_a = aps_cube[1].data.shape[1] - 1
+
         ax.plot(xpmax_a, ypmax_a, 'x', color='red', markersize=4, label=str(xpmax_a) + ', ' + str(ypmax_a))
         ax.set_title('Collapsed APS Datacube')
         ax.set_xlabel('X [px]')
@@ -1602,8 +1607,6 @@ def html_plots(ob, redshift, args):
         plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'log scale')
 
         # ------
-
-        breakpoint()
 
         ax = plt.subplot(gs[0, 1:])
         ax.plot(lam_a, aps_cube[1].data[:, ypmax_a, xpmax_a])
