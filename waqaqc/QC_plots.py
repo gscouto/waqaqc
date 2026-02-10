@@ -668,6 +668,17 @@ def html_plots(ob, redshift, args):
         else:
             exp_res = 10000
 
+        y_all = [sky_cen / sky_sigma]
+
+        if single_file[0].header['CAMERA'] == 'WEAVEBLUE' and len(warc_sigma_med_blue) > 0:
+            y_all.append(warc_cen_blue / warc_sigma_blue)
+
+        if single_file[0].header['CAMERA'] == 'WEAVERED' and len(warc_sigma_med_red) > 0:
+            y_all.append(warc_cen_red / warc_sigma_red)
+
+        y_all = np.concatenate(y_all)
+        ymin, ymax = np.nanpercentile(y_all, [2, 98])
+
         ax = plt.subplot(gs[1 + (5 * k), 2])
         ax.plot(sky_cen, sky_cen / sky_sigma, '.', color=single_file[1].name[:-5], alpha=0.1, zorder=-1)
         if len(warc_list) > 0:
@@ -682,6 +693,7 @@ def html_plots(ob, redshift, args):
         ax.axhline(np.mean(sky_lam) / (np.nanmedian(resol) - np.std(resol)), linestyle='-.', color='gray', zorder=-3,
                    alpha=0.5)
         ax.set_xlim([min(sky_lam), max(sky_lam)])
+        ax.set_ylim(ymin, ymax)
         ax.set_ylabel(r'R [$\lambda$ / FWHM]')
         ax.set_xlabel(r'$\lambda$ [$\AA$]')
 
