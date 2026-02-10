@@ -652,12 +652,7 @@ def html_plots(ob, redshift, args):
             y_all.append(warc_cen_red / warc_sigma_red)
 
         y_all = np.concatenate(y_all)
-        ymin, ymax = np.nanpercentile(y_all, [2, 98])
-        ax.set_ylim(ymin, ymax)
-
-        if single_file[0].header['CAMERA'] == 'WEAVEBLUE' and len(warc_sigma_med_blue) > 0:
-
-        ymin, ymax = np.nanpercentile(sky_sigma, [0.1, 99.9])
+        ymin, ymax = np.nanpercentile(y_all, [0.1, 99.9])
         ymin = 0.9*ymin
         ymax = 1.1*ymax
 
