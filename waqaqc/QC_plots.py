@@ -641,6 +641,8 @@ def html_plots(ob, redshift, args):
         ax.set_ylabel('FWHM [A]')
         ax.legend()
 
+        breakpoint()
+
         ymin, ymax = np.nanpercentile(sky_sigma, [0.1, 99.9])
         ymin = 0.9*ymin
         ymax = 1.1*ymax
