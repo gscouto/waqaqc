@@ -641,17 +641,14 @@ def html_plots(ob, redshift, args):
         ax.set_ylabel('FWHM [A]')
         ax.legend()
 
-        breakpoint()
-
         y_all = sky_sigma.ravel()
 
         if single_file[0].header['CAMERA'] == 'WEAVEBLUE' and len(warc_sigma_med_blue) > 0:
-            y_all.append(warc_cen_blue / warc_sigma_blue)
+            y_all = np.concatenate([y_all, warc_sigma_blue])
 
         if single_file[0].header['CAMERA'] == 'WEAVERED' and len(warc_sigma_med_red) > 0:
-            y_all.append(warc_cen_red / warc_sigma_red)
+            y_all = np.concatenate([y_all, warc_sigma_red])
 
-        y_all = np.concatenate(y_all)
         ymin, ymax = np.nanpercentile(y_all, [0.1, 99.9])
         ymin = 0.9*ymin
         ymax = 1.1*ymax
@@ -684,7 +681,14 @@ def html_plots(ob, redshift, args):
         else:
             exp_res = 10000
 
-        y_all = sky_cen / sky_sigma
+        y_all = (sky_cen / sky_sigma).ravel()
+
+        if single_file[0].header['CAMERA'] == 'WEAVEBLUE' and len(warc_sigma_med_blue) > 0:
+            y_all = np.concatenate([y_all, warc_cen_blue / warc_sigma_blue])
+
+        if single_file[0].header['CAMERA'] == 'WEAVERED' and len(warc_sigma_med_red) > 0:
+            y_all = np.concatenate([y_all, warc_cen_red / warc_sigma_red])
+
         ymin, ymax = np.nanpercentile(y_all, [0.1, 99.9])
         ymin = 0.9*ymin
         ymax = 1.1*ymax
