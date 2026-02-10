@@ -669,7 +669,9 @@ def html_plots(ob, redshift, args):
             exp_res = 10000
 
         y_all = sky_cen / sky_sigma
-        ymin, ymax = np.nanpercentile(y_all, [2, 98])
+        ymin, ymax = np.nanpercentile(y_all, [0.1, 99.9])
+        ymin = 0.9*ymin
+        ymax = 1.1*ymax
 
         ax = plt.subplot(gs[1 + (5 * k), 2])
         ax.plot(sky_cen, sky_cen / sky_sigma, '.', color=single_file[1].name[:-5], alpha=0.1, zorder=-1)
