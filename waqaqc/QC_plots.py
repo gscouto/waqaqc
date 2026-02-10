@@ -668,6 +668,8 @@ def html_plots(ob, redshift, args):
         else:
             exp_res = 10000
 
+        breakpoint()
+
         y_all = [sky_cen / sky_sigma]
 
         if single_file[0].header['CAMERA'] == 'WEAVEBLUE' and len(warc_sigma_med_blue) > 0:
