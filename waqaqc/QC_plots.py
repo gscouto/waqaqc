@@ -641,6 +641,10 @@ def html_plots(ob, redshift, args):
         ax.set_ylabel('FWHM [A]')
         ax.legend()
 
+        ymin, ymax = np.nanpercentile(sky_sigma, [0.1, 99.9])
+        ymin = 0.9*ymin
+        ymax = 1.1*ymax
+
         ax = plt.subplot(gs[1 + (5 * k), 1])
         ax.plot(sky_cen, sky_sigma, '.', color=single_file[1].name[:-5], alpha=0.1, zorder=-1)
         if len(warc_list) > 0:
@@ -660,6 +664,7 @@ def html_plots(ob, redshift, args):
             ax.annotate(r'FWHM = ' + ('%.2g' % popt[0]) + ' + ' + ('%.2g' % popt[1]) + '$\lambda$ + ' + (
                     '%.2g' % popt[2]) + '$\lambda^2$', (0.02, 0.95), xycoords='axes fraction')
         ax.set_xlim([min(sky_lam), max(sky_lam)])
+        ax.set_ylim(ymin, ymax)
         ax.set_xlabel(r'$\lambda$ [$\AA$]')
         ax.set_ylabel('FWHM [A]')
 
