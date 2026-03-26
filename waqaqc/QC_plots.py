@@ -888,11 +888,11 @@ def html_plots(ob, redshift, args):
         snr_band_etc = np.interp(mag_band.flatten(), etc_mag, etc_snr, left=None, right=None)
 
         ax = plt.subplot(gs[5 + (5 * k), :])
-        ax.scatter(mag_band.flatten(), snr_band.flatten()-snr_band_etc, s=20, marker='o', alpha=0.3,
+        ax.scatter(mag_band.flatten(), abs((snr_band.flatten()-snr_band_etc)/snr_band_etc), s=20, marker='o', alpha=0.3,
                    color=single_file[1].name[:-5], edgecolor='black')
         ax.axhline(0, color='black', linestyle='--', linewidth=1)
         ax.set_xlim([13, 26])
-        ax.set_ylim([-20, 20])
+        # ax.set_ylim([0.2, 20])
         ax.set_xlabel(band + ' band mag (Vega)')
         ax.set_ylabel(r'$\Delta$ S/N ratio [per $\AA$]')
         ax.grid()
