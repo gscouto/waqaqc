@@ -885,12 +885,13 @@ def html_plots(ob, redshift, args):
         ax.grid()
         ax.legend()
 
-        breakpoint()
+        mag_obs = mag_band.flatten()[np.isfinite(mag_band.flatten())]
+        snr_obs = snr_band.flatten()[np.isfinite(mag_band.flatten())]
 
-        snr_band_etc = np.interp(mag_band.flatten(), etc_mag, etc_snr, left=None, right=None)
+        snr_band_etc = np.interp(mag_obs, etc_mag, etc_snr, left=None, right=None)
 
         ax = plt.subplot(gs[5 + (5 * k), :])
-        ax.scatter(mag_band.flatten(), abs((snr_band.flatten()-snr_band_etc)/snr_band_etc), s=20, marker='o', alpha=0.3,
+        ax.scatter(mag_obs, abs((snr_obs-snr_band_etc)/snr_band_etc), s=20, marker='o', alpha=0.3,
                    color=single_file[1].name[:-5], edgecolor='black')
         ax.axhline(1, color='black', linestyle='--', linewidth=1)
         ax.set_xlim([13, 26])
