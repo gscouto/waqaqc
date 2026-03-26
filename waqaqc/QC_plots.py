@@ -892,9 +892,9 @@ def html_plots(ob, redshift, args):
                    color=single_file[1].name[:-5], edgecolor='black')
         ax.axhline(0, color='black', linestyle='--', linewidth=1)
         ax.set_xlim([13, 26])
-        # ax.set_ylim([0.2, 20])
+        ax.set_ylim([0.2, 2.0])
         ax.set_xlabel(band + ' band mag (Vega)')
-        ax.set_ylabel(r'$\Delta$ S/N ratio [per $\AA$]')
+        ax.set_ylabel(r'S/N ratio (measured - estimated / estimated) [per $\AA$]')
         ax.grid()
 
     # ------ flux calibration plots
