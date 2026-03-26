@@ -885,6 +885,8 @@ def html_plots(ob, redshift, args):
         ax.grid()
         ax.legend()
 
+        breakpoint()
+
         snr_band_etc = np.interp(mag_band.flatten(), etc_mag, etc_snr, left=None, right=None)
 
         ax = plt.subplot(gs[5 + (5 * k), :])
