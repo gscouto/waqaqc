@@ -4,7 +4,7 @@ import matplotlib.gridspec as gridspec
 import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
-from matplotlib.patches import Polygon
+from matplotlib.patches import Polygon, patches
 import numpy as np
 from astropy.io import fits
 from astropy.wcs import WCS
@@ -706,20 +706,28 @@ def html_plots(ob, redshift, args):
 
         # analyzing spectral resolution (green, yellow, red)
 
-        status_icon = "🟢"
-        # status_icon = "🟡"
-        # status_icon = "🔴"
+        status_icon = patches.Circle(
+            (1.02, 1.02),
+            0.02,
+            transform=ax_t.transAxes,
+            facecolor='limegreen',
+            edgecolor='black',
+            linewidth=1.5,
+            clip_on=False
+        )
 
         if len(warc_list) > 0:
             if single_file[0].header['CAMERA'] == 'WEAVEBLUE' and len(warc_sigma_med_blue) > 0:
                 if len(warc_list) > 1:
-                    ax_t.set_title(single_name + '  ' + warc_list[1][:-4] + ' / spectral resolution / ' + status_icon)
+                    ax_t.set_title(single_name + '  ' + warc_list[1][:-4] + ' / spectral resolution / ')
                 else:
-                    ax_t.set_title(single_name + '  ' + warc_list[0][:-4] + ' / spectral resolution / ' + status_icon)
+                    ax_t.set_title(single_name + '  ' + warc_list[0][:-4] + ' / spectral resolution / ')
             if single_file[0].header['CAMERA'] == 'WEAVERED' and len(warc_sigma_med_red) > 0:
-                ax_t.set_title(single_name + '  ' + warc_list[0][:-4] + ' / spectral resolution / ' + status_icon)
+                ax_t.set_title(single_name + '  ' + warc_list[0][:-4] + ' / spectral resolution / ')
         else:
-            ax_t.set_title(single_name + ' / spectral resolution / ' + status_icon)
+            ax_t.set_title(single_name + ' / spectral resolution / ')
+
+        ax_t.add_patch(circle)
 
         # saving spectral resolution text file
 
