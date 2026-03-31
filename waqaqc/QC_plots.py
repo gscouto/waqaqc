@@ -359,13 +359,13 @@ def html_plots(ob, redshift, args):
 
     if blue_cube[0].header['MODE'] == 'LOWRES':
         sgn_wind = 50
-        spec_pix_L1 = 0.5
+        spec_pix = 0.5
     elif blue_cube[0].header['MODE'] == 'HIGHRES':
         sgn_wind = 250
-        spec_pix_L1 = 0.1
+        spec_pix = 0.1
     else:
         sgn_wind = 50
-        spec_pix_L1 = 0.5
+        spec_pix = 0.5
 
     med_b = np.median(blue_cube[1].data[np.where(lam_b == blue_cen_wave)[0][0] - sgn_wind:
                                         np.where(lam_b == blue_cen_wave)[0][0] + sgn_wind], axis=0)
@@ -585,7 +585,6 @@ def html_plots(ob, redshift, args):
         sky_sigma_med = []
 
         if blue_cube[0].header['MODE'] == 'LOWRES':
-            spec_pix_L0 = 0.5
             if file_cam == 'WEAVEBLUE':
                 cen_lam = np.array([5577.])
             else:
@@ -593,7 +592,6 @@ def html_plots(ob, redshift, args):
                                     7931., 7993., 8062., 8399., 8430., 8465., 8505., 8886., 8920., 8959., 9002., 9376.,
                                     9440.])
         else:
-            spec_pix_L0 = 0.1
             if file_cam == 'WEAVEBLUE':
                 cen_lam = np.array([5198., 5239., 5256.])
             else:
@@ -665,8 +663,15 @@ def html_plots(ob, redshift, args):
         if len(warc_list) > 0:
             if single_file[0].header['CAMERA'] == 'WEAVEBLUE' and len(warc_sigma_med_blue) > 0:
                 ax_t.plot(warc_cen_blue, warc_sigma_blue, '.', color='orange', alpha=0.1, zorder=-2)
+                if len(warc_list) > 1:
+                    t = ax_t.set_title(single_name + '  ' + warc_list[1][:-4] + ' / spectral resolution')
+                else:
+                    t = ax_t.set_title(single_name + '  ' + warc_list[0][:-4] + ' / spectral resolution')
             if single_file[0].header['CAMERA'] == 'WEAVERED' and len(warc_sigma_med_red) > 0:
                 ax_t.plot(warc_cen_red, warc_sigma_red, '.', color='orange', alpha=0.1, zorder=-2)
+                t = ax_t.set_title(single_name + '  ' + warc_list[0][:-4] + ' / spectral resolution')
+        else:
+            t = ax_t.set_title(single_name + ' / spectral resolution')
         if (single_file[1].name[:-5] == 'RED') & (blue_cube[0].header['MODE'] == 'LOWRES'):
             ax_t.plot(sky_lam, polinom(sky_lam, *popt), linestyle='--', color='gray')
             ax_t.annotate(r'FWHM = ' + ('%.2g' % popt[0]) + ' + ' + ('%.2g' % popt[1]) + '$\lambda$ + ' + (
@@ -712,18 +717,6 @@ def html_plots(ob, redshift, args):
         ax.set_xlabel(r'$\lambda$ [$\AA$]')
 
         # analyzing spectral resolution (green, yellow, red)
-
-        if len(warc_list) > 0:
-            if single_file[0].header['CAMERA'] == 'WEAVEBLUE' and len(warc_sigma_med_blue) > 0:
-                if len(warc_list) > 1:
-                    t = ax_t.set_title(single_name + '  ' + warc_list[1][:-4] + ' / spectral resolution')
-                else:
-                    t = ax_t.set_title(single_name + '  ' + warc_list[0][:-4] + ' / spectral resolution')
-            if single_file[0].header['CAMERA'] == 'WEAVERED' and len(warc_sigma_med_red) > 0:
-                t = ax_t.set_title(single_name + '  ' + warc_list[0][:-4] + ' / spectral resolution')
-        else:
-            t = ax_t.set_title(single_name + ' / spectral resolution')
-
         plt.draw()
 
         bbox = t.get_window_extent()
@@ -731,10 +724,17 @@ def html_plots(ob, redshift, args):
         inv = ax_t.transAxes.inverted()
         x_axes, y_axes = inv.transform((bbox.x1 + 10, bbox.y0 + bbox.height + 4 / 2))
 
+        if np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res))) / len(sky_cen) > 0.5:
+            status_color = 'limegreen'
+        elif np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res))) / len(sky_cen) > 0.3:
+            status_color = 'yellow'
+        else:
+            status_color = 'darkred'
+
         ax_t.text(
             x_axes, y_axes,
             "●",
-            color="limegreen",
+            color=status_color,
             fontsize=18,
             fontweight="bold",
             ha="left",
