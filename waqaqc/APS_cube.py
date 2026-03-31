@@ -104,9 +104,22 @@ def process_aps_maps_pixel(idx, pix, vorbin_map, bin_id, r_bin_id, data4, map_na
 def cube_creator(ob, args):
     file_dir = args.data_path + ob + '/'
 
-    files = [x for x in os.listdir(file_dir) if 'LWVE' in x]
+    def has_galaxy_table(path):
+        try:
+            with fits.open(path) as hdul:
+                return any(hdu.name == 'GALAXY_TABLE' for hdu in hdul)
+        except Exception:
+            return False
 
-    largest_file = max(files, key=lambda f: os.path.getsize(os.path.join(file_dir, f)))
+    files = [
+        f for f in os.listdir(file_dir)
+        if 'LWVE' in f and has_galaxy_table(os.path.join(file_dir, f))
+    ]
+
+    largest_file = max(
+        files,
+        key=lambda f: os.path.getsize(os.path.join(file_dir, f))
+    )
 
     cube = fits.open(os.path.join(file_dir, largest_file))
 
