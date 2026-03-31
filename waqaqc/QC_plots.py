@@ -4,7 +4,8 @@ import matplotlib.gridspec as gridspec
 import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
-from matplotlib.patches import Polygon, patches
+import matplotlib.patches as patches
+from matplotlib.patches import Polygon
 import numpy as np
 from astropy.io import fits
 from astropy.wcs import WCS
