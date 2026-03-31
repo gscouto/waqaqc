@@ -727,7 +727,7 @@ def html_plots(ob, redshift, args):
         else:
             ax_t.set_title(single_name + ' / spectral resolution / ')
 
-        ax_t.add_patch(circle)
+        ax_t.add_patch(status_icon)
 
         # saving spectral resolution text file
 
