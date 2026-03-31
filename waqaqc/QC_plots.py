@@ -358,10 +358,13 @@ def html_plots(ob, redshift, args):
 
     if blue_cube[0].header['MODE'] == 'LOWRES':
         sgn_wind = 50
+        spec_pix_L1 = 0.5
     elif blue_cube[0].header['MODE'] == 'HIGHRES':
         sgn_wind = 250
+        spec_pix_L1 = 0.1
     else:
         sgn_wind = 50
+        spec_pix_L1 = 0.5
 
     med_b = np.median(blue_cube[1].data[np.where(lam_b == blue_cen_wave)[0][0] - sgn_wind:
                                         np.where(lam_b == blue_cen_wave)[0][0] + sgn_wind], axis=0)
@@ -581,6 +584,7 @@ def html_plots(ob, redshift, args):
         sky_sigma_med = []
 
         if blue_cube[0].header['MODE'] == 'LOWRES':
+            spec_pix_L0 = 0.5
             if file_cam == 'WEAVEBLUE':
                 cen_lam = np.array([5577.])
             else:
@@ -588,6 +592,7 @@ def html_plots(ob, redshift, args):
                                     7931., 7993., 8062., 8399., 8430., 8465., 8505., 8886., 8920., 8959., 9002., 9376.,
                                     9440.])
         else:
+            spec_pix_L0 = 0.1
             if file_cam == 'WEAVEBLUE':
                 cen_lam = np.array([5198., 5239., 5256.])
             else:
@@ -707,8 +712,26 @@ def html_plots(ob, redshift, args):
 
         # analyzing spectral resolution (green, yellow, red)
 
+        if len(warc_list) > 0:
+            if single_file[0].header['CAMERA'] == 'WEAVEBLUE' and len(warc_sigma_med_blue) > 0:
+                if len(warc_list) > 1:
+                    t = ax_t.set_title(single_name + '  ' + warc_list[1][:-4] + ' / spectral resolution / ')
+                else:
+                    t = ax_t.set_title(single_name + '  ' + warc_list[0][:-4] + ' / spectral resolution / ')
+            if single_file[0].header['CAMERA'] == 'WEAVERED' and len(warc_sigma_med_red) > 0:
+                t = ax_t.set_title(single_name + '  ' + warc_list[0][:-4] + ' / spectral resolution / ')
+        else:
+            t = ax_t.set_title(single_name + ' / spectral resolution / ')
+
+        plt.draw()
+
+        bbox = t.get_window_extent()
+
+        inv = ax_t.transAxes.inverted()
+        x_axes, y_axes = inv.transform((bbox.x1 + 5, bbox.y0 + bbox.height / 2))
+
         status_icon = patches.Circle(
-            (1.02, 1.02),
+            (x_axes, y_axes),
             0.02,
             transform=ax_t.transAxes,
             facecolor='limegreen',
@@ -716,17 +739,6 @@ def html_plots(ob, redshift, args):
             linewidth=1.5,
             clip_on=False
         )
-
-        if len(warc_list) > 0:
-            if single_file[0].header['CAMERA'] == 'WEAVEBLUE' and len(warc_sigma_med_blue) > 0:
-                if len(warc_list) > 1:
-                    ax_t.set_title(single_name + '  ' + warc_list[1][:-4] + ' / spectral resolution / ')
-                else:
-                    ax_t.set_title(single_name + '  ' + warc_list[0][:-4] + ' / spectral resolution / ')
-            if single_file[0].header['CAMERA'] == 'WEAVERED' and len(warc_sigma_med_red) > 0:
-                ax_t.set_title(single_name + '  ' + warc_list[0][:-4] + ' / spectral resolution / ')
-        else:
-            ax_t.set_title(single_name + ' / spectral resolution / ')
 
         ax_t.add_patch(status_icon)
 
