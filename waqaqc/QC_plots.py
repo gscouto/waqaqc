@@ -721,7 +721,7 @@ def html_plots(ob, redshift, args):
             if single_file[0].header['CAMERA'] == 'WEAVERED' and len(warc_sigma_med_red) > 0:
                 t = ax_t.set_title(single_name + '  ' + warc_list[0][:-4] + ' / spectral resolution / ')
         else:
-            t = ax_t.set_title(single_name + ' / spectral resolution / ')
+            t = ax_t.set_title(single_name + ' / spectral resolution ')
 
         plt.draw()
 
@@ -732,7 +732,7 @@ def html_plots(ob, redshift, args):
 
         status_icon = patches.Circle(
             (x_axes, y_axes),
-            0.02,
+            0.1,
             transform=ax_t.transAxes,
             facecolor='limegreen',
             edgecolor='black',
