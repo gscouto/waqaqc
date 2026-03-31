@@ -725,6 +725,8 @@ def html_plots(ob, redshift, args):
 
         plt.draw()
 
+        bbox = t.get_window_extent()
+
         t_fig = ax_t.figure
         x_fig = (bbox.x1 + 10) / t_fig.bbox.width
         y_fig = (bbox.y0 + bbox.height / 2) / t_fig.bbox.height
