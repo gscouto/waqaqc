@@ -653,28 +653,21 @@ def html_plots(ob, redshift, args):
         ymin = 0.9*ymin
         ymax = 1.1*ymax
 
-        ax = plt.subplot(gs[1 + (5 * k), 1])
-        ax.plot(sky_cen, sky_sigma, '.', color=single_file[1].name[:-5], alpha=0.1, zorder=-1)
+        ax_t = plt.subplot(gs[1 + (5 * k), 1])
+        ax_t.plot(sky_cen, sky_sigma, '.', color=single_file[1].name[:-5], alpha=0.1, zorder=-1)
         if len(warc_list) > 0:
             if single_file[0].header['CAMERA'] == 'WEAVEBLUE' and len(warc_sigma_med_blue) > 0:
-                ax.plot(warc_cen_blue, warc_sigma_blue, '.', color='orange', alpha=0.1, zorder=-2)
-                if len(warc_list) > 1:
-                    ax.set_title(single_name + '  ' + warc_list[1][:-4] + ' / spectral resolution')
-                else:
-                    ax.set_title(single_name + '  ' + warc_list[0][:-4] + ' / spectral resolution')
+                ax_t.plot(warc_cen_blue, warc_sigma_blue, '.', color='orange', alpha=0.1, zorder=-2)
             if single_file[0].header['CAMERA'] == 'WEAVERED' and len(warc_sigma_med_red) > 0:
-                ax.plot(warc_cen_red, warc_sigma_red, '.', color='orange', alpha=0.1, zorder=-2)
-                ax.set_title(single_name + '  ' + warc_list[0][:-4] + ' / spectral resolution')
-        else:
-            ax.set_title(single_name + ' / spectral resolution')
+                ax_t.plot(warc_cen_red, warc_sigma_red, '.', color='orange', alpha=0.1, zorder=-2)
         if (single_file[1].name[:-5] == 'RED') & (blue_cube[0].header['MODE'] == 'LOWRES'):
-            ax.plot(sky_lam, polinom(sky_lam, *popt), linestyle='--', color='gray')
-            ax.annotate(r'FWHM = ' + ('%.2g' % popt[0]) + ' + ' + ('%.2g' % popt[1]) + '$\lambda$ + ' + (
+            ax_t.plot(sky_lam, polinom(sky_lam, *popt), linestyle='--', color='gray')
+            ax_t.annotate(r'FWHM = ' + ('%.2g' % popt[0]) + ' + ' + ('%.2g' % popt[1]) + '$\lambda$ + ' + (
                     '%.2g' % popt[2]) + '$\lambda^2$', (0.02, 0.95), xycoords='axes fraction')
-        ax.set_xlim([min(sky_lam), max(sky_lam)])
-        ax.set_ylim(ymin, ymax)
-        ax.set_xlabel(r'$\lambda$ [$\AA$]')
-        ax.set_ylabel('FWHM [A]')
+        ax_t.set_xlim([min(sky_lam), max(sky_lam)])
+        ax_t.set_ylim(ymin, ymax)
+        ax_t.set_xlabel(r'$\lambda$ [$\AA$]')
+        ax_t.set_ylabel('FWHM [A]')
 
         if blue_cube[0].header['MODE'] == 'LOWRES':
             exp_res = 2500
@@ -710,6 +703,25 @@ def html_plots(ob, redshift, args):
         ax.set_ylim(ymin, ymax)
         ax.set_ylabel(r'R [$\lambda$ / FWHM]')
         ax.set_xlabel(r'$\lambda$ [$\AA$]')
+
+        # analyzing spectral resolution (green, yellow, red)
+
+        status_icon = "🟢"
+        # status_icon = "🟡"
+        # status_icon = "🔴"
+
+        if len(warc_list) > 0:
+            if single_file[0].header['CAMERA'] == 'WEAVEBLUE' and len(warc_sigma_med_blue) > 0:
+                if len(warc_list) > 1:
+                    ax_t.set_title(single_name + '  ' + warc_list[1][:-4] + ' / spectral resolution / ' + status_icon)
+                else:
+                    ax_t.set_title(single_name + '  ' + warc_list[0][:-4] + ' / spectral resolution / ' + status_icon)
+            if single_file[0].header['CAMERA'] == 'WEAVERED' and len(warc_sigma_med_red) > 0:
+                ax_t.set_title(single_name + '  ' + warc_list[0][:-4] + ' / spectral resolution / ' + status_icon)
+        else:
+            ax_t.set_title(single_name + ' / spectral resolution / ' + status_icon)
+
+        # saving spectral resolution text file
 
         if (single_file[1].name[:-5] == 'RED') & (blue_cube[0].header['MODE'] == 'LOWRES'):
             np.savetxt(gal_dir + '/resol_table_' + single_name + '.txt',
