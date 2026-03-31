@@ -725,15 +725,14 @@ def html_plots(ob, redshift, args):
 
         plt.draw()
 
-        bbox = t.get_window_extent()
-
-        inv = ax_t.transAxes.inverted()
-        x_axes, y_axes = inv.transform((bbox.x1 + 10, bbox.y0 + bbox.height / 2))
+        t_fig = ax_t.figure
+        x_fig = (bbox.x1 + 10) / t_fig.bbox.width
+        y_fig = (bbox.y0 + bbox.height / 2) / t_fig.bbox.height
 
         status_icon = patches.Circle(
-            (x_axes, y_axes),
-            0.1,
-            transform=ax_t.transAxes,
+            (x_fig, y_fig),
+            0.05,
+            transform=t_fig.transFigure,
             facecolor='limegreen',
             edgecolor='black',
             linewidth=1.5,
@@ -812,6 +811,7 @@ def html_plots(ob, redshift, args):
             sgn_band = np.mean(single_file[1].data[:, (sky_lam > 5000) & (sky_lam < 6000)], axis=1)
             rms_band = np.sqrt(1 / np.mean(single_file[2].data[:, (sky_lam > 5000) & (sky_lam < 6000)], axis=1))
             snr_band = sgn_band / rms_band
+            # snr_band = snr_band *
 
             data_path = files("waqaqc.data").joinpath("johnsonV.dat")
             with data_path.open("r") as f:
