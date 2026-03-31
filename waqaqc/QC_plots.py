@@ -730,8 +730,6 @@ def html_plots(ob, redshift, args):
         inv = ax_t.transAxes.inverted()
         x_axes, y_axes = inv.transform((bbox.x1 + 10, bbox.y0 + bbox.height + 4 / 2))
 
-        breakpoint()
-
         if np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res))) / len(np.ravel(sky_cen)) > 0.5:
             status_color = 'limegreen'
             if single_file[0].header['CAMERA'] == 'WEAVEBLUE':
