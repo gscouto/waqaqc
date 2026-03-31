@@ -384,7 +384,8 @@ def html_plots(ob, redshift, args):
     snr_r = sgn_r / rms_r
 
     # setting parameters to be passed as QC parameters
-    spec_resol = 'N/A'
+    red_spec_resol = 'N/A'
+    blue_spec_resol = 'N/A'
 
     axis_header = fits.Header()
     axis_header['NAXIS1'] = blue_cube[1].header['NAXIS1']
@@ -729,15 +730,26 @@ def html_plots(ob, redshift, args):
         inv = ax_t.transAxes.inverted()
         x_axes, y_axes = inv.transform((bbox.x1 + 10, bbox.y0 + bbox.height + 4 / 2))
 
+        breakpoint()
+
         if np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res))) / len(sky_cen) > 0.5:
             status_color = 'limegreen'
-            spec_resol = 'good'
+            if single_file[0].header['CAMERA'] == 'WEAVEBLUE':
+                blue_spec_resol = 'good'
+            else:
+                red_spec_resol = 'good'
         elif np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res))) / len(sky_cen) > 0.3:
             status_color = 'yellow'
-            spec_resol = 'passable'
+            if single_file[0].header['CAMERA'] == 'WEAVEBLUE':
+                blue_spec_resol = 'passable'
+            else:
+                red_spec_resol = 'passable'
         else:
             status_color = 'darkred'
-            spec_resol = 'bad'
+            if single_file[0].header['CAMERA'] == 'WEAVEBLUE':
+                blue_spec_resol = 'bad'
+            else:
+                red_spec_resol = 'bad'
 
         ax_t.text(
             x_axes, y_axes,
@@ -2089,7 +2101,8 @@ def html_plots(ob, redshift, args):
         f.write(blue_cube[0].header['MODE']+'\n')
         f.write(date+'\n')
         f.write(blue_cube[0].header['TRIMESTE']+'\n')
-        f.write(spec_resol+'\n')
+        f.write(blue_spec_resol+'\n')
+        f.write(red_spec_resol+'\n')
 
     os.makedirs(qc_plot_dir, exist_ok=True)
     os.system('mv ' + str(blue_cube[0].header['OBID']) + '*.png ' + qc_plot_dir + '/.')
