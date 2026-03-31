@@ -732,13 +732,13 @@ def html_plots(ob, redshift, args):
 
         breakpoint()
 
-        if np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res))) / len(sky_cen) > 0.5:
+        if np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res))) / len(np.ravel(sky_cen)) > 0.5:
             status_color = 'limegreen'
             if single_file[0].header['CAMERA'] == 'WEAVEBLUE':
                 blue_spec_resol = 'good'
             else:
                 red_spec_resol = 'good'
-        elif np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res))) / len(sky_cen) > 0.3:
+        elif np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res))) / len(np.ravel(sky_cen)) > 0.3:
             status_color = 'yellow'
             if single_file[0].header['CAMERA'] == 'WEAVEBLUE':
                 blue_spec_resol = 'passable'
