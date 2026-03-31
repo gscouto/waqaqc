@@ -724,29 +724,24 @@ def html_plots(ob, redshift, args):
         else:
             t = ax_t.set_title(single_name + ' / spectral resolution')
 
-        circle = patches.Circle((0, 0), radius=5, facecolor='limegreen', edgecolor='black')
-        ab = AnnotationBbox(circle, (1, 1), frameon=False, xycoords='axes fraction', boxcoords="axes fraction", pad=0)
-        ax_t.add_artist(ab)
+        plt.draw()
 
-        # plt.draw()
-        #
-        # bbox = t.get_window_extent()
-        #
-        # t_fig = ax_t.figure
-        # x_fig = (bbox.x1 + 10) / t_fig.bbox.width
-        # y_fig = (bbox.y0 + bbox.height / 2) / t_fig.bbox.height
-        #
-        # status_icon = patches.Circle(
-        #     (x_fig, y_fig),
-        #     0.05,
-        #     transform=t_fig.transFigure,
-        #     facecolor='limegreen',
-        #     edgecolor='black',
-        #     linewidth=1.5,
-        #     clip_on=False
-        # )
-        #
-        # ax_t.add_patch(status_icon)
+        bbox = t.get_window_extent()
+
+        inv = ax_t.transAxes.inverted()
+        x_axes, y_axes = inv.transform((bbox.x1 + 10, bbox.y0 + bbox.height / 2))
+
+        ax_t.text(
+            x_axes, y_axes,
+            "●",  # Unicode circle
+            color="limegreen",
+            fontsize=12,  # adjust size
+            fontweight="bold",
+            ha="left",
+            va="center",
+            transform=ax_t.transAxes,
+            clip_on=False
+        )
 
         # saving spectral resolution text file
 
