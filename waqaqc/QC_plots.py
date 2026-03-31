@@ -715,20 +715,20 @@ def html_plots(ob, redshift, args):
         if len(warc_list) > 0:
             if single_file[0].header['CAMERA'] == 'WEAVEBLUE' and len(warc_sigma_med_blue) > 0:
                 if len(warc_list) > 1:
-                    t = ax_t.set_title(single_name + '  ' + warc_list[1][:-4] + ' / spectral resolution / ')
+                    t = ax_t.set_title(single_name + '  ' + warc_list[1][:-4] + ' / spectral resolution')
                 else:
-                    t = ax_t.set_title(single_name + '  ' + warc_list[0][:-4] + ' / spectral resolution / ')
+                    t = ax_t.set_title(single_name + '  ' + warc_list[0][:-4] + ' / spectral resolution')
             if single_file[0].header['CAMERA'] == 'WEAVERED' and len(warc_sigma_med_red) > 0:
-                t = ax_t.set_title(single_name + '  ' + warc_list[0][:-4] + ' / spectral resolution / ')
+                t = ax_t.set_title(single_name + '  ' + warc_list[0][:-4] + ' / spectral resolution')
         else:
-            t = ax_t.set_title(single_name + ' / spectral resolution ')
+            t = ax_t.set_title(single_name + ' / spectral resolution')
 
         plt.draw()
 
         bbox = t.get_window_extent()
 
         inv = ax_t.transAxes.inverted()
-        x_axes, y_axes = inv.transform((bbox.x1 + 5, bbox.y0 + bbox.height / 2))
+        x_axes, y_axes = inv.transform((bbox.x1 + 10, bbox.y0 + bbox.height / 2))
 
         status_icon = patches.Circle(
             (x_axes, y_axes),
