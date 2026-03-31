@@ -729,13 +729,13 @@ def html_plots(ob, redshift, args):
         bbox = t.get_window_extent()
 
         inv = ax_t.transAxes.inverted()
-        x_axes, y_axes = inv.transform((bbox.x1 + 10, bbox.y0 + bbox.height / 2))
+        x_axes, y_axes = inv.transform((bbox.x1 + 10, bbox.y0 + bbox.height + 4 / 2))
 
         ax_t.text(
             x_axes, y_axes,
-            "●",  # Unicode circle
+            "●",
             color="limegreen",
-            fontsize=12,  # adjust size
+            fontsize=18,
             fontweight="bold",
             ha="left",
             va="center",
