@@ -959,7 +959,7 @@ def html_plots(ob, redshift, args):
         ax.set_ylim([0., 2.0])
         ax.set_xlabel(band + ' band mag (Vega)')
         # ax.set_ylabel(r'S/N ratio (|$\Delta$ SNR| / SNR_ETC) [per $\AA$]')
-        ax.set_ylabel(r'S/N ratio (SNR_obs / SNR_ETC) [per $\AA$]')
+        ax.set_ylabel(r'SNR$_{\textrm{obs}}$ / SNR$_{\textrm{ETC}}$ [per $\AA$]')
         ax.grid()
 
     # ------ flux calibration plots
