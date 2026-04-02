@@ -374,6 +374,7 @@ def html_plots(ob, redshift, args):
     rms_b = np.sqrt(1 / np.mean(blue_cube[2].data[np.where(lam_b == blue_cen_wave)[0][0] - sgn_wind:
                                                   np.where(lam_b == blue_cen_wave)[0][0] + sgn_wind], axis=0))
     snr_b = sgn_b / rms_b
+    snr_b = snr_b * np.sqrt(spec_pix)
 
     med_r = np.median(red_cube[1].data[np.where(lam_r == red_cen_wave)[0][0] - sgn_wind:
                                        np.where(lam_r == red_cen_wave)[0][0] + sgn_wind], axis=0)
@@ -382,6 +383,7 @@ def html_plots(ob, redshift, args):
     rms_r = np.sqrt(1 / np.mean(red_cube[2].data[np.where(lam_r == red_cen_wave)[0][0] - sgn_wind:
                                                  np.where(lam_r == red_cen_wave)[0][0] + sgn_wind], axis=0))
     snr_r = sgn_r / rms_r
+    snr_r = snr_r * np.sqrt(spec_pix)
 
     # setting parameters to be passed as QC parameters
     red_spec_resol = 'N/A'
@@ -831,7 +833,7 @@ def html_plots(ob, redshift, args):
             sgn_band = np.mean(single_file[1].data[:, (sky_lam > 5000) & (sky_lam < 6000)], axis=1)
             rms_band = np.sqrt(1 / np.mean(single_file[2].data[:, (sky_lam > 5000) & (sky_lam < 6000)], axis=1))
             snr_band = sgn_band / rms_band
-            # snr_band = snr_band *
+            snr_band = snr_band * np.sqrt(spec_pix)
 
             data_path = files("waqaqc.data").joinpath("johnsonV.dat")
             with data_path.open("r") as f:
@@ -844,6 +846,7 @@ def html_plots(ob, redshift, args):
             sgn_band = np.mean(single_file[1].data[:, (sky_lam > 8000) & (sky_lam < 9000)], axis=1)
             rms_band = np.sqrt(1 / np.mean(single_file[2].data[:, (sky_lam > 8000) & (sky_lam < 9000)], axis=1))
             snr_band = sgn_band / rms_band
+            snr_band = snr_band * np.sqrt(spec_pix)
 
             data_path = files("waqaqc.data").joinpath("johnsonI.dat")
             with data_path.open("r") as f:
@@ -856,6 +859,7 @@ def html_plots(ob, redshift, args):
             sgn_band = np.mean(single_file[1].data[:, (sky_lam > 5000) & (sky_lam < 6000)], axis=1)
             rms_band = np.sqrt(1 / np.mean(single_file[2].data[:, (sky_lam > 5000) & (sky_lam < 6000)], axis=1))
             snr_band = sgn_band / rms_band
+            snr_band = snr_band * np.sqrt(spec_pix)
 
             data_path = files("waqaqc.data").joinpath("johnsonV.dat")
             with data_path.open("r") as f:
@@ -868,6 +872,7 @@ def html_plots(ob, redshift, args):
             sgn_band = np.mean(single_file[1].data[:, (sky_lam > 6550) & (sky_lam < 7550)], axis=1)
             rms_band = np.sqrt(1 / np.mean(single_file[2].data[:, (sky_lam > 6550) & (sky_lam < 7550)], axis=1))
             snr_band = sgn_band / rms_band
+            snr_band = snr_band * np.sqrt(spec_pix)
 
             data_path = files("waqaqc.data").joinpath("johnsonR.dat")
             with data_path.open("r") as f:
