@@ -386,8 +386,8 @@ def html_plots(ob, redshift, args):
     snr_r = snr_r * np.sqrt(spec_pix)
 
     # setting parameters to be passed as QC parameters
-    red_spec_resol = 'N/A'
-    blue_spec_resol = 'N/A'
+    red_spec_resol = np.nan
+    blue_spec_resol = np.nan
 
     axis_header = fits.Header()
     axis_header['NAXIS1'] = blue_cube[1].header['NAXIS1']
@@ -735,21 +735,27 @@ def html_plots(ob, redshift, args):
         if np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res))) / len(np.ravel(sky_cen)) > 0.5:
             status_color = 'limegreen'
             if single_file[0].header['CAMERA'] == 'WEAVEBLUE':
-                blue_spec_resol = 'good'
+                blue_spec_resol = np.round(100 * np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res)))
+                                           / len(np.ravel(sky_cen)))
             else:
-                red_spec_resol = 'good'
+                red_spec_resol = np.round(100 * np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res)))
+                                           / len(np.ravel(sky_cen)))
         elif np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res))) / len(np.ravel(sky_cen)) > 0.3:
             status_color = 'yellow'
             if single_file[0].header['CAMERA'] == 'WEAVEBLUE':
-                blue_spec_resol = 'passable'
+                blue_spec_resol = np.round(100 * np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res)))
+                                           / len(np.ravel(sky_cen)))
             else:
-                red_spec_resol = 'passable'
+                red_spec_resol = np.round(100 * np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res)))
+                                           / len(np.ravel(sky_cen)))
         else:
             status_color = 'darkred'
             if single_file[0].header['CAMERA'] == 'WEAVEBLUE':
-                blue_spec_resol = 'bad'
+                blue_spec_resol = np.round(100 * np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res)))
+                                           / len(np.ravel(sky_cen)))
             else:
-                red_spec_resol = 'bad'
+                red_spec_resol = np.round(100 * np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res)))
+                                           / len(np.ravel(sky_cen)))
 
         ax_t.text(
             x_axes, y_axes,
