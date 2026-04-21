@@ -732,30 +732,19 @@ def html_plots(ob, redshift, args):
         inv = ax_t.transAxes.inverted()
         x_axes, y_axes = inv.transform((bbox.x1 + 10, bbox.y0 + bbox.height + 4 / 2))
 
+        if single_file[0].header['CAMERA'] == 'WEAVEBLUE':
+            blue_spec_resol = np.round(100 * np.sum(sky_cen / sky_sigma > (exp_res - (0.1 * exp_res)))
+                                       / len(np.ravel(sky_cen)))
+        else:
+            red_spec_resol = np.round(100 * np.sum(sky_cen / sky_sigma > (exp_res - (0.1 * exp_res)))
+                                      / len(np.ravel(sky_cen)))
+
         if np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res))) / len(np.ravel(sky_cen)) > 0.5:
             status_color = 'limegreen'
-            if single_file[0].header['CAMERA'] == 'WEAVEBLUE':
-                blue_spec_resol = np.round(100 * np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res)))
-                                           / len(np.ravel(sky_cen)))
-            else:
-                red_spec_resol = np.round(100 * np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res)))
-                                           / len(np.ravel(sky_cen)))
         elif np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res))) / len(np.ravel(sky_cen)) > 0.3:
             status_color = 'yellow'
-            if single_file[0].header['CAMERA'] == 'WEAVEBLUE':
-                blue_spec_resol = np.round(100 * np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res)))
-                                           / len(np.ravel(sky_cen)))
-            else:
-                red_spec_resol = np.round(100 * np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res)))
-                                           / len(np.ravel(sky_cen)))
         else:
             status_color = 'darkred'
-            if single_file[0].header['CAMERA'] == 'WEAVEBLUE':
-                blue_spec_resol = np.round(100 * np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res)))
-                                           / len(np.ravel(sky_cen)))
-            else:
-                red_spec_resol = np.round(100 * np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res)))
-                                           / len(np.ravel(sky_cen)))
 
         ax_t.text(
             x_axes, y_axes,
@@ -2114,8 +2103,8 @@ def html_plots(ob, redshift, args):
         f.write(blue_cube[0].header['MODE']+'\n')
         f.write(date+'\n')
         f.write(blue_cube[0].header['TRIMESTE']+'\n')
-        f.write(blue_spec_resol+'\n')
-        f.write(red_spec_resol+'\n')
+        f.write(str(blue_spec_resol)+'\n')
+        f.write(str(red_spec_resol)+'\n')
 
     os.makedirs(qc_plot_dir, exist_ok=True)
     os.system('mv ' + str(blue_cube[0].header['OBID']) + '*.png ' + qc_plot_dir + '/.')
