@@ -815,6 +815,8 @@ def html_plots(ob, redshift, args):
         else:
             red_wave_calib = np.round(100 * np.sum(abs(sky_cal_func) > 0.2 * spec_pix) / len(sky_cal_func))
 
+        breakpoint()
+
         # ------ estimate SNR using the ETC
 
         if (single_file[1].name[:-5] == 'BLUE') & (blue_cube[0].header['MODE'] == 'LOWRES'):
