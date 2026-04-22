@@ -389,6 +389,9 @@ def html_plots(ob, redshift, args):
     red_spec_resol = np.nan
     blue_spec_resol = np.nan
 
+    red_fiber_through = np.nan
+    blue_fiber_through = np.nan
+
     axis_header = fits.Header()
     axis_header['NAXIS1'] = blue_cube[1].header['NAXIS1']
     axis_header['NAXIS2'] = blue_cube[1].header['NAXIS2']
@@ -724,39 +727,13 @@ def html_plots(ob, redshift, args):
         ax.set_ylabel(r'R [$\lambda$ / FWHM]')
         ax.set_xlabel(r'$\lambda$ [$\AA$]')
 
-        # analyzing spectral resolution (green, yellow, red)
-        plt.draw()
-
-        bbox = t.get_window_extent()
-
-        inv = ax_t.transAxes.inverted()
-        x_axes, y_axes = inv.transform((bbox.x1 + 10, bbox.y0 + bbox.height + 4 / 2))
-
+        # analyzing spectral resolution parameter
         if single_file[0].header['CAMERA'] == 'WEAVEBLUE':
             blue_spec_resol = np.round(100 * np.sum(sky_cen / sky_sigma > (exp_res - (0.1 * exp_res)))
                                        / len(np.ravel(sky_cen)))
         else:
             red_spec_resol = np.round(100 * np.sum(sky_cen / sky_sigma > (exp_res - (0.1 * exp_res)))
                                       / len(np.ravel(sky_cen)))
-
-        if np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res))) / len(np.ravel(sky_cen)) > 0.5:
-            status_color = 'limegreen'
-        elif np.sum(sky_cen / sky_sigma > (exp_res - (0.1*exp_res))) / len(np.ravel(sky_cen)) > 0.3:
-            status_color = 'yellow'
-        else:
-            status_color = 'darkred'
-
-        ax_t.text(
-            x_axes, y_axes,
-            "●",
-            color=status_color,
-            fontsize=18,
-            fontweight="bold",
-            ha="left",
-            va="center",
-            transform=ax_t.transAxes,
-            clip_on=False
-        )
 
         # saving spectral resolution text file
 
@@ -775,21 +752,28 @@ def html_plots(ob, redshift, args):
 
         # ------- plotting the fiber throughput
 
+        sky_flux_func = sky_flux_med/np.median(sky_flux_med)
+
         ax = plt.subplot(gs[2 + (5 * k), :])
-        ax.plot(sky_flux_med / np.median(sky_flux_med), color=single_file[1].name[:-5], alpha=0.5)
+        ax.plot(sky_flux_func, color=single_file[1].name[:-5], alpha=0.5)
         ax.set_xlabel('fiber #')
         ax.set_ylabel('relative median sky lines flux')
         ax.set_ylim([0.7, 1.3])
         ax.set_title('fiber throughput')
-        ft_m = np.median(sky_flux_med / np.median(sky_flux_med))
-        ft_p1_l, ft_p1_h = np.percentile(sky_flux_med / np.median(sky_flux_med), [15.87, 84.13])
+        ft_m = np.median(sky_flux_func)
+        ft_p1_l, ft_p1_h = np.percentile(sky_flux_func, [15.87, 84.13])
         ft_p1 = (ft_p1_h - ft_p1_l) / 2
-        ft_p3_l, ft_p3_h = np.percentile(sky_flux_med / np.median(sky_flux_med), [0.135, 99.865])
+        ft_p3_l, ft_p3_h = np.percentile(sky_flux_func, [0.135, 99.865])
         ft_p3 = (ft_p3_h - ft_p3_l) / 2
         ax.annotate(r'median = ' + f"{ft_m:.2f}", (0.9, 0.9), xycoords='axes fraction')
         ax.annotate(r'84 perc = ' + f"{ft_p1:.2f}", (0.9, 0.8), xycoords='axes fraction')
         ax.annotate(r'99 perc = ' + f"{ft_p3:.2f}", (0.9, 0.7), xycoords='axes fraction')
         ax.grid()
+
+        if single_file[0].header['CAMERA'] == 'WEAVEBLUE':
+            blue_fiber_through = np.round(100 * np.sum((sky_flux_func > 0.99) & (sky_flux_func < 1.01)))
+        else:
+            red_fiber_through = np.round(100 * np.sum((sky_flux_func > 0.99) & (sky_flux_func < 1.01)))
 
         # ------- plotting the wavelength solution
 
@@ -2105,6 +2089,8 @@ def html_plots(ob, redshift, args):
         f.write(blue_cube[0].header['TRIMESTE']+'\n')
         f.write(str(blue_spec_resol)+'\n')
         f.write(str(red_spec_resol)+'\n')
+        f.write(str(blue_fiber_through)+'\n')
+        f.write(str(red_fiber_through)+'\n')
 
     os.makedirs(qc_plot_dir, exist_ok=True)
     os.system('mv ' + str(blue_cube[0].header['OBID']) + '*.png ' + qc_plot_dir + '/.')
