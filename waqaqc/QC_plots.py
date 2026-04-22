@@ -386,11 +386,11 @@ def html_plots(ob, redshift, args):
     snr_r = snr_r * np.sqrt(spec_pix)
 
     # setting parameters to be passed as QC parameters
-    red_spec_resol = np.nan
-    blue_spec_resol = np.nan
+    red_spec_resol = 0
+    blue_spec_resol = 0
 
-    red_fiber_through = np.nan
-    blue_fiber_through = np.nan
+    red_fiber_through = 0
+    blue_fiber_through = 0
 
     axis_header = fits.Header()
     axis_header['NAXIS1'] = blue_cube[1].header['NAXIS1']
