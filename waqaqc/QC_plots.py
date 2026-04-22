@@ -388,9 +388,10 @@ def html_plots(ob, redshift, args):
     # setting parameters to be passed as QC parameters
     red_spec_resol = 0
     blue_spec_resol = 0
-
     red_fiber_through = 0
     blue_fiber_through = 0
+    red_wave_calib = 0
+    blue_wave_calib = 0
 
     axis_header = fits.Header()
     axis_header['NAXIS1'] = blue_cube[1].header['NAXIS1']
@@ -777,8 +778,10 @@ def html_plots(ob, redshift, args):
 
         # ------- plotting the wavelength solution
 
+        sky_cal_func = np.nanmedian(sky_cen - np.nanmedian(sky_cen, axis=0), axis = 1)
+
         ax = plt.subplot(gs[3 + (5 * k), :])
-        ax.plot(np.nanmedian(sky_cen - np.nanmedian(sky_cen, axis=0), axis=1), color=single_file[1].name[:-5],
+        ax.plot(sky_cal_func, color=single_file[1].name[:-5],
                 alpha=0.5, label='sky lines')
         if single_file[0].header['CAMERA'] == 'WEAVEBLUE' and len(warc_cen_blue_ext) > 0:
             ax.plot(np.nanmedian(warc_cen_blue_ext - np.nanmedian(warc_cen_blue_ext, axis=0), axis=1), color='orange',
@@ -790,21 +793,25 @@ def html_plots(ob, redshift, args):
         ax.set_ylabel(r'relative sky line offsets [$\AA$]')
         ax.set_ylim([-0.5, 0.5])
         ax.set_title('wavelength calibration')
-        ws_sky_m = np.median(np.nanmedian(sky_cen - np.nanmedian(sky_cen, axis=0), axis=1))
+        ws_sky_m = np.median(sky_cal_func)
         ws_warc_m = np.median(np.nanmedian(warc_cen_blue_ext - np.nanmedian(warc_cen_blue_ext, axis=0)))
-        ws_sky_p1_l, ws_sky_p1_h = np.percentile(np.nanmedian(sky_cen -
-                                                              np.nanmedian(sky_cen, axis=0), axis=1), [15.87, 84.13])
+        ws_sky_p1_l, ws_sky_p1_h = np.percentile(sky_cal_func, [15.87, 84.13])
         ws_sky_p1 = (ws_sky_p1_h - ws_sky_p1_l) / 2
         ws_warc_p1_l, ws_warc_p1_h = np.percentile(np.nanmedian(warc_cen_blue_ext -
                                                                 np.nanmedian(warc_cen_blue_ext, axis=0)),
                                                    [15.87, 84.13])
         ws_warc_p1 = (ws_warc_p1_h - ws_warc_p1_l) / 2
-        ax.annotate(r'sky median = ' + f"{ws_sky_m:.2f}" + r' $\pm$ ' + f"{ws_sky_p1:.2f}"
+        ax.annotate(r'sky median = ' + f"{ws_sky_m:.3f}" + r' $\pm$ ' + f"{ws_sky_p1:.3f}"
                     + r'$\AA$', (0.1, 0.2), xycoords='axes fraction')
-        ax.annotate(r'warc median = ' + f"{ws_warc_m:.2f}" + r' $\pm$ ' + f"{ws_warc_p1:.2f}"
+        ax.annotate(r'warc median = ' + f"{ws_warc_m:.3f}" + r' $\pm$ ' + f"{ws_warc_p1:.3f}"
                     + r'$\AA$', (0.1, 0.1), xycoords='axes fraction')
         ax.grid()
         ax.legend()
+
+        if single_file[0].header['CAMERA'] == 'WEAVEBLUE':
+            blue_wave_calib = np.round(100 * np.sum(abs(sky_cal_func) > 0.2 * spec_pix))
+        else:
+            red_wave_calib = np.round(100 * np.sum(abs(sky_cal_func) > 0.2 * spec_pix))
 
         # ------ estimate SNR using the ETC
 
@@ -2091,6 +2098,8 @@ def html_plots(ob, redshift, args):
         f.write(str(red_spec_resol)+'\n')
         f.write(str(blue_fiber_through)+'\n')
         f.write(str(red_fiber_through)+'\n')
+        f.write(str(blue_wave_calib)+'\n')
+        f.write(str(red_wave_calib)+'\n')
 
     os.makedirs(qc_plot_dir, exist_ok=True)
     os.system('mv ' + str(blue_cube[0].header['OBID']) + '*.png ' + qc_plot_dir + '/.')
