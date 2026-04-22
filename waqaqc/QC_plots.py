@@ -772,9 +772,11 @@ def html_plots(ob, redshift, args):
         ax.grid()
 
         if single_file[0].header['CAMERA'] == 'WEAVEBLUE':
-            blue_fiber_through = np.round(100 * np.sum((sky_flux_func > 0.99) & (sky_flux_func < 1.01)))
+            blue_fiber_through = np.round(100 * np.sum((sky_flux_func > 0.99) & (sky_flux_func < 1.01))
+                                          / len(sky_flux_func))
         else:
-            red_fiber_through = np.round(100 * np.sum((sky_flux_func > 0.99) & (sky_flux_func < 1.01)))
+            red_fiber_through = np.round(100 * np.sum((sky_flux_func > 0.99) & (sky_flux_func < 1.01))
+                                          / len(sky_flux_func))
 
         # ------- plotting the wavelength solution
 
@@ -809,9 +811,9 @@ def html_plots(ob, redshift, args):
         ax.legend()
 
         if single_file[0].header['CAMERA'] == 'WEAVEBLUE':
-            blue_wave_calib = np.round(100 * np.sum(abs(sky_cal_func) > 0.2 * spec_pix))
+            blue_wave_calib = np.round(100 * np.sum(abs(sky_cal_func) > 0.2 * spec_pix) / len(sky_cal_func))
         else:
-            red_wave_calib = np.round(100 * np.sum(abs(sky_cal_func) > 0.2 * spec_pix))
+            red_wave_calib = np.round(100 * np.sum(abs(sky_cal_func) > 0.2 * spec_pix) / len(sky_cal_func))
 
         # ------ estimate SNR using the ETC
 
