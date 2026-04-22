@@ -811,11 +811,9 @@ def html_plots(ob, redshift, args):
         ax.legend()
 
         if single_file[0].header['CAMERA'] == 'WEAVEBLUE':
-            blue_wave_calib = np.round(100 * np.sum(abs(sky_cal_func) > 0.2 * spec_pix) / len(sky_cal_func))
+            blue_wave_calib = np.round(100 * np.sum(abs(sky_cal_func) < 0.2 * spec_pix) / len(sky_cal_func))
         else:
-            red_wave_calib = np.round(100 * np.sum(abs(sky_cal_func) > 0.2 * spec_pix) / len(sky_cal_func))
-
-        breakpoint()
+            red_wave_calib = np.round(100 * np.sum(abs(sky_cal_func) < 0.2 * spec_pix) / len(sky_cal_func))
 
         # ------ estimate SNR using the ETC
 
