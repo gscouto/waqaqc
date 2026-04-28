@@ -132,11 +132,11 @@ def specs(ob, args):
 
         if args.el_flag == 1:
             os.system('ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' +
-                      fwhm_str + ' --SSP_par parameters_stellar_red --line_par parameters_eline_red --parallel ' +
-                      str(args.nproc) + ' --verbose')
+                      fwhm_str + ' --SSP_par parameters_stellar_red_'+ob+' --line_par parameters_eline_red_'+ob+''
+                      ' --parallel ' + str(args.nproc) + ' --verbose')
         else:
             os.system('ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' + fwhm_str +
-                      ' --SSP_par parameters_stellar_red --parallel ' + str(args.nproc) + ' --verbose')
+                      ' --SSP_par parameters_stellar_red_'+ob+' --parallel ' + str(args.nproc) + ' --verbose')
 
         if args.boot_flag == 1:
             print('')
@@ -144,12 +144,12 @@ def specs(ob, args):
 
             os.system(
                 'ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' + fwhm_str +
-                ' --SSP_par parameters_stellar_red --line_par parameters_eline_red --bootstraps 100 --modkeep 80 '
-                '--parallel ' + str(args.nproc) + ' --verbose')
+                ' --SSP_par parameters_stellar_red_'+ob+' --line_par parameters_eline_red_'+ob+' --bootstraps 100 '
+                '--modkeep 80 --parallel ' + str(args.nproc) + ' --verbose')
 
         os.system('mv ' + gal + '*.fits ' + res_dir + '/.')
-        os.system('cp excl_red* lines_red.fit par_red.lines parameters_eline_red '
-                                 'parameters_stellar_red ' + res_dir + '/.')
+        os.system('cp excl_red_'+ob+'* lines_red_'+ob+'.fit par_red_'+ob+'.lines parameters_eline_red_'+ob+' '
+                  'parameters_stellar_red_'+ob+' ' + res_dir + '/.')
 
     # =================== running for blue cube ===========================
 
@@ -255,11 +255,11 @@ def specs(ob, args):
 
         if args.el_flag == 1:
             os.system('ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' +
-                      fwhm_str + ' --SSP_par parameters_stellar_blue --line_par parameters_eline_blue --parallel ' +
-                      str(args.nproc) + ' --verbose')
+                      fwhm_str + ' --SSP_par parameters_stellar_blue_'+ob+' --line_par parameters_eline_blue_'+ob+''
+                      ' --parallel ' + str(args.nproc) + ' --verbose')
         else:
             os.system('ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' + fwhm_str +
-                      ' --SSP_par parameters_stellar_blue --parallel ' + str(args.nproc) + ' --verbose')
+                      ' --SSP_par parameters_stellar_blue_'+ob+' --parallel ' + str(args.nproc) + ' --verbose')
 
         if args.boot_flag == 1:
             print('')
@@ -267,12 +267,12 @@ def specs(ob, args):
 
             os.system(
                 'ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' + fwhm_str +
-                ' --SSP_par parameters_stellar_blue --line_par parameters_eline_blue --bootstraps 100 --modkeep 80 '
-                '--parallel ' + str(args.nproc) + ' --verbose')
+                ' --SSP_par parameters_stellar_blue_'+ob+' --line_par parameters_eline_blue_'+ob+' --bootstraps 100 '
+                '--modkeep 80 --parallel ' + str(args.nproc) + ' --verbose')
 
         os.system('mv ' + gal + '*.fits ' + res_dir + '/.')
-        os.system('cp excl_blue* lines_blue.fit par_blue.lines parameters_eline_blue '
-                                 'parameters_stellar_blue ' + res_dir + '/.')
+        os.system('cp excl_blue_'+ob+'* lines_blue_'+ob+'.fit par_blue_'+ob+'.lines parameters_eline_blue_'+ob+' '
+                  'parameters_stellar_blue_'+ob+' ' + res_dir + '/.')
 
     # =================== running for APS ===========================
 
@@ -357,7 +357,7 @@ def specs(ob, args):
 
         rss_ima = fits.HDUList([fits.PrimaryHDU(data=rss_data, header=rss_head),
                                 fits.ImageHDU(data=rss_err, header=rss_head, name='ERROR')])
-        
+
         if args.vorbin_flag == 1:
             f_name = 'aps_vorbin'
         if args.vorbin_flag == 0:
@@ -377,11 +377,11 @@ def specs(ob, args):
 
         if args.el_flag == 1:
             os.system('ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' + fwhm_str +
-                      ' --SSP_par parameters_stellar_aps --line_par parameters_eline_aps --parallel ' +
+                      ' --SSP_par parameters_stellar_aps_'+ob+' --line_par parameters_eline_aps_'+ob+' --parallel ' +
                       str(args.nproc) + ' --verbose')
         else:
             os.system('ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' + fwhm_str +
-                      ' --SSP_par parameters_stellar_aps --parallel ' + str(args.nproc) + ' --verbose')
+                      ' --SSP_par parameters_stellar_aps_'+ob+' --parallel ' + str(args.nproc) + ' --verbose')
 
         if args.boot_flag == 1:
             print('')
@@ -389,9 +389,9 @@ def specs(ob, args):
 
             os.system(
                 'ParadiseApp.py ' + gal + '_' + f_name + '_RSS.fits ' + gal + '_' + f_name + ' ' + fwhm_str +
-                ' --SSP_par parameters_stellar_aps --line_par parameters_eline_aps --bootstraps 100 --modkeep 80 '
-                '--parallel ' + str(args.nproc) + ' --verbose')
+                ' --SSP_par parameters_stellar_aps_'+ob+' --line_par parameters_eline_aps_'+ob+' '
+                '--bootstraps 100 --modkeep 80 --parallel ' + str(args.nproc) + ' --verbose')
 
         os.system('mv ' + gal + '*.fits ' + res_dir + '/.')
-        os.system('cp excl_aps* lines_aps.fit par_aps.lines parameters_eline_aps parameters_stellar_aps '
-                  + res_dir + '/.')
+        os.system('cp excl_aps_'+ob+'* lines_aps_'+ob+'.fit par_aps_'+ob+'.lines parameters_eline_aps_'+ob+' '
+                  'parameters_stellar_aps_'+ob+' '+res_dir+'/.')

@@ -33,7 +33,7 @@ def pp(ob, redshift, args):
 
         vel = round(vel + (const.c.to('km/s').value * z), 1)
 
-        f = open("parameters_stellar_blue", "w+")
+        f = open('parameters_stellar_blue_'+ob, "w+")
 
         f.write(
             'tmpldir            ' + args.temp_path + '          !Directory with template spec (string)\n')
@@ -63,9 +63,9 @@ def pp(ob, redshift, args):
             'oversampling       2                                           '
             '!Oversampling in log-wavelength space (int)\n')
         f.write(
-            'excl_fit           excl_blue.fit                                    '
+            'excl_fit           excl_blue_'+ob+'.fit                                    '
             '!Exclude wavelength region during the fitting (string)\n')
-        f.write('excl_cont          excl_blue.cont                                   '
+        f.write('excl_cont          excl_blue_'+ob+'.cont                                   '
                 '!Exclude wavelength region during the continuum '
                 'normalization (string)\n')
         f.write(
@@ -111,14 +111,14 @@ def pp(ob, redshift, args):
         # =======
         # create emission line parameters file
 
-        f = open("parameters_eline_blue", "w+")
+        f = open('parameters_eline_blue_'+ob, "w+")
 
-        f.write('eCompFile		par_blue.lines				!name of the line parameter file, None '
+        f.write('eCompFile		par_blue_'+ob+'.lines				!name of the line parameter file, None '
                 'if no emission lines to be fitted\n')
         f.write(
             'vel_guess		' + str(
                 vel) + '				!rough velocity guess for the object in km/s as cz (float)\n')
-        f.write('line_fit_region	lines_blue.fit				'
+        f.write('line_fit_region	lines_blue_'+ob+'.fit				'
                 '!Wavelength regions considered during the fitting '
                 '(string)\n')
         f.write('efit_method		leastsq					!method for line parameter fitting (leastsq/simplex)\n')
@@ -135,8 +135,8 @@ def pp(ob, redshift, args):
 
         # =======
         # create par.lines and lines.fit
-        f = open("lines_blue.fit", "w+")
-        g = open("par_blue.lines", "w+")
+        f = open('lines_blue_'+ob+'.fit', "w+")
+        g = open('par_blue_'+ob+'.lines', "w+")
 
         f.write('[rest-frame]\n')
 
@@ -205,7 +205,7 @@ def pp(ob, redshift, args):
 
         # =======
         # create excl.cont
-        h = open("excl_blue.cont", "w+")
+        h = open('excl_blue_'+ob+'.cont', "w+")
 
         h.write('[rest-frame]\n')
         if z < 1.617:
@@ -239,7 +239,7 @@ def pp(ob, redshift, args):
 
         # =======
         # create excl.fit
-        f = open("excl_blue.fit", "w+")
+        f = open('excl_blue_'+ob+'.fit', "w+")
 
         f.write('[rest-frame]\n')
         f.write('3712 3742    !OII, H13\n')
@@ -271,7 +271,7 @@ def pp(ob, redshift, args):
         # =======
         # create stellar parameters file
 
-        f = open("parameters_stellar_red", "w+")
+        f = open('parameters_stellar_red_'+ob, "w+")
 
         f.write(
             'tmpldir            ' + args.temp_path + '          !Directory with template spec (string)\n')
@@ -302,9 +302,9 @@ def pp(ob, redshift, args):
             'oversampling       2                                           '
             '!Oversampling in log-wavelength space (int)\n')
         f.write(
-            'excl_fit           excl_red.fit                                    '
+            'excl_fit           excl_red_'+ob+'.fit                                    '
             '!Exclude wavelength region during the fitting (string)\n')
-        f.write('excl_cont          excl_red.cont                                   '
+        f.write('excl_cont          excl_red_'+ob+'.cont                                   '
                 '!Exclude wavelength region during the continuum '
                 'normalization (string)\n')
         f.write(
@@ -350,14 +350,14 @@ def pp(ob, redshift, args):
         # =======
         # create emission line parameters file
 
-        f = open("parameters_eline_red", "w+")
+        f = open('parameters_eline_red_'+ob, "w+")
 
-        f.write('eCompFile		par_red.lines				!name of the line parameter file, None '
+        f.write('eCompFile		par_red_'+ob+'.lines				!name of the line parameter file, None '
                 'if no emission lines to be fitted\n')
         f.write(
             'vel_guess		' + str(
                 vel) + '				!rough velocity guess for the object in km/s as cz (float)\n')
-        f.write('line_fit_region	lines_red.fit				'
+        f.write('line_fit_region	lines_red_'+ob+'.fit				'
                 '!Wavelength regions considered during the fitting '
                 '(string)\n')
         f.write('efit_method		leastsq					!method for line parameter fitting (leastsq/simplex)\n')
@@ -374,8 +374,8 @@ def pp(ob, redshift, args):
 
         # =======
         # create par.lines and lines.fit
-        f = open("lines_red.fit", "w+")
-        g = open("par_red.lines", "w+")
+        f = open('lines_red_'+ob+'.fit', "w+")
+        g = open('par_red_'+ob+'.lines', "w+")
 
         f.write('[rest-frame]\n')
 
@@ -446,7 +446,7 @@ def pp(ob, redshift, args):
 
         # =======
         # create excl.cont
-        h = open("excl_red.cont", "w+")
+        h = open('excl_red_'+ob+'.cont', "w+")
 
         h.write('[rest-frame]\n')
 
@@ -495,7 +495,7 @@ def pp(ob, redshift, args):
 
         # =======
         # create excl.fit
-        f = open("excl_red.fit", "w+")
+        f = open('excl_red_'+ob+'.fit', "w+")
 
         f.write('[rest-frame]\n')
         f.write('5856 5926    !HeI, ?\n')
@@ -526,7 +526,7 @@ def pp(ob, redshift, args):
         # =======
         # create stellar parameters file
 
-        f = open("parameters_stellar_aps", "w+")
+        f = open('parameters_stellar_aps_'+ob, "w+")
 
         f.write(
             'tmpldir            ' + args.temp_path + '          !Directory with template spec (string)\n')
@@ -556,9 +556,9 @@ def pp(ob, redshift, args):
             'oversampling       2                                           '
             '!Oversampling in log-wavelength space (int)\n')
         f.write(
-            'excl_fit           excl_aps.fit                                    '
+            'excl_fit           excl_aps_'+ob+'.fit                                    '
             '!Exclude wavelength region during the fitting (string)\n')
-        f.write('excl_cont          excl_aps.cont                                   '
+        f.write('excl_cont          excl_aps_'+ob+'.cont                                   '
                 '!Exclude wavelength region during the continuum '
                 'normalization (string)\n')
         f.write(
@@ -604,14 +604,14 @@ def pp(ob, redshift, args):
         # =======
         # create emission line parameters file
 
-        f = open("parameters_eline_aps", "w+")
+        f = open('parameters_eline_aps_'+ob, "w+")
 
-        f.write('eCompFile		par_aps.lines				!name of the line parameter file, None '
+        f.write('eCompFile		par_aps_'+ob+'.lines				!name of the line parameter file, None '
                 'if no emission lines to be fitted\n')
         f.write(
             'vel_guess		' + str(
                 vel) + '				!rough velocity guess for the object in km/s as cz (float)\n')
-        f.write('line_fit_region	lines_aps.fit				'
+        f.write('line_fit_region	lines_aps_'+ob+'.fit				'
                 '!Wavelength regions considered during the fitting '
                 '(string)\n')
         f.write('efit_method		leastsq					!method for line parameter fitting (leastsq/simplex)\n')
@@ -628,8 +628,8 @@ def pp(ob, redshift, args):
 
         # =======
         # create par.lines and lines.fit
-        f = open("lines_aps.fit", "w+")
-        g = open("par_aps.lines", "w+")
+        f = open('lines_aps_'+ob+'.fit', "w+")
+        g = open('par_aps_'+ob+'.lines', "w+")
 
         f.write('[rest-frame]\n')
 
@@ -761,7 +761,7 @@ def pp(ob, redshift, args):
 
         # =======
         # create excl.cont
-        h = open("excl_aps.cont", "w+")
+        h = open('excl_aps_'+ob+'.cont', "w+")
 
         h.write('[rest-frame]\n')
 
@@ -814,7 +814,7 @@ def pp(ob, redshift, args):
 
         # =======
         # create excl.fit
-        f = open("excl_aps.fit", "w+")
+        f = open('excl_aps_'+ob+'.fit', "w+")
 
         f.write('[rest-frame]\n')
         f.write('3712 3742    !OII, H13\n')
