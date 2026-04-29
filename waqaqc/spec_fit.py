@@ -148,7 +148,7 @@ def specs(ob, args):
                 '--modkeep 80 --parallel ' + str(args.nproc) + ' --verbose')
 
         os.system('mv ' + gal + '*.fits ' + res_dir + '/.')
-        os.system('cp excl_red_'+ob+'* lines_red_'+ob+'.fit par_red_'+ob+'.lines parameters_eline_red_'+ob+' '
+        os.system('mv excl_red_'+ob+'* lines_red_'+ob+'.fit par_red_'+ob+'.lines parameters_eline_red_'+ob+' '
                   'parameters_stellar_red_'+ob+' ' + res_dir + '/.')
 
     # =================== running for blue cube ===========================
@@ -271,7 +271,7 @@ def specs(ob, args):
                 '--modkeep 80 --parallel ' + str(args.nproc) + ' --verbose')
 
         os.system('mv ' + gal + '*.fits ' + res_dir + '/.')
-        os.system('cp excl_blue_'+ob+'* lines_blue_'+ob+'.fit par_blue_'+ob+'.lines parameters_eline_blue_'+ob+' '
+        os.system('mv excl_blue_'+ob+'* lines_blue_'+ob+'.fit par_blue_'+ob+'.lines parameters_eline_blue_'+ob+' '
                   'parameters_stellar_blue_'+ob+' ' + res_dir + '/.')
 
     # =================== running for APS ===========================
@@ -393,5 +393,5 @@ def specs(ob, args):
                 '--bootstraps 100 --modkeep 80 --parallel ' + str(args.nproc) + ' --verbose')
 
         os.system('mv ' + gal + '*.fits ' + res_dir + '/.')
-        os.system('cp excl_aps_'+ob+'* lines_aps_'+ob+'.fit par_aps_'+ob+'.lines parameters_eline_aps_'+ob+' '
+        os.system('mv excl_aps_'+ob+'* lines_aps_'+ob+'.fit par_aps_'+ob+'.lines parameters_eline_aps_'+ob+' '
                   'parameters_stellar_aps_'+ob+' '+res_dir+'/.')

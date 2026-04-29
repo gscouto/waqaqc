@@ -2,12 +2,9 @@ import numpy as np
 from astropy.io import fits
 import os
 from astropy.table import Table
-import configparser
 
 
 def tab_cre(ob, args):
-    # config = configparser.ConfigParser()
-    # config.read(self)
 
     file_dir = args.data_path + ob + '/'
 
@@ -55,7 +52,7 @@ def tab_cre(ob, args):
 
         vorbin_map = fits.getdata(gal_dir + '/vorbin_map_blue.fits')
 
-        params_stel = open(res_dir + '/parameters_stellar_blue', 'r')
+        params_stel = open(res_dir + '/parameters_stellar_blue_'+ob, 'r')
         lines = params_stel.readlines()
 
         stelt_t = Table(stelt_file[1].data)
@@ -373,7 +370,7 @@ def tab_cre(ob, args):
 
         vorbin_map = fits.getdata(gal_dir + '/vorbin_map_red.fits')
 
-        params_stel = open(res_dir + '/parameters_stellar_red', 'r')
+        params_stel = open(res_dir + '/parameters_stellar_red_'+ob, 'r')
         lines = params_stel.readlines()
 
         stelt_t = Table(stelt_file[1].data)
@@ -695,7 +692,7 @@ def tab_cre(ob, args):
         # vorbin_map = fits.getdata(gal_dir + '/vorbin_map_aps.fits')
         vorbin_map = fits.getdata(gal_dir + '/vorbin_map.fits')
 
-        params_stel = open(res_dir + '/parameters_stellar_aps', 'r')
+        params_stel = open(res_dir + '/parameters_stellar_aps_'ob, 'r')
         lines = params_stel.readlines()
 
         stelt_t = Table(stelt_file[1].data)
