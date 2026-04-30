@@ -692,7 +692,7 @@ def tab_cre(ob, args):
         # vorbin_map = fits.getdata(gal_dir + '/vorbin_map_aps.fits')
         vorbin_map = fits.getdata(gal_dir + '/vorbin_map.fits')
 
-        params_stel = open(res_dir + '/parameters_stellar_aps_'ob, 'r')
+        params_stel = open(res_dir + '/parameters_stellar_aps_'+ob, 'r')
         lines = params_stel.readlines()
 
         stelt_t = Table(stelt_file[1].data)
