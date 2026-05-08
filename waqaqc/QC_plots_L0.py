@@ -758,7 +758,8 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     avs = np.array([np.round(np.mean(resol_blue), 2), np.round(np.mean(resol_red), 2), np.round(np.mean(resol_aps), 2)])
     np.savetxt(gal_dir + '/resol_table_mean.txt', np.column_stack((modes, avs)), fmt='%s')
 
-    return blue_spec_resol, red_spec_resol, blue_fiber_through, red_fiber_through, blue_wave_calib, red_wave_calib
+    return fig_l0, blue_spec_resol, red_spec_resol, blue_fiber_through, red_fiber_through, blue_wave_calib, \
+           red_wave_calib
 
 
 def polynom(x, a, b, c):

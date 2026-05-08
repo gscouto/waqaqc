@@ -147,7 +147,7 @@ def html_plots(ob, redshift, args):
         aps_files = [x for x in os.listdir(file_dir) if 'LWVE' in x]
         largest_file = max(aps_files, key=lambda fl: os.path.getsize(os.path.join(file_dir, fl)))
         aps_file = fits.open(os.path.join(file_dir, largest_file))
-        redshift = round(aps_file['PATCH_TABLE'].data['Z'][0],6)
+        redshift = round(aps_file['PATCH_TABLE'].data['Z'][0], 6)
 
     global blue_cube_data, blue_cube_err, red_cube_data, red_cube_err, aps_cube_data, aps_cube_err
 
@@ -268,7 +268,7 @@ def html_plots(ob, redshift, args):
     file_list = np.sort([x for x in os.listdir(file_dir) if ("APS" not in x) & ('single' in x)])  # single files list
     mode = blue_cube[0].header['MODE']
     warc_list = np.sort([x for x in os.listdir(file_dir) if ('warc' in x) and
-                        fits.getheader(os.path.join(file_dir, x), 0).get('MODE') == mode])  # WARC files list
+                         fits.getheader(os.path.join(file_dir, x), 0).get('MODE') == mode])  # WARC files list
 
     # ==================================================================
 
@@ -278,7 +278,8 @@ def html_plots(ob, redshift, args):
     L0_results = QC_plots_L0.plots(blue_cube, file_dir, gal_dir, file_list, warc_list,
                                    output_str, redshift, spec_pix, args)
 
-    blue_spec_resol, red_spec_resol, blue_fiber_through, red_fiber_through, blue_wave_calib, red_wave_calib = L0_results
+    fig_l0, blue_spec_resol, red_spec_resol, blue_fiber_through, red_fiber_through, \
+        blue_wave_calib, red_wave_calib = L0_results
 
     # ==================================================================
 
@@ -1010,22 +1011,26 @@ def html_plots(ob, redshift, args):
                 try:
                     binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_a, y_t_a, sgn_tt_a,
                                                                                               rms_tt_a,
-                                                                                              targetSN, pixelsize=pixelsize,
+                                                                                              targetSN,
+                                                                                              pixelsize=pixelsize,
                                                                                               plot=0,
-                                                                                              quiet=1, sn_func=sn_func_aps)
+                                                                                              quiet=1,
+                                                                                              sn_func=sn_func_aps)
                     vorbin_sn = targetSN
                 except:
                     binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_a, y_t_a, sgn_tt_a,
                                                                                               rms_tt_a,
                                                                                               10, pixelsize=pixelsize,
                                                                                               plot=0,
-                                                                                              quiet=1, sn_func=sn_func_aps)
+                                                                                              quiet=1,
+                                                                                              sn_func=sn_func_aps)
                     vorbin_sn = 10.
             else:
                 try:
                     binNum, xNode, yNode, xBar, yBar, sn, nPixels, scale = voronoi_2d_binning(x_t_a, y_t_a, sgn_tt_a,
                                                                                               rms_tt_a,
-                                                                                              targetSN, pixelsize=pixelsize,
+                                                                                              targetSN,
+                                                                                              pixelsize=pixelsize,
                                                                                               plot=0,
                                                                                               quiet=1)
                     vorbin_sn = targetSN
@@ -1133,7 +1138,8 @@ def html_plots(ob, redshift, args):
 
         if 'V' in ext_names:
             ax = plt.subplot(gs[subplots_rows[1], 0])
-            im = ax.imshow(aps_maps['V'].data, origin='lower', cmap='bwr', vmin=np.nanpercentile(aps_maps['V'].data, 10),
+            im = ax.imshow(aps_maps['V'].data, origin='lower', cmap='bwr',
+                           vmin=np.nanpercentile(aps_maps['V'].data, 10),
                            vmax=np.nanpercentile(aps_maps['V'].data, 90))
             ax.set_title(r'APS V')
             ax.set_xlabel('X [px]')
@@ -1343,18 +1349,18 @@ def html_plots(ob, redshift, args):
         obj_nme = re.sub(r"\s+NED\d+$", "", obj_nme)
 
     with open(output_str + ".txt", "w") as f:
-        f.write(gal_name+'\n')
+        f.write(gal_name + '\n')
         f.write(obj_nme + '\n')
-        f.write(str(blue_cube[0].header['OBID'])+'\n')
-        f.write(blue_cube[0].header['MODE']+'\n')
-        f.write(date+'\n')
-        f.write(blue_cube[0].header['TRIMESTE']+'\n')
-        f.write(str(blue_spec_resol)+'\n')
-        f.write(str(red_spec_resol)+'\n')
-        f.write(str(blue_fiber_through)+'\n')
-        f.write(str(red_fiber_through)+'\n')
-        f.write(str(blue_wave_calib)+'\n')
-        f.write(str(red_wave_calib)+'\n')
+        f.write(str(blue_cube[0].header['OBID']) + '\n')
+        f.write(blue_cube[0].header['MODE'] + '\n')
+        f.write(date + '\n')
+        f.write(blue_cube[0].header['TRIMESTE'] + '\n')
+        f.write(str(blue_spec_resol) + '\n')
+        f.write(str(red_spec_resol) + '\n')
+        f.write(str(blue_fiber_through) + '\n')
+        f.write(str(red_fiber_through) + '\n')
+        f.write(str(blue_wave_calib) + '\n')
+        f.write(str(red_wave_calib) + '\n')
 
     os.makedirs(qc_plot_dir, exist_ok=True)
     os.system('mv ' + str(blue_cube[0].header['OBID']) + '*.png ' + qc_plot_dir + '/.')
