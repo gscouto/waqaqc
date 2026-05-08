@@ -15,6 +15,7 @@ from scipy.optimize import curve_fit
 import tqdm
 from waqaqc.signalWEAVE import signalWEAVE
 from scipy.interpolate import interp1d
+
 try:
     from importlib.resources import files  # Python 3.9+
 except ImportError:
@@ -146,6 +147,9 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     red_wave_calib = 0
     blue_wave_calib = 0
 
+    mode = blue_cube[0].header['MODE']
+    file_cam = blue_cube[0].header['CAMERA']
+
     rows = 11 + len(file_list)
 
     fig = plt.figure(figsize=(14, 3.5 * rows))
@@ -196,6 +200,33 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     ax.set_title('WEAVE FoV on PanSTARRS')
     ax.grid(color='white', ls='dotted')
 
+    # ----- setting warc and sky lines
+
+    WARC_LINES = {
+        "LOWRES": {
+            "WEAVEBLUE": np.array([3606., 3738., 3850., 3995., 4104., 4132., 4290., 4400., 4511., 4545., 4579., 4609.,
+                                   4765., 4806., 4965., 5187., 5410.]),
+            "WEAVERED": np.array([7788., 7979., 8046., 8159., 8384., 8606., 8748., 8850., 9008., 9180.]),
+        },
+        "HIGHRES": {
+            "WEAVEBLUE": np.array([4727., 4765., 4806., 4848., 4880., 4965., 5017., 5091., 5159., 5231.]),
+            "WEAVERED": np.array([6457., 6531., 6584., 6644., 6677., 6684., 6753., 6767.]),
+        }
+    }
+
+    SKY_LINES = {
+        "LOWRES": {
+            "WEAVEBLUE": np.array([5577.]),
+            "WEAVERED": np.array([6864., 6923., 6949., 6978., 7316., 7341., 7370., 7402., 7750., 7794., 7821., 7890.,
+                                  7931., 7993., 8062., 8399., 8430., 8465., 8505., 8886., 8920., 8959., 9002., 9376.,
+                                  9440.]),
+        },
+        "HIGHRES": {
+            "WEAVEBLUE": np.array([5198., 5239., 5256.]),
+            "WEAVERED": np.array([6170., 6258., 6287., 6300., 6330., 6363., 6533., 6553., 6577.]),
+        }
+    }
+
     # ------
 
     # LSF plots
@@ -217,7 +248,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
         os.makedirs(warc_plot_dir, exist_ok=True)
 
     lam_wind = 10
-    if blue_cube[0].header['MODE'] == 'HIGHRES':
+    if mode == 'HIGHRES':
         lam_wind = 50
 
     warc_cen_blue = []
@@ -241,24 +272,11 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
         warc_name = warc_list[j][:-4]
         warc_file = fits.open(file_dir + warc_name + '.fit')
 
-        file_cam = warc_file[0].header['CAMERA']
-
         lamp_lam = (np.arange(warc_file[1].header['NAXIS1']) * warc_file[1].header['CD1_1']) + warc_file[1].header[
             'CRVAL1']
         lamp_spec = warc_file[1].data
 
-        if blue_cube[0].header['MODE'] == 'LOWRES':
-            if file_cam == 'WEAVEBLUE':
-                cen_lam = np.array([3606., 3738., 3850., 3995., 4104., 4132., 4290., 4400., 4511., 4545., 4579., 4609.,
-                                    4765., 4806., 4965., 5187., 5410.])
-            else:
-                # cen_lam = np.array([7724., 7948., 8103., 8115., 8264., 8408., 8424., 8521., 8668., 9123., 9224.])
-                cen_lam = np.array([7788., 7979., 8046., 8159., 8384., 8606., 8748., 8850., 9008., 9180.])
-        else:
-            if file_cam == 'WEAVEBLUE':
-                cen_lam = np.array([4727., 4765., 4806., 4848., 4880., 4965., 5017., 5091., 5159., 5231.])
-            else:
-                cen_lam = np.array([6457., 6531., 6584., 6644., 6677., 6684., 6753., 6767.])
+        cen_lam = WARC_LINES[mode][file_cam]
 
         with mp.Pool(args.nproc) as pool:
             warc_stats = pool.starmap(fiber_lines,
@@ -325,18 +343,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
         sky_flux_med = []
         sky_sigma_med = []
 
-        if blue_cube[0].header['MODE'] == 'LOWRES':
-            if file_cam == 'WEAVEBLUE':
-                cen_lam = np.array([5577.])
-            else:
-                cen_lam = np.array([6864., 6923., 6949., 6978., 7316., 7341., 7370., 7402., 7750., 7794., 7821., 7890.,
-                                    7931., 7993., 8062., 8399., 8430., 8465., 8505., 8886., 8920., 8959., 9002., 9376.,
-                                    9440.])
-        else:
-            if file_cam == 'WEAVEBLUE':
-                cen_lam = np.array([5198., 5239., 5256.])
-            else:
-                cen_lam = np.array([6170., 6258., 6287., 6300., 6330., 6363., 6533., 6553., 6577., ])
+        cen_lam = SKY_LINES[mode][file_cam]
 
         with mp.Pool(args.nproc) as pool:
             warc_stats = pool.starmap(fiber_lines,
@@ -356,7 +363,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
                 sky_cen[i, l] = warc_stats[i][2][l]
                 sky_sigma[i, l] = warc_stats[i][4][l]
 
-        if (single_file[1].name[:-5] == 'RED') & (blue_cube[0].header['MODE'] == 'LOWRES'):
+        if (single_file[1].name[:-5] == 'RED') & (mode == 'LOWRES'):
             fit_sky_cen = np.ravel(sky_cen[np.isfinite(sky_cen)])
             fit_sky_sigma = np.ravel(sky_sigma[np.isfinite(sky_sigma)])
             popt, pcov = curve_fit(polynom, fit_sky_cen, fit_sky_sigma, maxfev=5000)
@@ -415,7 +422,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
         title = title + ' / spectral resolution'
         t = ax_t.set_title(title)
 
-        if (single_file[1].name[:-5] == 'RED') & (blue_cube[0].header['MODE'] == 'LOWRES'):
+        if (single_file[1].name[:-5] == 'RED') & (mode == 'LOWRES'):
             ax_t.plot(sky_lam, polynom(sky_lam, *popt), linestyle='--', color='gray')
             ax_t.annotate(r'FWHM = ' + ('%.2g' % popt[0]) + ' + ' + ('%.2g' % popt[1]) + '$\lambda$ + ' + (
                     '%.2g' % popt[2]) + '$\lambda^2$', (0.02, 0.95), xycoords='axes fraction')
@@ -424,7 +431,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
         ax_t.set_xlabel(r'$\lambda$ [$\AA$]')
         ax_t.set_ylabel('FWHM [A]')
 
-        if blue_cube[0].header['MODE'] == 'LOWRES':
+        if mode == 'LOWRES':
             exp_res = 2500
         else:
             exp_res = 10000
@@ -469,7 +476,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
         # saving spectral resolution text file
 
-        if (single_file[1].name[:-5] == 'RED') & (blue_cube[0].header['MODE'] == 'LOWRES'):
+        if (single_file[1].name[:-5] == 'RED') & (mode == 'LOWRES'):
             np.savetxt(gal_dir + '/resol_table_' + single_name + '.txt',
                        np.column_stack([sky_lam, polynom(sky_lam, *popt)]),
                        fmt=['%.1f', '%.2f'])
@@ -548,7 +555,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
         # ------ estimate SNR using the ETC
 
-        if (single_file[1].name[:-5] == 'BLUE') & (blue_cube[0].header['MODE'] == 'LOWRES'):
+        if (single_file[1].name[:-5] == 'BLUE') & (mode == 'LOWRES'):
             sgn_band = np.mean(single_file[1].data[:, (sky_lam > 5000) & (sky_lam < 6000)], axis=1)
             rms_band = np.sqrt(1 / np.mean(single_file[2].data[:, (sky_lam > 5000) & (sky_lam < 6000)], axis=1))
             snr_band = sgn_band / rms_band
@@ -561,7 +568,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
             band = 'V'
             ins_mode = 'blueLR'
 
-        if (single_file[1].name[:-5] == 'RED') & (blue_cube[0].header['MODE'] == 'LOWRES'):
+        if (single_file[1].name[:-5] == 'RED') & (mode == 'LOWRES'):
             sgn_band = np.mean(single_file[1].data[:, (sky_lam > 8000) & (sky_lam < 9000)], axis=1)
             rms_band = np.sqrt(1 / np.mean(single_file[2].data[:, (sky_lam > 8000) & (sky_lam < 9000)], axis=1))
             snr_band = sgn_band / rms_band
@@ -574,7 +581,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
             band = 'I'
             ins_mode = 'redLR'
 
-        if (single_file[1].name[:-5] == 'BLUE') & (blue_cube[0].header['MODE'] == 'HIGHRES'):
+        if (single_file[1].name[:-5] == 'BLUE') & (mode == 'HIGHRES'):
             sgn_band = np.mean(single_file[1].data[:, (sky_lam > 5000) & (sky_lam < 6000)], axis=1)
             rms_band = np.sqrt(1 / np.mean(single_file[2].data[:, (sky_lam > 5000) & (sky_lam < 6000)], axis=1))
             snr_band = sgn_band / rms_band
@@ -587,7 +594,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
             band = 'V'
             ins_mode = 'greenHR'
 
-        if (single_file[1].name[:-5] == 'RED') & (blue_cube[0].header['MODE'] == 'HIGHRES'):
+        if (single_file[1].name[:-5] == 'RED') & (mode == 'HIGHRES'):
             sgn_band = np.mean(single_file[1].data[:, (sky_lam > 6550) & (sky_lam < 7550)], axis=1)
             rms_band = np.sqrt(1 / np.mean(single_file[2].data[:, (sky_lam > 6550) & (sky_lam < 7550)], axis=1))
             snr_band = sgn_band / rms_band
