@@ -43,9 +43,6 @@ def fiber_lines(args):
         w_lam = lamp_lam[lam_wind_c - lam_wind: lam_wind_c + lam_wind]
         w_spec = lamp_spec[fiber][lam_wind_c - lam_wind: lam_wind_c + lam_wind]
 
-        print(i, cen_lam[i])
-
-
         popt, pcov = curve_fit(gauss, w_lam, w_spec, p0=[0, 0, max(w_spec), cen_lam[i], 1],
                                bounds=([-np.inf, -np.inf, 0, 0, 0],
                                        [np.inf, np.inf, np.inf, np.inf, np.inf]))
@@ -281,8 +278,6 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
         lamp_spec = warc_file[1].data
 
         cen_lam = WARC_LINES[mode][file_cam]
-
-        breakpoint()
 
         with mp.Pool(args.nproc) as pool:
             warc_stats = pool.starmap(fiber_lines,
