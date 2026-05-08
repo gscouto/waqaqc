@@ -1079,8 +1079,6 @@ def html_plots(ob, redshift, args):
     ax.legend()
     plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'log scale')
 
-    breakpoint()
-
     # ------
 
     ax = plt.subplot(gs[1, 0])
