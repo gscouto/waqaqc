@@ -151,7 +151,6 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     blue_wave_calib = 0
 
     mode = blue_cube[0].header['MODE']
-    file_cam = blue_cube[0].header['CAMERA']
 
     rows = 11 + len(file_list)
 
@@ -274,6 +273,8 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
         warc_name = warc_list[j][:-4]
         warc_file = fits.open(file_dir + warc_name + '.fit')
+
+        file_cam = warc_file[0].header['CAMERA']
 
         lamp_lam = (np.arange(warc_file[1].header['NAXIS1']) * warc_file[1].header['CD1_1']) + warc_file[1].header[
             'CRVAL1']
