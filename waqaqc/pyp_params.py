@@ -51,6 +51,7 @@ def pp(ob, redshift, args):
         f.write(
             'disp_min           10.0                                        '
             '!minimum velocity dispersion in km/s (float)\n')
+        breakpoint()
         f.write('disp_max           ' + args.disp_max +
                 '                                       !maximum velocity  dispersion in km/s (float)\n')
         f.write(
