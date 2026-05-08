@@ -43,6 +43,9 @@ def fiber_lines(args):
         w_lam = lamp_lam[lam_wind_c - lam_wind: lam_wind_c + lam_wind]
         w_spec = lamp_spec[fiber][lam_wind_c - lam_wind: lam_wind_c + lam_wind]
 
+        print(i)
+        breakpoint()
+
         popt, pcov = curve_fit(gauss, w_lam, w_spec, p0=[0, 0, max(w_spec), cen_lam[i], 1],
                                bounds=([-np.inf, -np.inf, 0, 0, 0],
                                        [np.inf, np.inf, np.inf, np.inf, np.inf]))
