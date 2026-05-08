@@ -467,7 +467,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
         if (single_file[1].name[:-5] == 'RED') & (blue_cube[0].header['MODE'] == 'LOWRES'):
             np.savetxt(gal_dir + '/resol_table_' + single_name + '.txt',
-                       np.column_stack([sky_lam, polinom(sky_lam, *popt)]),
+                       np.column_stack([sky_lam, polynom(sky_lam, *popt)]),
                        fmt=['%.1f', '%.2f'])
         else:
             np.savetxt(gal_dir + '/resol_table_' + single_name + '.txt',
