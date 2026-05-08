@@ -278,6 +278,8 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
         cen_lam = WARC_LINES[mode][file_cam]
 
+        breakpoint()
+
         with mp.Pool(args.nproc) as pool:
             warc_stats = pool.starmap(fiber_lines,
                                       tqdm.tqdm(zip((fiber, cen_lam, lamp_spec, lamp_lam, lam_wind, sky_plot_flag,
