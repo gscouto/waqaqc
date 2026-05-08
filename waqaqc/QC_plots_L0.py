@@ -133,7 +133,7 @@ def gauss(x, a, b, amp, x0, sigma):
     return a + b * x + amp * np.exp(-(x - x0) ** 2 / (2 * sigma ** 2))
 
 
-def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, args):
+def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshift, args):
     # setting parameters to be passed as QC parameters
     red_spec_resol = 0
     blue_spec_resol = 0
@@ -355,7 +355,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, args):
         if (single_file[1].name[:-5] == 'RED') & (blue_cube[0].header['MODE'] == 'LOWRES'):
             fit_sky_cen = np.ravel(sky_cen[np.isfinite(sky_cen)])
             fit_sky_sigma = np.ravel(sky_sigma[np.isfinite(sky_sigma)])
-            popt, pcov = curve_fit(polinom, fit_sky_cen, fit_sky_sigma, maxfev=5000)
+            popt, pcov = curve_fit(polynom, fit_sky_cen, fit_sky_sigma, maxfev=5000)
 
         sky_diff_m = []
         sky_cen_diff_m = []
@@ -412,7 +412,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, args):
         t = ax_t.set_title(title)
 
         if (single_file[1].name[:-5] == 'RED') & (blue_cube[0].header['MODE'] == 'LOWRES'):
-            ax_t.plot(sky_lam, polinom(sky_lam, *popt), linestyle='--', color='gray')
+            ax_t.plot(sky_lam, polynom(sky_lam, *popt), linestyle='--', color='gray')
             ax_t.annotate(r'FWHM = ' + ('%.2g' % popt[0]) + ' + ' + ('%.2g' % popt[1]) + '$\lambda$ + ' + (
                     '%.2g' % popt[2]) + '$\lambda^2$', (0.02, 0.95), xycoords='axes fraction')
         ax_t.set_xlim([min(sky_lam), max(sky_lam)])
@@ -755,3 +755,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, args):
     np.savetxt(gal_dir + '/resol_table_mean.txt', np.column_stack((modes, avs)), fmt='%s')
 
     return blue_spec_resol, red_spec_resol, blue_fiber_through, red_fiber_through, blue_wave_calib, red_wave_calib
+
+
+def polynom(x, a, b, c):
+    return a + b * x + c * (x ** 2)

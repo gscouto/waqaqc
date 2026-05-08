@@ -83,10 +83,6 @@ def gauss_hermite(x, a, b, amp, x0, sigma, h3=0.0, h4=0.0):
     return a + b * x + amp * gauss_f * hermite
 
 
-def polinom(x, a, b, c):
-    return a + b * x + c * (x ** 2)
-
-
 def get_xy_peak_positions(
         cube, wave, bin_size=20, use_centroid_if_fail=True,
         clip_sigma=5.0, clip_iters=3, preserve_radius=20
@@ -294,7 +290,7 @@ def html_plots(ob, redshift, args):
     # Start doing the L0 plots
     print('Doing L0 raw data plots')
 
-    L0_results = QC_plots_L0.plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, args)
+    L0_results = QC_plots_L0.plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshift, args)
 
     blue_spec_resol, red_spec_resol, blue_fiber_through, red_fiber_through, blue_wave_calib, red_wave_calib = L0_results
 
