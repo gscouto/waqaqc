@@ -71,10 +71,10 @@ def pp(ob, redshift, args):
         f.write(
             'nwidth_norm        150                                         '
             '!Width of running mean in pixels for the normalization (int)\n')
-        f.write('start_wave         ' + args.blue_lam_min +
+        f.write('start_wave         ' + str(args.blue_lam_min) +
                 '                                   !Lower wavelength limit for the stellar population fitting\n')
         start_wave = args.blue_lam_min
-        f.write('end_wave           ' + args.blue_lam_max +
+        f.write('end_wave           ' + str(args.blue_lam_max) +
                 '                                   !Upper wavelength limit for the stellar population fitting\n')
         end_wave = args.blue_lam_max
         f.write('min_x              1                                           !Minimum x dimension (int)\n')
