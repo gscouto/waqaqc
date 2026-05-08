@@ -15,6 +15,10 @@ from scipy.optimize import curve_fit
 import tqdm
 from waqaqc.signalWEAVE import signalWEAVE
 from scipy.interpolate import interp1d
+try:
+    from importlib.resources import files  # Python 3.9+
+except ImportError:
+    from importlib_resources import files  # Backport for Python 3.8
 
 
 def fiber_lines(args):
@@ -133,7 +137,7 @@ def gauss(x, a, b, amp, x0, sigma):
     return a + b * x + amp * np.exp(-(x - x0) ** 2 / (2 * sigma ** 2))
 
 
-def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshift, args):
+def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshift, spec_pix, args):
     # setting parameters to be passed as QC parameters
     red_spec_resol = 0
     blue_spec_resol = 0

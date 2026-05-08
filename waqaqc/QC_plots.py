@@ -7,7 +7,6 @@ from matplotlib.colors import LogNorm
 import numpy as np
 from astropy.io import fits
 from astropy.wcs import WCS
-from astropy.table import Table
 from astropy.coordinates import SkyCoord, FK5
 from astropy.stats import sigma_clip
 import astropy.units as u
@@ -17,15 +16,9 @@ import warnings
 import multiprocessing as mp
 from scipy.optimize import curve_fit
 import re
-
 from waqaqc import QC_plots_L0
 
 matplotlib.use("Agg")
-
-try:
-    from importlib.resources import files  # Python 3.9+
-except ImportError:
-    from importlib_resources import files  # Backport for Python 3.8
 
 
 def vorbin_loop(args):
@@ -258,14 +251,6 @@ def html_plots(ob, redshift, args):
     snr_r = sgn_r / rms_r
     snr_r = snr_r * np.sqrt(spec_pix)
 
-    # setting parameters to be passed as QC parameters
-    red_spec_resol = 0
-    blue_spec_resol = 0
-    red_fiber_through = 0
-    blue_fiber_through = 0
-    red_wave_calib = 0
-    blue_wave_calib = 0
-
     axis_header = fits.Header()
     axis_header['NAXIS1'] = blue_cube[1].header['NAXIS1']
     axis_header['NAXIS2'] = blue_cube[1].header['NAXIS2']
@@ -290,7 +275,8 @@ def html_plots(ob, redshift, args):
     # Start doing the L0 plots
     print('Doing L0 raw data plots')
 
-    L0_results = QC_plots_L0.plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshift, args)
+    L0_results = QC_plots_L0.plots(blue_cube, file_dir, gal_dir, file_list, warc_list,
+                                   output_str, redshift, spec_pix, args)
 
     blue_spec_resol, red_spec_resol, blue_fiber_through, red_fiber_through, blue_wave_calib, red_wave_calib = L0_results
 
