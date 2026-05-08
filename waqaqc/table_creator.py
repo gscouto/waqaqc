@@ -882,6 +882,8 @@ def tab_cre(ob, args):
         tab_st.add_column(ttx, name='x_cor', index=0)
         tab_st.add_column(tty, name='y_cor', index=1)
 
+        breakpoint()
+
         if args.el_flag == 1:
             tab_el = tab_el[tab_el.argsort(['fiber'])]
 
