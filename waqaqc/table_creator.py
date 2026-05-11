@@ -744,20 +744,22 @@ def tab_cre(ob, args):
 
         cnt = 0
 
+        bins = np.unique(vorbin_map[vorbin_map >= 0]).astype(int)
+
         breakpoint()
 
         if args.vorbin_flag == 1:
-            for i in np.unique(vorbin_map[np.isfinite(vorbin_map)]).astype(int):
+            for i in np.arrange(len(bins)):
                 print('Rearranging into datacube formats: ' + str(
-                    round(100. * cnt / np.unique(vorbin_map[np.isfinite(vorbin_map)]).shape[0], 2)) + '%', end='\r')
-                contm_data.T[vorbin_map.T == i] = contm_file[0].data[i]
-                contm_err.T[vorbin_map.T == i] = contm_file[1].data[i]
-                contm_badp.T[vorbin_map.T == i] = contm_file[2].data[i]
-                contm_norm.T[vorbin_map.T == i] = contm_file[3].data[i]
-                contr_data.T[vorbin_map.T == i] = contr_file[0].data[i]
+                    round(100. * cnt / bins.shape[0], 2)) + '%', end='\r')
+                contm_data.T[vorbin_map.T == bins[i]] = contm_file[0].data[i]
+                contm_err.T[vorbin_map.T == bins[i]] = contm_file[1].data[i]
+                contm_badp.T[vorbin_map.T == bins[i]] = contm_file[2].data[i]
+                contm_norm.T[vorbin_map.T == bins[i]] = contm_file[3].data[i]
+                contr_data.T[vorbin_map.T == bins[i]] = contr_file[0].data[i]
                 if args.el_flag == 1:
-                    elinm_data.T[vorbin_map.T == i] = elinm_file[0].data[i]
-                    elinr_data.T[vorbin_map.T == i] = elinr_file[0].data[i]
+                    elinm_data.T[vorbin_map.T == bins[i]] = elinm_file[0].data[i]
+                    elinr_data.T[vorbin_map.T == bins[i]] = elinr_file[0].data[i]
                 cnt += 1
         else:
             for i in range(rss_file[0].data.shape[0]):
