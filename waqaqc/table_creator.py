@@ -104,10 +104,12 @@ def tab_cre(ob, args):
 
         cnt = 0
 
+        bins = np.unique(vorbin_map[vorbin_map >= 0]).astype(int)
+
         if args.vorbin_flag == 1:
-            for i in np.unique(vorbin_map[np.isfinite(vorbin_map)]).astype(int):
+            for i in bins:
                 print('Rearranging into datacube formats: ' + str(
-                    round(100. * cnt / np.unique(vorbin_map[np.isfinite(vorbin_map)]).shape[0], 2)) + '%', end='\r')
+                    round(100. * cnt / bins.shape[0], 2)) + '%', end='\r')
                 contm_data.T[vorbin_map.T == i] = contm_file[0].data[i]
                 contm_err.T[vorbin_map.T == i] = contm_file[1].data[i]
                 contm_badp.T[vorbin_map.T == i] = contm_file[2].data[i]
@@ -179,35 +181,35 @@ def tab_cre(ob, args):
         base_coeff_maps = np.reshape(base_coeff_maps,
                                      (len(base_coeff_maps), base_coeff_maps[0].shape[0], base_coeff_maps[0].shape[1]))
 
-        for k in np.arange(len(stelt_file[1].data['fiber'])):
+        for row_idx, fiber_id in enumerate(bins):
             if args.vorbin_flag == 1:
-                if np.sum(stelt_file[1].data['fiber'] == k) > 0:
-                    tx.append(np.where(vorbin_map == k)[1])
-                    ty.append(np.where(vorbin_map == k)[0])
+                if np.sum(stelt_file[1].data['fiber'] == row_idx) > 0:
+                    tx.append(np.where(vorbin_map == fiber_id)[1])
+                    ty.append(np.where(vorbin_map == fiber_id)[0])
                     for i in np.arange(len(stelt_maps)):
-                        stelt_maps[i][vorbin_map == k] = \
-                            stelt_file[1].data[stelt_maps_n[i]][stelt_file[1].data['fiber'] == k][0]
+                        stelt_maps[i][vorbin_map == fiber_id] = \
+                            stelt_file[1].data[stelt_maps_n[i]][stelt_file[1].data['fiber'] == row_idx][0]
                     for i in np.arange(len(base_coeff_maps)):
-                        base_coeff_maps[i][vorbin_map == k] = \
-                            stelt_file[1].data['base_coeff'][stelt_file[1].data['fiber'] == k][0][i]
+                        base_coeff_maps[i][vorbin_map == fiber_id] = \
+                            stelt_file[1].data['base_coeff'][stelt_file[1].data['fiber'] == row_idx][0][i]
                 else:
                     tx.append([np.nan])
                     ty.append([np.nan])
                 if args.el_flag == 1:
-                    if np.sum(elint_file[1].data['fiber'] == k) > 0:
+                    if np.sum(elint_file[1].data['fiber'] == row_idx) > 0:
                         for i in np.arange(len(elint_maps)):
-                            elint_maps[i][vorbin_map == k] = \
-                                elint_file[1].data[elint_maps_n[i]][elint_file[1].data['fiber'] == k][0]
+                            elint_maps[i][vorbin_map == fiber_id] = \
+                                elint_file[1].data[elint_maps_n[i]][elint_file[1].data['fiber'] == row_idx][0]
             else:
-                tx.append(x[k])
-                ty.append(y[k])
+                tx.append(x[row_idx])
+                ty.append(y[row_idx])
                 for i in np.arange(len(stelt_maps)):
-                    stelt_maps[i][y[k], x[k]] = stelt_file[1].data[stelt_maps_n[i]][k]
+                    stelt_maps[i][y[row_idx], x[row_idx]] = stelt_file[1].data[stelt_maps_n[i]][row_idx]
                 for i in np.arange(len(base_coeff_maps)):
-                    base_coeff_maps[i][y[k], x[k]] = stelt_file[1].data['base_coeff'][k][i]
+                    base_coeff_maps[i][y[row_idx], x[row_idx]] = stelt_file[1].data['base_coeff'][row_idx][i]
                 if args.el_flag == 1:
                     for i in np.arange(len(elint_maps)):
-                        elint_maps[i][y[k], x[k]] = elint_file[1].data[elint_maps_n[i]][k]
+                        elint_maps[i][y[row_idx], x[row_idx]] = elint_file[1].data[elint_maps_n[i]][row_idx]
 
         if args.vorbin_flag == 1:
             ttx = np.concatenate(tx)
@@ -217,13 +219,13 @@ def tab_cre(ob, args):
             tty = ty
 
         if args.vorbin_flag == 1:
-            for k in np.arange(len(stelt_file[1].data['fiber'])):
+            for row_idx, fiber_id in enumerate(bins):
                 print('Organizing tables formats: ' +
-                      str(round(100. * k / np.nanmax(stelt_file[1].data['fiber']), 2)) + '%', end='\r')
-                for j in np.arange(len(np.where(vorbin_map == k)[0]) - 1):
+                      str(round(100. * row_idx / len(bins), 2)) + '%', end='\r')
+                for j in np.arange(len(np.where(vorbin_map == fiber_id)[0]) - 1):
                     if args.el_flag == 1:
-                        tab_el.add_row(tab_el[tab_el['fiber'] == k][0])
-                    tab_st.add_row(tab_st[tab_st['fiber'] == k][0])
+                        tab_el.add_row(tab_el[tab_el['fiber'] == fiber_id][0])
+                    tab_st.add_row(tab_st[tab_st['fiber'] == fiber_id][0])
             print('')
 
         tab_st = tab_st[tab_st.argsort(['fiber'])]
@@ -422,10 +424,12 @@ def tab_cre(ob, args):
 
         cnt = 0
 
+        bins = np.unique(vorbin_map[vorbin_map >= 0]).astype(int)
+
         if args.vorbin_flag == 1:
-            for i in np.unique(vorbin_map[np.isfinite(vorbin_map)]).astype(int):
+            for i in bins:
                 print('Rearranging into datacube formats: ' + str(
-                    round(100. * cnt / np.unique(vorbin_map[np.isfinite(vorbin_map)]).shape[0], 2)) + '%', end='\r')
+                    round(100. * cnt / bins.shape[0], 2)) + '%', end='\r')
                 contm_data.T[vorbin_map.T == i] = contm_file[0].data[i]
                 contm_err.T[vorbin_map.T == i] = contm_file[1].data[i]
                 contm_badp.T[vorbin_map.T == i] = contm_file[2].data[i]
@@ -497,35 +501,35 @@ def tab_cre(ob, args):
         base_coeff_maps = np.reshape(base_coeff_maps,
                                      (len(base_coeff_maps), base_coeff_maps[0].shape[0], base_coeff_maps[0].shape[1]))
 
-        for k in np.arange(len(stelt_file[1].data['fiber'])):
+        for row_idx, fiber_id in enumerate(bins):
             if args.vorbin_flag == 1:
-                if np.sum(stelt_file[1].data['fiber'] == k) > 0:
-                    tx.append(np.where(vorbin_map == k)[1])
-                    ty.append(np.where(vorbin_map == k)[0])
+                if np.sum(stelt_file[1].data['fiber'] == row_idx) > 0:
+                    tx.append(np.where(vorbin_map == fiber_id)[1])
+                    ty.append(np.where(vorbin_map == fiber_id)[0])
                     for i in np.arange(len(stelt_maps)):
-                        stelt_maps[i][vorbin_map == k] = \
-                            stelt_file[1].data[stelt_maps_n[i]][stelt_file[1].data['fiber'] == k][0]
+                        stelt_maps[i][vorbin_map == fiber_id] = \
+                            stelt_file[1].data[stelt_maps_n[i]][stelt_file[1].data['fiber'] == row_idx][0]
                     for i in np.arange(len(base_coeff_maps)):
-                        base_coeff_maps[i][vorbin_map == k] = \
-                            stelt_file[1].data['base_coeff'][stelt_file[1].data['fiber'] == k][0][i]
+                        base_coeff_maps[i][vorbin_map == fiber_id] = \
+                            stelt_file[1].data['base_coeff'][stelt_file[1].data['fiber'] == row_idx][0][i]
                 else:
                     tx.append([np.nan])
                     ty.append([np.nan])
                 if args.el_flag == 1:
-                    if np.sum(elint_file[1].data['fiber'] == k) > 0:
+                    if np.sum(elint_file[1].data['fiber'] == row_idx) > 0:
                         for i in np.arange(len(elint_maps)):
-                            elint_maps[i][vorbin_map == k] = \
-                                elint_file[1].data[elint_maps_n[i]][elint_file[1].data['fiber'] == k][0]
+                            elint_maps[i][vorbin_map == fiber_id] = \
+                                elint_file[1].data[elint_maps_n[i]][elint_file[1].data['fiber'] == row_idx][0]
             else:
-                tx.append(x[k])
-                ty.append(y[k])
+                tx.append(x[row_idx])
+                ty.append(y[row_idx])
                 for i in np.arange(len(stelt_maps)):
-                    stelt_maps[i][y[k], x[k]] = stelt_file[1].data[stelt_maps_n[i]][k]
+                    stelt_maps[i][y[row_idx], x[row_idx]] = stelt_file[1].data[stelt_maps_n[i]][row_idx]
                 for i in np.arange(len(base_coeff_maps)):
-                    base_coeff_maps[i][y[k], x[k]] = stelt_file[1].data['base_coeff'][k][i]
+                    base_coeff_maps[i][y[row_idx], x[row_idx]] = stelt_file[1].data['base_coeff'][row_idx][i]
                 if args.el_flag == 1:
                     for i in np.arange(len(elint_maps)):
-                        elint_maps[i][y[k], x[k]] = elint_file[1].data[elint_maps_n[i]][k]
+                        elint_maps[i][y[row_idx], x[row_idx]] = elint_file[1].data[elint_maps_n[i]][row_idx]
 
         if args.vorbin_flag == 1:
             ttx = np.concatenate(tx)
@@ -535,13 +539,13 @@ def tab_cre(ob, args):
             tty = ty
 
         if args.vorbin_flag == 1:
-            for k in np.arange(len(stelt_file[1].data['fiber'])):
+            for row_idx, fiber_id in enumerate(bins):
                 print('Organizing tables formats: ' +
-                      str(round(100. * k / np.nanmax(stelt_file[1].data['fiber']), 2)) + '%', end='\r')
-                for j in np.arange(len(np.where(vorbin_map == k)[0]) - 1):
+                      str(round(100. * row_idx / len(bins), 2)) + '%', end='\r')
+                for j in np.arange(len(np.where(vorbin_map == fiber_id)[0]) - 1):
                     if args.el_flag == 1:
-                        tab_el.add_row(tab_el[tab_el['fiber'] == k][0])
-                    tab_st.add_row(tab_st[tab_st['fiber'] == k][0])
+                        tab_el.add_row(tab_el[tab_el['fiber'] == fiber_id][0])
+                    tab_st.add_row(tab_st[tab_st['fiber'] == fiber_id][0])
             print('')
 
         tab_st = tab_st[tab_st.argsort(['fiber'])]
@@ -825,35 +829,35 @@ def tab_cre(ob, args):
         base_coeff_maps = np.reshape(base_coeff_maps,
                                      (len(base_coeff_maps), base_coeff_maps[0].shape[0], base_coeff_maps[0].shape[1]))
 
-        for k in np.arange(len(stelt_file[1].data['fiber'])):
+        for row_idx, fiber_id in enumerate(bins):
             if args.vorbin_flag == 1:
-                if np.sum(stelt_file[1].data['fiber'] == k) > 0:
-                    tx.append(np.where(vorbin_map == k)[1])
-                    ty.append(np.where(vorbin_map == k)[0])
+                if np.sum(stelt_file[1].data['fiber'] == row_idx) > 0:
+                    tx.append(np.where(vorbin_map == fiber_id)[1])
+                    ty.append(np.where(vorbin_map == fiber_id)[0])
                     for i in np.arange(len(stelt_maps)):
-                        stelt_maps[i][vorbin_map == k] = \
-                            stelt_file[1].data[stelt_maps_n[i]][stelt_file[1].data['fiber'] == k][0]
+                        stelt_maps[i][vorbin_map == fiber_id] = \
+                            stelt_file[1].data[stelt_maps_n[i]][stelt_file[1].data['fiber'] == row_idx][0]
                     for i in np.arange(len(base_coeff_maps)):
-                        base_coeff_maps[i][vorbin_map == k] = \
-                            stelt_file[1].data['base_coeff'][stelt_file[1].data['fiber'] == k][0][i]
+                        base_coeff_maps[i][vorbin_map == fiber_id] = \
+                            stelt_file[1].data['base_coeff'][stelt_file[1].data['fiber'] == row_idx][0][i]
                 else:
                     tx.append([np.nan])
                     ty.append([np.nan])
                 if args.el_flag == 1:
-                    if np.sum(elint_file[1].data['fiber'] == k) > 0:
+                    if np.sum(elint_file[1].data['fiber'] == row_idx) > 0:
                         for i in np.arange(len(elint_maps)):
-                            elint_maps[i][vorbin_map == k] = \
-                                elint_file[1].data[elint_maps_n[i]][elint_file[1].data['fiber'] == k][0]
+                            elint_maps[i][vorbin_map == fiber_id] = \
+                                elint_file[1].data[elint_maps_n[i]][elint_file[1].data['fiber'] == row_idx][0]
             else:
-                tx.append(x[k])
-                ty.append(y[k])
+                tx.append(x[row_idx])
+                ty.append(y[row_idx])
                 for i in np.arange(len(stelt_maps)):
-                    stelt_maps[i][y[k], x[k]] = stelt_file[1].data[stelt_maps_n[i]][k]
+                    stelt_maps[i][y[row_idx], x[row_idx]] = stelt_file[1].data[stelt_maps_n[i]][row_idx]
                 for i in np.arange(len(base_coeff_maps)):
-                    base_coeff_maps[i][y[k], x[k]] = stelt_file[1].data['base_coeff'][k][i]
+                    base_coeff_maps[i][y[row_idx], x[row_idx]] = stelt_file[1].data['base_coeff'][row_idx][i]
                 if args.el_flag == 1:
                     for i in np.arange(len(elint_maps)):
-                        elint_maps[i][y[k], x[k]] = elint_file[1].data[elint_maps_n[i]][k]
+                        elint_maps[i][y[row_idx], x[row_idx]] = elint_file[1].data[elint_maps_n[i]][row_idx]
 
         if args.vorbin_flag == 1:
             ttx = np.concatenate(tx)
@@ -863,20 +867,20 @@ def tab_cre(ob, args):
             tty = ty
 
         if args.vorbin_flag == 1:
-            for k in np.arange(len(stelt_file[1].data['fiber'])):
+            for row_idx, fiber_id in enumerate(bins):
                 print('Organizing tables formats: ' +
-                      str(round(100. * k / np.nanmax(stelt_file[1].data['fiber']), 2)) + '%', end='\r')
-                for j in np.arange(len(np.where(vorbin_map == k)[0]) - 1):
+                      str(round(100. * row_idx / len(bins), 2)) + '%', end='\r')
+                for j in np.arange(len(np.where(vorbin_map == fiber_id)[0]) - 1):
                     if args.el_flag == 1:
-                        if np.sum(elint_file[1].data['fiber'] == k) > 0:
-                            tab_el.add_row(tab_el[tab_el['fiber'] == k][0])
+                        if np.sum(elint_file[1].data['fiber'] == fiber_id) > 0:
+                            tab_el.add_row(tab_el[tab_el['fiber'] == fiber_id][0])
                         else:
                             new_row = tab_el[tab_el['fiber'] == 0][0]
                             for i in np.arange(len(new_row)-1):
                                 new_row[i+1] = np.nan
-                            new_row['fiber'] = k
+                            new_row['fiber'] = fiber_id
                             tab_el.add_row(new_row)
-                    tab_st.add_row(tab_st[tab_st['fiber'] == k][0])
+                    tab_st.add_row(tab_st[tab_st['fiber'] == fiber_id][0])
             print('')
 
         tab_st = tab_st[tab_st.argsort(['fiber'])]
