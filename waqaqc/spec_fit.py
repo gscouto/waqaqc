@@ -41,20 +41,22 @@ def create_rss_from_cube(cube, snr_map=None, vorbin_map=None,
 
         rss_err = np.zeros_like(rss_data)
 
-        breakpoint()
+        bin_coords = {
+            b: np.argwhere(vorbin_map == b)[0]
+            for b in bins
+        }
 
-        for i in bins:
+        for k, bin_id in enumerate(bins):
+            y, x = bin_coords[bin_id]
 
-            yy, xx = np.where(vorbin_map == i)
+            rss_data[k] = cube[1].data[:, y, x]
+            rss_err[k] = cube[2].data[:, y, x]
 
-            rss_data[i] = cube[1].data[:, yy[0], xx[0]]
-            rss_err[i] = cube[2].data[:, yy[0], xx[0]]
-
-            if apply_sigmaclip:
-                rss_data[i] = sigma_clip_spec(
-                    rss_data[i],
-                    sigmaclip_limit
-                )
+        if apply_sigmaclip:
+            rss_data[k] = sigma_clip_spec(
+                rss_data[k],
+                sigmaclip_limit
+            )
 
         return rss_data, rss_err, None, None
 
