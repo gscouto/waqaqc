@@ -868,19 +868,21 @@ def tab_cre(ob, args):
 
         if args.vorbin_flag == 1:
             for row_idx, fiber_id in enumerate(bins):
-                print('Organizing tables formats: ' +
-                      str(round(100. * row_idx / len(bins), 2)) + '%', end='\r')
-                for j in np.arange(len(np.where(vorbin_map == fiber_id)[0]) - 1):
+                print('Organizing tables formats: ' + str(round(100. * row_idx / len(bins), 2)) + '%', end='\r')
+                n_pix = len(np.where(vorbin_map == fiber_id)[0])
+                for j in np.arange(n_pix - 1):
                     if args.el_flag == 1:
-                        if np.sum(elint_file[1].data['fiber'] == fiber_id) > 0:
-                            tab_el.add_row(tab_el[tab_el['fiber'] == fiber_id][0])
+                        if np.sum(elint_file[1].data['fiber'] == row_idx) > 0:
+                            tab_el.add_row(tab_el[tab_el['fiber'] == row_idx][0])
                         else:
-                            new_row = tab_el[tab_el['fiber'] == 0][0]
-                            for i in np.arange(len(new_row)-1):
-                                new_row[i+1] = np.nan
-                            new_row['fiber'] = fiber_id
+                            new_row = tab_el[tab_el['fiber'] == 0][0].copy()
+                            for col in new_row.colnames:
+                                if col != 'fiber':
+                                    new_row[col] = np.nan
+                            new_row['fiber'] = row_idx
                             tab_el.add_row(new_row)
-                    tab_st.add_row(tab_st[tab_st['fiber'] == fiber_id][0])
+                    if np.sum(tab_st['fiber'] == row_idx) > 0:
+                        tab_st.add_row(tab_st[tab_st['fiber'] == row_idx][0])
             print('')
 
         tab_st = tab_st[tab_st.argsort(['fiber'])]
