@@ -749,7 +749,7 @@ def tab_cre(ob, args):
         breakpoint()
 
         if args.vorbin_flag == 1:
-            for i in np.arrange(len(bins)):
+            for i in np.arange(len(bins)):
                 print('Rearranging into datacube formats: ' + str(
                     round(100. * cnt / bins.shape[0], 2)) + '%', end='\r')
                 contm_data.T[vorbin_map.T == bins[i]] = contm_file[0].data[i]
