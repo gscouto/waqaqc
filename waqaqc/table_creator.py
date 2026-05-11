@@ -879,8 +879,6 @@ def tab_cre(ob, args):
                     tab_st.add_row(tab_st[tab_st['fiber'] == k][0])
             print('')
 
-        breakpoint()
-
         tab_st = tab_st[tab_st.argsort(['fiber'])]
 
         tab_st.add_column(ttx, name='x_cor', index=0)
