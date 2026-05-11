@@ -251,19 +251,22 @@ def run_mode(mode, ob, args, gal, gal_dir, file_dir, stackcubes):
         flux_header = cube[1].header.copy()
         err_header = cube[2].header.copy()
 
-        flux_header['CDELT3'] = flux_header['CD3_3']
-        err_header['CDELT3'] = err_header['CD3_3']
+        if 'CDELT3' not in flux_header and 'CD3_3' in flux_header:
+            flux_header['CDELT3'] = flux_header['CD3_3']
+
+        if 'CDELT3' not in err_header and 'CD3_3' in err_header:
+            err_header['CDELT3'] = err_header['CD3_3']
 
         cube_hdul = fits.HDUList([
 
             fits.PrimaryHDU(
                 data=flux,
-                header=cube[1].header
+                header=flux_header
             ),
 
             fits.ImageHDU(
                 data=err,
-                header=cube[2].header,
+                header=err_header,
                 name='ERROR'
             )
         ])
@@ -348,7 +351,7 @@ def run_mode(mode, ob, args, gal, gal_dir, file_dir, stackcubes):
 
         boot_cmd = (
             f'ParadiseApp.py '
-            f'{rss_name} '
+            f'{input_name} '
             f'{gal}_{f_name} '
             f'{fwhm_str} '
             f'--SSP_par parameters_stellar_{mode}_{ob} '
