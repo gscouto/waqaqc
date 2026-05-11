@@ -41,6 +41,8 @@ def create_rss_from_cube(cube, snr_map=None, vorbin_map=None,
 
         rss_err = np.zeros_like(rss_data)
 
+        breakpoint()
+
         for i in bins:
 
             yy, xx = np.where(vorbin_map == i)
