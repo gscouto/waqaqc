@@ -744,6 +744,8 @@ def tab_cre(ob, args):
 
         cnt = 0
 
+        breakpoint()
+
         if args.vorbin_flag == 1:
             for i in np.unique(vorbin_map[np.isfinite(vorbin_map)]).astype(int):
                 print('Rearranging into datacube formats: ' + str(

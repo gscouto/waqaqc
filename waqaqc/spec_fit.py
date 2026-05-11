@@ -137,10 +137,6 @@ def build_rss_header(cube, rss_data, vorbin_flag):
 
 def run_mode(mode, ob, args, gal, gal_dir, file_dir, stackcubes):
 
-    print(f'\n====================')
-    print(f'Running {mode.upper()}')
-    print(f'====================')
-
     mode_cfg = {
 
         'red': {
@@ -181,6 +177,10 @@ def run_mode(mode, ob, args, gal, gal_dir, file_dir, stackcubes):
 
     if cfg['fit_flag'] != 1:
         return
+    else:
+        print(f'\n====================')
+        print(f'Running {mode.upper()}')
+        print(f'====================')
 
     # ========================================================
     # Output directory
