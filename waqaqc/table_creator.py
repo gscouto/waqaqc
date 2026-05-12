@@ -804,14 +804,25 @@ def tab_cre(ob, args):
         map_head['NAXIS1'] = vorbin_map.shape[1]
         map_head['NAXIS2'] = vorbin_map.shape[0]
 
-        map_head['CRPIX1'] = cube[1].header['CRPIX1']
-        map_head['CRPIX2'] = cube[1].header['CRPIX2']
+        if args.vorbin_flag:
+            # RSS / Voronoi mode
+            map_head['CRPIX1'] = cube[1].header['CRPIX1']
+            map_head['CRVAL1'] = cube[1].header['CRVAL1']
+            map_head['CDELT1'] = cube[1].header['CDELT1']
 
-        map_head['CRVAL1'] = cube[1].header['CRVAL1']
-        map_head['CRVAL2'] = cube[1].header['CRVAL2']
+            map_head['CRPIX2'] = cube[1].header['CRPIX2']
+            map_head['CRVAL2'] = cube[1].header['CRVAL2']
+            map_head['CDELT2'] = cube[1].header['CDELT2']
 
-        map_head['CDELT1'] = cube[1].header['CDELT1']
-        map_head['CDELT2'] = cube[1].header['CDELT2']
+        else:
+            # Cube mode
+            map_head['CDELT1'] = (contm_file[0].header['CD1_1'])
+            map_head['CRVAL1'] = (contm_file[0].header['CRVAL1'])
+            map_head['CRPIX1'] = (contm_file[0].header['CRPIX1'])
+
+            map_head['CDELT2'] = (contm_file[0].header['CD2_2'])
+            map_head['CRVAL2'] = (contm_file[0].header['CRVAL2'])
+            map_head['CRPIX2'] = (contm_file[0].header['CRPIX2'])
 
         map_head['CTYPE1'] = 'RA---TAN'
         map_head['CTYPE2'] = 'DEC--TAN'
