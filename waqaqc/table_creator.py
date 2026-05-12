@@ -583,6 +583,8 @@ def tab_cre(ob, args):
         # Load WCS cube
         # ----------------------------------------------------
 
+        coords = None
+
         if args.vorbin_flag:
 
             cube = fits.open(
@@ -590,8 +592,6 @@ def tab_cre(ob, args):
             )
 
             file_n = f'_{mode}_vorbin'
-
-            coords = None
 
         else:
 
