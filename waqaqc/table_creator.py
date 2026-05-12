@@ -757,8 +757,6 @@ def tab_cre(ob, args):
         cube_head['CTYPE3'] = 'WAVELENGTH'
         cube_head['CUNIT3'] = 'Angstrom'
 
-        cube_head['DISPAXIS'] = (contm_file[0].header['DISPAXIS'])
-
         if args.vorbin_flag:
             # RSS / Voronoi mode
             cube_head['CDELT3'] = (contm_file[0].header['CDELT1'])
@@ -798,8 +796,6 @@ def tab_cre(ob, args):
 
         map_head['NAXIS1'] = vorbin_map.shape[1]
         map_head['NAXIS2'] = vorbin_map.shape[0]
-
-        map_head['DISPAXIS'] = 1
 
         map_head['CRPIX1'] = cube[1].header['CRPIX1']
         map_head['CRPIX2'] = cube[1].header['CRPIX2']
