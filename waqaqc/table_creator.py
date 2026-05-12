@@ -177,15 +177,17 @@ def write_outputs(
     # Save stellar products
     # ========================================================
 
-    n_contm.writeto(
-        f'{res_dir}/{gal}_{mode}_cont_model.fits',
-        overwrite=True
-    )
+    if args.vorbin_flag:
 
-    n_contr.writeto(
-        f'{res_dir}/{gal}_{mode}_cont_res.fits',
-        overwrite=True
-    )
+        n_contm.writeto(
+            f'{res_dir}/{gal}_{mode}_cont_model.fits',
+            overwrite=True
+        )
+
+        n_contr.writeto(
+            f'{res_dir}/{gal}_{mode}_cont_res.fits',
+            overwrite=True
+        )
 
     n_tab_stell.writeto(
         f'{res_dir}/{gal}_{mode}_stellar_table.fits',
@@ -251,15 +253,17 @@ def write_outputs(
                 )
             )
 
-        n_elinm.writeto(
-            f'{res_dir}/{gal}_{mode}_eline_model.fits',
-            overwrite=True
-        )
+        if args.vorbin_flag:
 
-        n_elinr.writeto(
-            f'{res_dir}/{gal}_{mode}_eline_res.fits',
-            overwrite=True
-        )
+            n_elinm.writeto(
+                f'{res_dir}/{gal}_{mode}_eline_model.fits',
+                overwrite=True
+            )
+
+            n_elinr.writeto(
+                f'{res_dir}/{gal}_{mode}_eline_res.fits',
+                overwrite=True
+            )
 
         n_tab_eline.writeto(
             f'{res_dir}/{gal}_{mode}_eline_table.fits',
