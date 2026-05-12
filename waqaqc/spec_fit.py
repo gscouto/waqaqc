@@ -23,10 +23,9 @@ def sigma_clip_spec(spec, limit_sigma):
     return spec
 
 
-def create_rss_from_cube(cube, snr_map=None, vorbin_map=None,
+def create_rss_from_cube(cube, vorbin_map=None,
                          apply_sigmaclip=False,
-                         sigmaclip_limit=5,
-                         scale_flux=False):
+                         sigmaclip_limit=5):
 
     # ========================================================
     # Voronoi case
@@ -52,56 +51,13 @@ def create_rss_from_cube(cube, snr_map=None, vorbin_map=None,
             rss_data[k] = cube[1].data[:, y, x]
             rss_err[k] = cube[2].data[:, y, x]
 
-        if apply_sigmaclip:
-            rss_data[k] = sigma_clip_spec(
-                rss_data[k],
-                sigmaclip_limit
-            )
+            if apply_sigmaclip:
+                rss_data[k] = sigma_clip_spec(
+                    rss_data[k],
+                    sigmaclip_limit
+                )
 
         return rss_data, rss_err, None, None
-
-    # ========================================================
-    # Normal spaxel case
-    # ========================================================
-
-    flux = cube[1].data.copy()
-    err = cube[2].data.copy()
-
-    if scale_flux:
-        sens = np.mean(cube[5].data[:], axis=0)
-        flux *= sens
-        err *= sens
-
-    nl, ny, nx = flux.shape
-
-    yy, xx = np.indices((ny, nx))
-
-    flux_rss = flux.reshape(nl, ny * nx).T
-    err_rss = err.reshape(nl, ny * nx).T
-
-    snr_flat = snr_map.reshape(ny * nx)
-
-    x_flat = xx.reshape(ny * nx)
-    y_flat = yy.reshape(ny * nx)
-
-    mask = snr_flat >= 5.0
-
-    rss_data = flux_rss[mask]
-    rss_err = err_rss[mask]
-
-    x_sel = x_flat[mask]
-    y_sel = y_flat[mask]
-
-    if apply_sigmaclip:
-
-        for i in range(len(rss_data)):
-
-            rss_data[i] = sigma_clip_spec(
-                rss_data[i],
-                sigmaclip_limit
-            )
-
-    return rss_data, rss_err, x_sel, y_sel
 
 
 def build_rss_header(cube, rss_data, vorbin_flag):
@@ -120,10 +76,10 @@ def build_rss_header(cube, rss_data, vorbin_flag):
     if vorbin_flag:
         h['CDELT1'] = cube[1].header['CDELT3']
     else:
-        h['CDELT1'] = cube[1].header.get(
-            'CD3_3',
-            cube[1].header['CDELT3']
-        )
+        if 'CD3_3' in cube[1].header:
+            h['CDELT1'] = cube[1].header['CD3_3']
+        else:
+            h['CDELT1'] = cube[1].header['CDELT3']
 
     h['CRVAL1'] = cube[1].header['CRVAL3']
     h['CRPIX1'] = cube[1].header['CRPIX3']
@@ -198,6 +154,8 @@ def run_mode(mode, ob, args, gal, gal_dir, file_dir, stackcubes):
     # Open cube
     # ========================================================
 
+    cube_name = f'{gal}_{mode}_cube.fits'
+
     if args.vorbin_flag:
 
         cube = fits.open(gal_dir + '/' + cfg['vorbin_cube'])
@@ -222,10 +180,6 @@ def run_mode(mode, ob, args, gal, gal_dir, file_dir, stackcubes):
         else:
             cube = fits.open(gal_dir + '/' + cfg['cube_file'])
 
-        snr_map = fits.getdata(
-            gal_dir + '/' + cfg['snr_map']
-        )
-
         flux = cube[1].data.copy()
         err = cube[2].data.copy()
 
@@ -245,8 +199,6 @@ def run_mode(mode, ob, args, gal, gal_dir, file_dir, stackcubes):
                         flux[:, y, x],
                         args.sigmaclip_limit
                     )
-
-        cube_name = f'{gal}_{mode}_cube.fits'
 
         flux_header = cube[1].header.copy()
         err_header = cube[2].header.copy()
