@@ -540,9 +540,7 @@ def tab_cre(ob, args):
 
         'aps': {
             'fit_flag': args.aps_fit_flag,
-            'cube': fits.open(
-                gal_dir + '/' + gal + '_cube.fits'
-            ),
+            'cube': gal_dir + '/' + gal + '_cube.fits',
             'cube_file': gal + '_vorbin_cube.fits',
             'vorbin_map': 'vorbin_map.fits',
             'params': 'parameters_stellar_aps'
@@ -597,7 +595,10 @@ def tab_cre(ob, args):
 
         else:
 
-            cube = cfg['cube']
+            if mode == 'aps':
+                cube = fits.open(cfg['cube'])
+            else:
+                cube = cfg['cube']
 
             file_n = f'_{mode}'
 
