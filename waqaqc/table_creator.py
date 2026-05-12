@@ -759,24 +759,31 @@ def tab_cre(ob, args):
 
         if args.vorbin_flag:
             # RSS / Voronoi mode
+            cube_head['CRPIX1'] = cube[1].header['CRPIX1']
+            cube_head['CRVAL1'] = cube[1].header['CRVAL1']
+            cube_head['CDELT1'] = cube[1].header['CDELT1']
+
+            cube_head['CRPIX2'] = cube[1].header['CRPIX2']
+            cube_head['CRVAL2'] = cube[1].header['CRVAL2']
+            cube_head['CDELT2'] = cube[1].header['CDELT2']
+
             cube_head['CDELT3'] = (contm_file[0].header['CDELT1'])
             cube_head['CRVAL3'] = (contm_file[0].header['CRVAL1'])
             cube_head['CRPIX3'] = (contm_file[0].header['CRPIX1'])
 
         else:
             # Cube mode
+            cube_head['CDELT1'] = (contm_file[0].header['CD1_1'])
+            cube_head['CRVAL1'] = (contm_file[0].header['CRVAL1'])
+            cube_head['CRPIX1'] = (contm_file[0].header['CRPIX1'])
+
+            cube_head['CDELT2'] = (contm_file[0].header['CD2_2'])
+            cube_head['CRVAL2'] = (contm_file[0].header['CRVAL2'])
+            cube_head['CRPIX2'] = (contm_file[0].header['CRPIX2'])
+
             cube_head['CDELT3'] = (contm_file[0].header['CD3_3'])
             cube_head['CRVAL3'] = (contm_file[0].header['CRVAL3'])
             cube_head['CRPIX3'] = (contm_file[0].header['CRPIX3'])
-
-        cube_head['CRPIX1'] = cube[1].header['CRPIX1']
-        cube_head['CRPIX2'] = cube[1].header['CRPIX2']
-
-        cube_head['CRVAL1'] = cube[1].header['CRVAL1']
-        cube_head['CRVAL2'] = cube[1].header['CRVAL2']
-
-        cube_head['CDELT1'] = cube[1].header['CDELT1']
-        cube_head['CDELT2'] = cube[1].header['CDELT2']
 
         cube_head['CTYPE1'] = 'RA---TAN'
         cube_head['CTYPE2'] = 'DEC--TAN'
