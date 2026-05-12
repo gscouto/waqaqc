@@ -4,994 +4,837 @@ import os
 from astropy.table import Table
 
 
+def fill_cube(vorbin_flag, bins, vorbin_map, contm_file, contr_file,
+              eline, shape, coords):
+
+    nl, ny, nx = shape
+
+    contm_data = np.zeros((nl, ny, nx))
+    contm_err = np.zeros_like(contm_data)
+    contm_badp = np.zeros_like(contm_data)
+    contm_norm = np.zeros_like(contm_data)
+    contr_data = np.zeros_like(contm_data)
+
+    if eline:
+        elinm_data = np.zeros_like(contm_data)
+        elinr_data = np.zeros_like(contm_data)
+
+    if vorbin_flag:
+
+        for i, b in enumerate(bins):
+            mask = (vorbin_map.T == b)
+
+            contm_data.T[mask] = contm_file[0].data[i]
+            contm_err.T[mask] = contm_file[1].data[i]
+            contm_badp.T[mask] = contm_file[2].data[i]
+            contm_norm.T[mask] = contm_file[3].data[i]
+            contr_data.T[mask] = contr_file[0].data[i]
+
+            if eline:
+                elinm_data.T[mask] = eline["model"][0].data[i]
+                elinr_data.T[mask] = eline["res"][0].data[i]
+
+    else:
+
+        x, y = coords["X"], coords["Y"]
+
+        for i in range(len(x)):
+            contm_data[:, y[i], x[i]] = contm_file[0].data[i]
+            contm_err[:, y[i], x[i]] = contm_file[1].data[i]
+            contm_badp[:, y[i], x[i]] = contm_file[2].data[i]
+            contm_norm[:, y[i], x[i]] = contm_file[3].data[i]
+            contr_data[:, y[i], x[i]] = contr_file[0].data[i]
+
+            if eline:
+                elinm_data[:, y[i], x[i]] = eline["model"][0].data[i]
+                elinr_data[:, y[i], x[i]] = eline["res"][0].data[i]
+
+    if eline is not None:
+
+        return contm_data, contm_err, contm_badp, contm_norm, contr_data, elinm_data, elinr_data
+
+    else:
+
+        return contm_data, contm_err, contm_badp, contm_norm, contr_data
+
+
+def write_outputs(
+        res_dir,
+        gal,
+        mode,
+        cube_header,
+        map_header,
+        contm_data,
+        contm_err,
+        contm_badp,
+        contm_norm,
+        contr_data,
+        stelt_file,
+        tables_maps,
+        args,
+        elinm_data=None,
+        elinr_data=None,
+        elint_file=None
+):
+
+    # ========================================================
+    # Continuum products
+    # ========================================================
+
+    n_contm = fits.HDUList([
+
+        fits.PrimaryHDU(
+            data=contm_data,
+            header=cube_header
+        ),
+
+        fits.ImageHDU(
+            data=contm_err,
+            header=cube_header,
+            name='ERROR'
+        ),
+
+        fits.ImageHDU(
+            data=contm_badp,
+            header=cube_header,
+            name='BADPIX'
+        ),
+
+        fits.ImageHDU(
+            data=contm_norm,
+            header=cube_header,
+            name='NORMALIZE'
+        )
+    ])
+
+    n_contr = fits.HDUList([
+
+        fits.PrimaryHDU(
+            data=contr_data,
+            header=cube_header
+        )
+    ])
+
+    # ========================================================
+    # Stellar tables
+    # ========================================================
+
+    n_tab_stell = fits.HDUList([
+
+        stelt_file[0].copy(),
+
+        fits.BinTableHDU(
+            tables_maps['tab_st'],
+            header=stelt_file[1].header
+        )
+    ])
+
+    # ========================================================
+    # Stellar maps
+    # ========================================================
+
+    hdu_stelt_maps = fits.HDUList([
+
+        fits.PrimaryHDU()
+    ])
+
+    for i, name in enumerate(tables_maps['stelt_maps_n']):
+
+        hdu_stelt_maps.append(
+
+            fits.ImageHDU(
+                data=tables_maps['stelt_maps'][i],
+                name=name,
+                header=map_header
+            )
+        )
+
+    # ========================================================
+    # Base coeff maps
+    # ========================================================
+
+    hdu_base_coeff_maps = fits.HDUList([
+
+        fits.PrimaryHDU(),
+
+        fits.BinTableHDU(
+            tables_maps['base_coeff_t']
+        )
+    ])
+
+    for i in range(len(tables_maps['base_coeff_maps'])):
+
+        hdu_base_coeff_maps.append(
+
+            fits.ImageHDU(
+                data=tables_maps['base_coeff_maps'][i],
+                name=f'Template {i}',
+                header=map_header
+            )
+        )
+
+    # ========================================================
+    # Save stellar products
+    # ========================================================
+
+    n_contm.writeto(
+        f'{res_dir}/{gal}_{mode}_cont_model.fits',
+        overwrite=True
+    )
+
+    n_contr.writeto(
+        f'{res_dir}/{gal}_{mode}_cont_res.fits',
+        overwrite=True
+    )
+
+    n_tab_stell.writeto(
+        f'{res_dir}/{gal}_{mode}_stellar_table.fits',
+        overwrite=True
+    )
+
+    hdu_stelt_maps.writeto(
+        f'{res_dir}/{gal}_{mode}_stellar_maps.fits',
+        overwrite=True
+    )
+
+    hdu_base_coeff_maps.writeto(
+        f'{res_dir}/{gal}_{mode}_base_coeff_maps.fits',
+        overwrite=True
+    )
+
+    # ========================================================
+    # Emission line products
+    # ========================================================
+
+    if args.el_flag:
+
+        n_elinm = fits.HDUList([
+
+            fits.PrimaryHDU(
+                data=elinm_data,
+                header=cube_header
+            )
+        ])
+
+        n_elinr = fits.HDUList([
+
+            fits.PrimaryHDU(
+                data=elinr_data,
+                header=cube_header
+            )
+        ])
+
+        n_tab_eline = fits.HDUList([
+
+            elint_file[0].copy(),
+
+            fits.BinTableHDU(
+                tables_maps['tab_el'],
+                header=elint_file[1].header
+            )
+        ])
+
+        hdu_elint_maps = fits.HDUList([
+
+            fits.PrimaryHDU()
+        ])
+
+        for i, name in enumerate(
+                tables_maps['elint_maps_n']):
+
+            hdu_elint_maps.append(
+
+                fits.ImageHDU(
+                    data=tables_maps['elint_maps'][i],
+                    name=name,
+                    header=map_header
+                )
+            )
+
+        n_elinm.writeto(
+            f'{res_dir}/{gal}_{mode}_eline_model.fits',
+            overwrite=True
+        )
+
+        n_elinr.writeto(
+            f'{res_dir}/{gal}_{mode}_eline_res.fits',
+            overwrite=True
+        )
+
+        n_tab_eline.writeto(
+            f'{res_dir}/{gal}_{mode}_eline_table.fits',
+            overwrite=True
+        )
+
+        hdu_elint_maps.writeto(
+            f'{res_dir}/{gal}_{mode}_eline_maps.fits',
+            overwrite=True
+        )
+
+
+def process_tables_and_maps(
+        args,
+        bins,
+        vorbin_map,
+        stelt_file,
+        elint_file,
+        stel_template,
+        coords=None
+):
+
+    # ========================================================
+    # Load tables
+    # ========================================================
+
+    stelt_t = Table(stelt_file[1].data)
+
+    if args.el_flag:
+        elint_t = Table(elint_file[1].data)
+
+        # remove duplicated fiber=0 rows
+        fiber_zero = np.where(elint_t['fiber'] == 0)[0]
+
+        if len(fiber_zero) > 1:
+            mask = np.ones(len(elint_t), dtype=bool)
+            mask[fiber_zero[1:]] = False
+            elint_t = elint_t[mask]
+
+        tab_el = elint_t.copy()
+
+    tab_st = stelt_t.copy()
+
+    # ========================================================
+    # Map names
+    # ========================================================
+
+    stelt_maps_n = list(stelt_file[1].data.names)
+    stelt_maps_n.remove('fiber')
+    stelt_maps_n.remove('base_coeff')
+
+    if args.el_flag:
+        elint_maps_n = list(elint_file[1].data.names)
+        elint_maps_n.remove('fiber')
+
+    # ========================================================
+    # Create empty maps
+    # ========================================================
+
+    ny, nx = vorbin_map.shape
+
+    stelt_maps = np.full(
+        (len(stelt_maps_n), ny, nx),
+        np.nan
+    )
+
+    if args.el_flag:
+        elint_maps = np.full(
+            (len(elint_maps_n), ny, nx),
+            np.nan
+        )
+
+    base_coeff_t = Table(stel_template[1].data)
+
+    base_coeff_maps = np.full(
+        (len(base_coeff_t), ny, nx),
+        np.nan
+    )
+
+    # ========================================================
+    # Coordinates
+    # ========================================================
+
+    tx = []
+    ty = []
+
+    # ========================================================
+    # Fill maps
+    # ========================================================
+
+    if args.vorbin_flag:
+
+        for row_idx, fiber_id in enumerate(bins):
+
+            mask = (vorbin_map == fiber_id)
+
+            yy, xx = np.where(mask)
+
+            tx.append(xx)
+            ty.append(yy)
+
+            # stellar maps
+            if np.sum(stelt_t['fiber'] == row_idx):
+
+                for i, name in enumerate(stelt_maps_n):
+                    value = stelt_t[name][
+                        stelt_t['fiber'] == row_idx
+                        ][0]
+
+                    stelt_maps[i][mask] = value
+
+                coeffs = stelt_t['base_coeff'][
+                    stelt_t['fiber'] == row_idx
+                    ][0]
+
+                for i in range(len(coeffs)):
+                    base_coeff_maps[i][mask] = coeffs[i]
+
+            # emission-line maps
+            if args.el_flag:
+
+                if np.sum(elint_t['fiber'] == row_idx):
+
+                    for i, name in enumerate(elint_maps_n):
+                        value = elint_t[name][
+                            elint_t['fiber'] == row_idx
+                            ][0]
+
+                        elint_maps[i][mask] = value
+
+    else:
+
+        for row_idx in range(len(stelt_t)):
+
+            x = int(stelt_t['x_cor'][row_idx])
+            y = int(stelt_t['y_cor'][row_idx])
+
+            tx.append(x)
+            ty.append(y)
+
+            for i, name in enumerate(stelt_maps_n):
+                stelt_maps[i][y, x] = \
+                    stelt_t[name][row_idx]
+
+            coeffs = stelt_t['base_coeff'][row_idx]
+
+            for i in range(len(coeffs)):
+                base_coeff_maps[i][y, x] = coeffs[i]
+
+            if args.el_flag:
+
+                for i, name in enumerate(elint_maps_n):
+                    elint_maps[i][y, x] = \
+                        elint_t[name][row_idx]
+
+    # ========================================================
+    # Expand Voronoi tables
+    # ========================================================
+
+    if args.vorbin_flag:
+
+        for row_idx, fiber_id in enumerate(bins):
+
+            n_pix = np.sum(vorbin_map == fiber_id)
+
+            for _ in range(n_pix - 1):
+
+                if np.sum(tab_st['fiber'] == row_idx):
+                    tab_st.add_row(
+                        tab_st[tab_st['fiber'] == row_idx][0]
+                    )
+
+                if args.el_flag:
+
+                    if np.sum(tab_el['fiber'] == row_idx):
+
+                        tab_el.add_row(
+                            tab_el[tab_el['fiber'] == row_idx][0]
+                        )
+
+    # ========================================================
+    # Sort tables
+    # ========================================================
+
+    tab_st = tab_st[tab_st.argsort(['fiber'])]
+
+    if args.el_flag:
+        tab_el = tab_el[tab_el.argsort(['fiber'])]
+
+    # ========================================================
+    # Add coordinates
+    # ========================================================
+
+    if args.vorbin_flag:
+        ttx = np.concatenate(tx)
+        tty = np.concatenate(ty)
+    else:
+        ttx = tx
+        tty = ty
+
+    if 'x_cor' not in tab_st.colnames:
+        tab_st.add_column(ttx, name='x_cor', index=0)
+    if 'y_cor' not in tab_st.colnames:
+        tab_st.add_column(tty, name='y_cor', index=1)
+
+    if args.el_flag:
+        if 'x_cor' not in tab_el.colnames:
+            tab_el.add_column(ttx, name='x_cor', index=0)
+        if 'y_cor' not in tab_el.colnames:
+            tab_el.add_column(tty, name='y_cor', index=1)
+
+    # ========================================================
+    # Return everything
+    # ========================================================
+
+    result = {
+        "tab_st": tab_st,
+        "stelt_maps": stelt_maps,
+        "stelt_maps_n": stelt_maps_n,
+        "base_coeff_maps": base_coeff_maps,
+        "base_coeff_t": base_coeff_t
+    }
+
+    if args.el_flag:
+
+        result["tab_el"] = tab_el
+        result["elint_maps"] = elint_maps
+        result["elint_maps_n"] = elint_maps_n
+
+    return result
+
+
 def tab_cre(ob, args):
+
+    # ========================================================
+    # Initial setup
+    # ========================================================
 
     file_dir = args.data_path + ob + '/'
 
-    blue_cube = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('stackcube' in x)])[1])
-    red_cube = fits.open(file_dir + np.sort([x for x in os.listdir(file_dir) if ('stackcube' in x)])[0])
+    stackcubes = np.sort([
+        x for x in os.listdir(file_dir)
+        if 'stackcube' in x
+    ])
+
+    blue_cube = fits.open(file_dir + stackcubes[1])
+    red_cube = fits.open(file_dir + stackcubes[0])
 
     gal = blue_cube[0].header['CCNAME1']
-    gal_dir = str(blue_cube[0].header['OBID']) + '_' + gal + '_' + blue_cube[0].header['MODE'] + '/'
 
-    # =================== running for blue cube ===========================
+    gal_dir = (
+        str(blue_cube[0].header['OBID']) + '_' +
+        gal + '_' +
+        blue_cube[0].header['MODE']
+    )
 
-    if args.blue_fit_flag == 1:
+    # ========================================================
+    # Mode configuration
+    # ========================================================
 
-        res_dir = gal_dir + '/pyp_results/' + np.sort([x for x in os.listdir(gal_dir + '/pyp_results/')
-                                                       if ('BLUE' in x)])[-1] + '/'
+    mode_cfg = {
 
-        # wcs_c = fits.open(gal_dir + '/blue_cube_vorbin.fits')
-        # # rss_file = fits.open(res_dir + gal + '_blue_vorbin_RSS.fits')
+        'blue': {
+            'fit_flag': args.blue_fit_flag,
+            'cube': blue_cube,
+            'cube_file': 'blue_cube_vorbin.fits',
+            'vorbin_map': 'vorbin_map_blue.fits',
+            'params': 'parameters_stellar_blue'
+        },
 
-        if args.vorbin_flag == 1:
-            wcs_c = fits.open(gal_dir + '/blue_cube_vorbin.fits')
-            file_n = '_blue_vorbin'
-        elif args.vorbin_flag == 0:
-            wcs_c = blue_cube
-            file_n = '_blue'
-            coords = fits.getdata(res_dir + gal + file_n +'_RSS_coords.fits')
-            x = coords['X']
-            y = coords['Y']
+        'red': {
+            'fit_flag': args.red_fit_flag,
+            'cube': red_cube,
+            'cube_file': 'red_cube_vorbin.fits',
+            'vorbin_map': 'vorbin_map_red.fits',
+            'params': 'parameters_stellar_red'
+        },
+
+        'aps': {
+            'fit_flag': args.aps_fit_flag,
+            'cube': fits.open(
+                gal_dir + '/' + gal + '_cube.fits'
+            ),
+            'cube_file': gal + '_vorbin_cube.fits',
+            'vorbin_map': 'vorbin_map.fits',
+            'params': 'parameters_stellar_aps'
+        }
+    }
+
+    # ========================================================
+    # Loop over modes
+    # ========================================================
+
+    for mode, cfg in mode_cfg.items():
+
+        # ----------------------------------------------------
+        # Skip mode if disabled
+        # ----------------------------------------------------
+
+        if cfg['fit_flag'] != 1:
+            continue
+
+        print('\n====================')
+        print(f'Running {mode.upper()}')
+        print('====================')
+
+        # ----------------------------------------------------
+        # Locate latest result directory
+        # ----------------------------------------------------
+
+        pyp_dir = gal_dir + '/pyp_results/'
+
+        res_dir = (
+            pyp_dir +
+            np.sort([
+                x for x in os.listdir(pyp_dir)
+                if mode.upper() in x
+            ])[-1] +
+            '/'
+        )
+
+        # ----------------------------------------------------
+        # Load WCS cube
+        # ----------------------------------------------------
+
+        if args.vorbin_flag:
+
+            cube = fits.open(
+                gal_dir + '/' + cfg['cube_file']
+            )
+
+            file_n = f'_{mode}_vorbin'
+
+            coords = None
+
         else:
-            raise ValueError(f"Invalid input: {args.vorbin_flag}. Expected 0 or 1.")
 
-        rss_file = fits.open(res_dir + gal + file_n + '_RSS.fits')
-        contm_file = fits.open(res_dir + gal + file_n + '.cont_model.fits')
-        contr_file = fits.open(res_dir + gal + file_n + '.cont_res.fits')
+            cube = cfg['cube']
 
-        stelt_file = fits.open(res_dir + gal + file_n + '.stellar_table.fits')
+            file_n = f'_{mode}'
 
-        if args.el_flag == 1:
-            elinm_file = fits.open(res_dir + gal + file_n + '.eline_model.fits')
-            elinr_file = fits.open(res_dir + gal + file_n + '.eline_res.fits')
+        # ----------------------------------------------------
+        # Load PyParadise products
+        # ----------------------------------------------------
 
-            elint_file = fits.open(res_dir + gal + file_n + '.eline_table.fits')
+        contm_file = fits.open(
+            res_dir + gal + file_n + '.cont_model.fits'
+        )
 
-            elint_t = Table(elint_file[1].data)
+        contr_file = fits.open(
+            res_dir + gal + file_n + '.cont_res.fits'
+        )
 
-        vorbin_map = fits.getdata(gal_dir + '/vorbin_map_blue.fits')
+        stelt_file = fits.open(
+            res_dir + gal + file_n + '.stellar_table.fits'
+        )
 
-        params_stel = open(res_dir + '/parameters_stellar_blue_'+ob, 'r')
+        # ----------------------------------------------------
+        # Optional emission line products
+        # ----------------------------------------------------
+
+        if args.el_flag:
+
+            elinm_file = fits.open(
+                res_dir + gal + file_n + '.eline_model.fits'
+            )
+
+            elinr_file = fits.open(
+                res_dir + gal + file_n + '.eline_res.fits'
+            )
+
+            elint_file = fits.open(
+                res_dir + gal + file_n + '.eline_table.fits'
+            )
+
+        else:
+
+            elinm_file = None
+            elinr_file = None
+            elint_file = None
+
+        # ----------------------------------------------------
+        # Voronoi map
+        # ----------------------------------------------------
+
+        vorbin_map = fits.getdata(
+            gal_dir + '/' + cfg['vorbin_map']
+        )
+
+        bins = np.unique(
+            vorbin_map[vorbin_map >= 0]
+        ).astype(int)
+
+        # ----------------------------------------------------
+        # Load stellar templates
+        # ----------------------------------------------------
+
+        params_stel = open(
+            res_dir +
+            '/' +
+            cfg['params'] +
+            '_' +
+            ob,
+            'r'
+        )
+
         lines = params_stel.readlines()
 
-        stelt_t = Table(stelt_file[1].data)
+        stel_template = fits.open(
+            args.temp_path +
+            lines[1].split()[1]
+        )
 
-        axis_header = fits.Header()
-        axis_header['NAXIS1'] = wcs_c[1].header['NAXIS1']
-        axis_header['NAXIS2'] = wcs_c[1].header['NAXIS2']
-        axis_header['CDELT1'] = wcs_c[1].header['CDELT1']
-        axis_header['CDELT2'] = wcs_c[1].header['CDELT2']
-        axis_header['CRPIX1'] = wcs_c[1].header['CRPIX1']
-        axis_header['CRPIX2'] = wcs_c[1].header['CRPIX2']
-        axis_header['CRVAL1'] = wcs_c[1].header['CRVAL1']
-        axis_header['CRVAL2'] = wcs_c[1].header['CRVAL2']
-        axis_header['CTYPE1'] = wcs_c[1].header['CTYPE1']
-        axis_header['CTYPE2'] = wcs_c[1].header['CTYPE2']
-        axis_header['CUNIT1'] = wcs_c[1].header['CUNIT1']
-        axis_header['CUNIT2'] = wcs_c[1].header['CUNIT2']
+        # ----------------------------------------------------
+        # Reconstruct cubes
+        # ----------------------------------------------------
 
-        # wcs = WCS(axis_header)
+        print('\nReconstructing cubes...')
 
-        # aps_ra = c[2].data['X_0'] + (c[2].data['X'] / 3600)
-        # aps_dec = c[2].data['Y_0'] + (c[2].data['Y'] / 3600)
-        #
-        # aps_ra_dec = np.vstack((aps_ra, aps_dec)).T
-        #
-        # pix_map = np.round(wcs.wcs_world2pix(aps_ra_dec, 0), 0)
-        #
-        # pix_mapt = pix_map.T.astype(int)
-        # pix_mapt[0] = pix_mapt[0] - np.min(pix_mapt[0])
-        # pix_mapt[1] = pix_mapt[1] - np.min(pix_mapt[1])
-        #
-        # pix_mapt = pix_mapt.T
-        #
-        # x_pix, y_pix = pix_map.T.astype(int)
+        if args.vorbin_flag:
 
-        # bin_id = c[2].data['BIN_ID']
-        # r_bin_id = c[3].data['BIN_ID']
+            cube_shape = cube[1].data.shape
 
-        stel_template = fits.open(args.temp_path + lines[1].split()[1])
+            if args.el_flag:
+                (contm_data, contm_err, contm_badp, contm_norm, contr_data, elinm_data, elinr_data) = \
+                    fill_cube(args.vorbin_flag, bins, vorbin_map, contm_file, contr_file,
+                              None if not args.el_flag else {"model": elinm_file, "res": elinr_file},
+                              cube_shape, coords)
 
-        contm_data = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
-        contm_err = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
-        contm_badp = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
-        contm_norm = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
-        contr_data = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
-        if args.el_flag == 1:
-            elinm_data = np.zeros((contm_file[0].data.shape[1], c[1].data.shape[1], c[1].data.shape[2]))
-            elinr_data = np.zeros((contm_file[0].data.shape[1], c[1].data.shape[1], c[1].data.shape[2]))
-
-        cnt = 0
-
-        bins = np.unique(vorbin_map[vorbin_map >= 0]).astype(int)
-
-        if args.vorbin_flag == 1:
-            for i in bins:
-                print('Rearranging into datacube formats: ' + str(
-                    round(100. * cnt / bins.shape[0], 2)) + '%', end='\r')
-                contm_data.T[vorbin_map.T == i] = contm_file[0].data[i]
-                contm_err.T[vorbin_map.T == i] = contm_file[1].data[i]
-                contm_badp.T[vorbin_map.T == i] = contm_file[2].data[i]
-                contm_norm.T[vorbin_map.T == i] = contm_file[3].data[i]
-                contr_data.T[vorbin_map.T == i] = contr_file[0].data[i]
-                if args.el_flag == 1:
-                    elinm_data.T[vorbin_map.T == i] = elinm_file[0].data[i]
-                    elinr_data.T[vorbin_map.T == i] = elinr_file[0].data[i]
-                cnt += 1
-        else:
-            print('Rearranging into datacube formats: ' + str(
-                round(100. * cnt / rss_file[0].data.shape[0], 2)) + '%', end='\r')
-            contm_data[:, y[i], x[i]] = contm_file[0].data[i]
-            contm_err[:, y[i], x[i]] = contm_file[1].data[i]
-            contm_badp[:, y[i], x[i]] = contm_file[2].data[i]
-            contm_norm[:, y[i], x[i]] = contm_file[3].data[i]
-            contr_data[:, y[i], x[i]] = contr_file[0].data[i]
-            if args.el_flag == 1:
-                elinm_data[:, y[i], x[i]] = elinm_file[0].data[i]
-                elinr_data[:, y[i], x[i]] = elinr_file[0].data[i]
-
-        print('')
-
-        tab_st = stelt_t.copy()
-
-        tx = []
-        ty = []
-
-        stelt_maps = []
-
-        stelt_maps_n = stelt_file[1].data.names
-        stelt_maps_n.remove('fiber')
-        stelt_maps_n.remove('base_coeff')
-
-        if args.el_flag == 1:
-            fiber_zero_indices = np.where(elint_t['fiber'] == 0)[0]
-
-            # If there are any fiber=0 rows, keep only the first one
-            if len(fiber_zero_indices) > 1:
-                # mark all except the first for removal
-                to_remove = fiber_zero_indices[1:]
-                mask = np.ones(len(elint_t), dtype=bool)
-                mask[to_remove] = False
             else:
-                # nothing to remove
-                mask = np.ones(len(elint_t), dtype=bool)
+                (contm_data, contm_err, contm_badp, contm_norm, contr_data) = \
+                    fill_cube(args.vorbin_flag, bins, vorbin_map, contm_file, contr_file,
+                              None if not args.el_flag else {"model": elinm_file, "res": elinr_file},
+                              cube_shape, coords)
 
-            # Apply mask
-            elint_t = elint_t[mask]
-            tab_el = elint_t.copy()
-            elint_maps = []
-            elint_maps_n = elint_file[1].data.names
-            elint_maps_n.remove('fiber')
-
-        base_coeff_t = Table(stel_template[1].data)
-        base_coeff_maps = []
-
-        if args.el_flag == 1:
-            for i in np.arange(len(elint_maps_n)):
-                elint_maps.append(vorbin_map.copy()*np.nan)
-        for i in np.arange(len(stelt_maps_n)):
-            stelt_maps.append(vorbin_map.copy()*np.nan)
-        for i in np.arange(len(base_coeff_t)):
-            base_coeff_maps.append(vorbin_map.copy()*np.nan)
-
-        if args.el_flag == 1:
-            elint_maps = np.reshape(elint_maps, (len(elint_maps_n), elint_maps[0].shape[0], elint_maps[0].shape[1]))
-        stelt_maps = np.reshape(stelt_maps, (len(stelt_maps_n), stelt_maps[0].shape[0], stelt_maps[0].shape[1]))
-        base_coeff_maps = np.reshape(base_coeff_maps,
-                                     (len(base_coeff_maps), base_coeff_maps[0].shape[0], base_coeff_maps[0].shape[1]))
-
-        for row_idx, fiber_id in enumerate(bins):
-            if args.vorbin_flag == 1:
-                if np.sum(stelt_file[1].data['fiber'] == row_idx) > 0:
-                    tx.append(np.where(vorbin_map == fiber_id)[1])
-                    ty.append(np.where(vorbin_map == fiber_id)[0])
-                    for i in np.arange(len(stelt_maps)):
-                        stelt_maps[i][vorbin_map == fiber_id] = \
-                            stelt_file[1].data[stelt_maps_n[i]][stelt_file[1].data['fiber'] == row_idx][0]
-                    for i in np.arange(len(base_coeff_maps)):
-                        base_coeff_maps[i][vorbin_map == fiber_id] = \
-                            stelt_file[1].data['base_coeff'][stelt_file[1].data['fiber'] == row_idx][0][i]
-                else:
-                    tx.append([np.nan])
-                    ty.append([np.nan])
-                if args.el_flag == 1:
-                    if np.sum(elint_file[1].data['fiber'] == row_idx) > 0:
-                        for i in np.arange(len(elint_maps)):
-                            elint_maps[i][vorbin_map == fiber_id] = \
-                                elint_file[1].data[elint_maps_n[i]][elint_file[1].data['fiber'] == row_idx][0]
-            else:
-                tx.append(x[row_idx])
-                ty.append(y[row_idx])
-                for i in np.arange(len(stelt_maps)):
-                    stelt_maps[i][y[row_idx], x[row_idx]] = stelt_file[1].data[stelt_maps_n[i]][row_idx]
-                for i in np.arange(len(base_coeff_maps)):
-                    base_coeff_maps[i][y[row_idx], x[row_idx]] = stelt_file[1].data['base_coeff'][row_idx][i]
-                if args.el_flag == 1:
-                    for i in np.arange(len(elint_maps)):
-                        elint_maps[i][y[row_idx], x[row_idx]] = elint_file[1].data[elint_maps_n[i]][row_idx]
-
-        if args.vorbin_flag == 1:
-            ttx = np.concatenate(tx)
-            tty = np.concatenate(ty)
         else:
-            ttx = tx
-            tty = ty
 
-        if args.vorbin_flag == 1:
-            for row_idx, fiber_id in enumerate(bins):
-                print('Organizing tables formats: ' +
-                      str(round(100. * row_idx / len(bins), 2)) + '%', end='\r')
-                for j in np.arange(len(np.where(vorbin_map == fiber_id)[0]) - 1):
-                    if args.el_flag == 1:
-                        tab_el.add_row(tab_el[tab_el['fiber'] == fiber_id][0])
-                    tab_st.add_row(tab_st[tab_st['fiber'] == fiber_id][0])
-            print('')
+            contm_data = contm_file[0].data
+            contm_err = contm_file[1].data
+            contm_badp = contm_file[2].data
+            contm_norm = contm_file[3].data
 
-        tab_st = tab_st[tab_st.argsort(['fiber'])]
+            contr_data = contr_file[0].data
 
-        tab_st.add_column(ttx, name='x_cor', index=0)
-        tab_st.add_column(tty, name='y_cor', index=1)
+            if args.el_flag:
+                elinm_data = elinm_file[0].data
+                elinr_data = elinr_file[0].data
 
-        if args.el_flag == 1:
-            tab_el = tab_el[tab_el.argsort(['fiber'])]
+        # ----------------------------------------------------
+        # Process tables + maps
+        # ----------------------------------------------------
 
-            tab_el.add_column(ttx, name='x_cor', index=0)
-            tab_el.add_column(tty, name='y_cor', index=1)
+        print('Processing tables and maps...')
 
-        # create RSS file
+        tables_maps = process_tables_and_maps(
+
+            args=args,
+            bins=bins,
+            vorbin_map=vorbin_map,
+            stelt_file=stelt_file,
+            elint_file=elint_file,
+            stel_template=stel_template,
+            coords=coords
+        )
+
+        # ----------------------------------------------------
+        # Build cube header
+        # ----------------------------------------------------
 
         cube_head = fits.Header()
+
         cube_head['SIMPLE'] = True
         cube_head['BITPIX'] = -32
         cube_head['NAXIS'] = 3
+
         cube_head['NAXIS1'] = contm_data.shape[2]
         cube_head['NAXIS2'] = contm_data.shape[1]
         cube_head['NAXIS3'] = contm_data.shape[0]
+
         cube_head['CTYPE3'] = 'WAVELENGTH'
         cube_head['CUNIT3'] = 'Angstrom'
-        cube_head['CDELT3'] = contm_file[0].header['CDELT1']
-        cube_head['DISPAXIS'] = contm_file[0].header['DISPAXIS']
-        cube_head['CRVAL3'] = contm_file[0].header['CRVAL1']
-        cube_head['CRPIX3'] = contm_file[0].header['CRPIX1']
-        cube_head['CRPIX1'] = wcs_c[1].header['CRPIX1']
-        cube_head['CRPIX2'] = wcs_c[1].header['CRPIX2']
-        cube_head['CRVAL1'] = wcs_c[1].header['CRVAL1']
-        cube_head['CRVAL2'] = wcs_c[1].header['CRVAL2']
-        cube_head['CDELT1'] = wcs_c[1].header['CDELT1']
-        cube_head['CDELT2'] = wcs_c[1].header['CDELT2']
+
+        cube_head['CDELT3'] = (
+            contm_file[0].header['CDELT1']
+        )
+
+        cube_head['DISPAXIS'] = (
+            contm_file[0].header['DISPAXIS']
+        )
+
+        cube_head['CRVAL3'] = (
+            contm_file[0].header['CRVAL1']
+        )
+
+        cube_head['CRPIX3'] = (
+            contm_file[0].header['CRPIX1']
+        )
+
+        cube_head['CRPIX1'] = cube[1].header['CRPIX1']
+        cube_head['CRPIX2'] = cube[1].header['CRPIX2']
+
+        cube_head['CRVAL1'] = cube[1].header['CRVAL1']
+        cube_head['CRVAL2'] = cube[1].header['CRVAL2']
+
+        cube_head['CDELT1'] = cube[1].header['CDELT1']
+        cube_head['CDELT2'] = cube[1].header['CDELT2']
+
         cube_head['CTYPE1'] = 'RA---TAN'
         cube_head['CTYPE2'] = 'DEC--TAN'
+
         cube_head['CUNIT1'] = 'deg'
         cube_head['CUNIT2'] = 'deg'
 
-        n_contm = fits.HDUList([fits.PrimaryHDU(data=contm_data, header=cube_head),
-                                fits.ImageHDU(data=contm_err, header=cube_head, name='ERROR'),
-                                fits.ImageHDU(data=contm_badp, header=cube_head, name='BADPIX'),
-                                fits.ImageHDU(data=contm_norm, header=cube_head, name='NORMALIZE')])
-        n_contr = fits.HDUList([fits.PrimaryHDU(data=contr_data, header=cube_head)])
-
-        n_tab_stell = fits.HDUList([stelt_file[0].copy(),
-                                    fits.BinTableHDU(tab_st, header=stelt_file[1].header)])
-
-        if args.el_flag == 1:
-            n_elinm = fits.HDUList([fits.PrimaryHDU(data=elinm_data, header=cube_head)])
-            n_elinr = fits.HDUList([fits.PrimaryHDU(data=elinr_data, header=cube_head)])
-
-            n_tab_eline = fits.HDUList([elint_file[0].copy(),
-                                        fits.BinTableHDU(tab_el, header=elint_file[1].header)])
+        # ----------------------------------------------------
+        # Build map header
+        # ----------------------------------------------------
 
         map_head = fits.Header()
+
         map_head['SIMPLE'] = True
         map_head['BITPIX'] = -32
         map_head['NAXIS'] = 2
+
         map_head['NAXIS1'] = vorbin_map.shape[1]
         map_head['NAXIS2'] = vorbin_map.shape[0]
+
         map_head['DISPAXIS'] = 1
-        map_head['CRPIX1'] = wcs_c[1].header['CRPIX1']
-        map_head['CRPIX2'] = wcs_c[1].header['CRPIX2']
-        map_head['CRVAL1'] = wcs_c[1].header['CRVAL1']
-        map_head['CRVAL2'] = wcs_c[1].header['CRVAL2']
-        map_head['CDELT1'] = wcs_c[1].header['CDELT1']
-        map_head['CDELT2'] = wcs_c[1].header['CDELT2']
+
+        map_head['CRPIX1'] = cube[1].header['CRPIX1']
+        map_head['CRPIX2'] = cube[1].header['CRPIX2']
+
+        map_head['CRVAL1'] = cube[1].header['CRVAL1']
+        map_head['CRVAL2'] = cube[1].header['CRVAL2']
+
+        map_head['CDELT1'] = cube[1].header['CDELT1']
+        map_head['CDELT2'] = cube[1].header['CDELT2']
+
         map_head['CTYPE1'] = 'RA---TAN'
         map_head['CTYPE2'] = 'DEC--TAN'
+
         map_head['CUNIT1'] = 'deg'
         map_head['CUNIT2'] = 'deg'
 
-        hdu_stelt_maps = fits.HDUList([fits.PrimaryHDU()])
-        hdu_base_coeff_maps = fits.HDUList(
-            [fits.PrimaryHDU(), fits.BinTableHDU(base_coeff_t, name=lines[1].split()[1][:-5])])
+        # ----------------------------------------------------
+        # Write outputs
+        # ----------------------------------------------------
 
-        for i in np.arange(len(stelt_maps)):
-            hdu_stelt_maps.append(fits.ImageHDU(data=stelt_maps[i], name=stelt_maps_n[i], header=map_head))
-        for i in np.arange(len(base_coeff_maps)):
-            hdu_base_coeff_maps.append(
-                fits.ImageHDU(data=base_coeff_maps[i], name='Template ' + str(i), header=map_head))
+        print('Saving outputs...')
 
-        if args.el_flag == 1:
-            hdu_elint_maps = fits.HDUList([fits.PrimaryHDU()])
+        write_outputs(
 
-            for i in np.arange(len(elint_maps)):
-                hdu_elint_maps.append(fits.ImageHDU(data=elint_maps[i], name=elint_maps_n[i], header=map_head))
+            res_dir=res_dir,
+            gal=gal,
+            mode=mode,
 
-        print('Saving data...')
+            cube_header=cube_head,
+            map_header=map_head,
 
-        n_contm.writeto(res_dir + gal + '_blue_cont_model.fits', overwrite=True)
-        n_contr.writeto(res_dir + gal + '_blue_cont_res.fits', overwrite=True)
+            contm_data=contm_data,
+            contm_err=contm_err,
+            contm_badp=contm_badp,
+            contm_norm=contm_norm,
+            contr_data=contr_data,
 
-        n_tab_stell.writeto(res_dir + gal + '_blue_stellar_table.fits', overwrite=True)
+            stelt_file=stelt_file,
 
-        hdu_stelt_maps.writeto(res_dir + gal + '_blue_stellar_maps.fits', overwrite=True)
-        hdu_base_coeff_maps.writeto(res_dir + gal + '_blue_base_coeff_maps.fits', overwrite=True)
+            tables_maps=tables_maps,
 
-        if args.el_flag == 1:
-            n_elinm.writeto(res_dir + gal + '_blue_eline_model.fits', overwrite=True)
-            n_elinr.writeto(res_dir + gal + '_blue_eline_res.fits', overwrite=True)
+            args=args,
 
-            n_tab_eline.writeto(res_dir + gal + '_blue_eline_table.fits', overwrite=True)
+            elinm_data=elinm_data if args.el_flag else None,
+            elinr_data=elinr_data if args.el_flag else None,
 
-            hdu_elint_maps.writeto(res_dir + gal + '_blue_eline_maps.fits', overwrite=True)
+            elint_file=elint_file
+        )
 
-    # =================== running for red cube ===========================
-
-    if args.red_fit_flag == 1:
-
-        res_dir = gal_dir + '/pyp_results/' + np.sort([x for x in os.listdir(gal_dir + '/pyp_results/')
-                                                       if ('RED' in x)])[-1] + '/'
-
-        # wcs_c = fits.open(gal_dir + '/red_cube_vorbin.fits')
-        # rss_file = fits.open(res_dir + gal + '_red_vorbin_RSS.fits')
-
-        if args.vorbin_flag == 1:
-            wcs_c = fits.open(gal_dir + '/red_cube_vorbin.fits')
-            file_n = '_red_vorbin'
-        elif args.vorbin_flag == 0:
-            wcs_c = red_cube
-            file_n = '_red'
-            coords = fits.getdata(res_dir + gal + file_n +'_RSS_coords.fits')
-            x = coords['X']
-            y = coords['Y']
-        else:
-            raise ValueError(f"Invalid input: {args.vorbin_flag}. Expected 0 or 1.")
-
-        rss_file = fits.open(res_dir + gal + file_n + '_RSS.fits')
-        rss_file = fits.open(res_dir + gal + file_n + '_RSS.fits')
-        contm_file = fits.open(res_dir + gal + file_n + '.cont_model.fits')
-        contr_file = fits.open(res_dir + gal + file_n + '.cont_res.fits')
-
-        stelt_file = fits.open(res_dir + gal + file_n + '.stellar_table.fits')
-
-        if args.el_flag == 1:
-            elinm_file = fits.open(res_dir + gal + file_n + '.eline_model.fits')
-            elinr_file = fits.open(res_dir + gal + file_n + '.eline_res.fits')
-
-            elint_file = fits.open(res_dir + gal + file_n + '.eline_table.fits')
-
-            elint_t = Table(elint_file[1].data)
-
-        vorbin_map = fits.getdata(gal_dir + '/vorbin_map_red.fits')
-
-        params_stel = open(res_dir + '/parameters_stellar_red_'+ob, 'r')
-        lines = params_stel.readlines()
-
-        stelt_t = Table(stelt_file[1].data)
-
-        axis_header = fits.Header()
-        axis_header['NAXIS1'] = wcs_c[1].header['NAXIS1']
-        axis_header['NAXIS2'] = wcs_c[1].header['NAXIS2']
-        axis_header['CDELT1'] = wcs_c[1].header['CDELT1']
-        axis_header['CDELT2'] = wcs_c[1].header['CDELT2']
-        axis_header['CRPIX1'] = wcs_c[1].header['CRPIX1']
-        axis_header['CRPIX2'] = wcs_c[1].header['CRPIX2']
-        axis_header['CRVAL1'] = wcs_c[1].header['CRVAL1']
-        axis_header['CRVAL2'] = wcs_c[1].header['CRVAL2']
-        axis_header['CTYPE1'] = wcs_c[1].header['CTYPE1']
-        axis_header['CTYPE2'] = wcs_c[1].header['CTYPE2']
-        axis_header['CUNIT1'] = wcs_c[1].header['CUNIT1']
-        axis_header['CUNIT2'] = wcs_c[1].header['CUNIT2']
-
-        # wcs = WCS(axis_header)
-
-        # aps_ra = c[2].data['X_0'] + (c[2].data['X'] / 3600)
-        # aps_dec = c[2].data['Y_0'] + (c[2].data['Y'] / 3600)
-        #
-        # aps_ra_dec = np.vstack((aps_ra, aps_dec)).T
-        #
-        # pix_map = np.round(wcs.wcs_world2pix(aps_ra_dec, 0), 0)
-        #
-        # pix_mapt = pix_map.T.astype(int)
-        # pix_mapt[0] = pix_mapt[0] - np.min(pix_mapt[0])
-        # pix_mapt[1] = pix_mapt[1] - np.min(pix_mapt[1])
-        #
-        # pix_mapt = pix_mapt.T
-        #
-        # x_pix, y_pix = pix_map.T.astype(int)
-
-        # bin_id = c[2].data['BIN_ID']
-        # r_bin_id = c[3].data['BIN_ID']
-
-        stel_template = fits.open(args.temp_path + lines[1].split()[1])
-
-        contm_data = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
-        contm_err = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
-        contm_badp = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
-        contm_norm = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
-        contr_data = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
-        if args.el_flag == 1:
-            elinm_data = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
-            elinr_data = np.zeros((contm_file[0].data.shape[1], wcs_c[1].data.shape[1], wcs_c[1].data.shape[2]))
-
-        cnt = 0
-
-        bins = np.unique(vorbin_map[vorbin_map >= 0]).astype(int)
-
-        if args.vorbin_flag == 1:
-            for i in bins:
-                print('Rearranging into datacube formats: ' + str(
-                    round(100. * cnt / bins.shape[0], 2)) + '%', end='\r')
-                contm_data.T[vorbin_map.T == i] = contm_file[0].data[i]
-                contm_err.T[vorbin_map.T == i] = contm_file[1].data[i]
-                contm_badp.T[vorbin_map.T == i] = contm_file[2].data[i]
-                contm_norm.T[vorbin_map.T == i] = contm_file[3].data[i]
-                contr_data.T[vorbin_map.T == i] = contr_file[0].data[i]
-                if args.el_flag == 1:
-                    elinm_data.T[vorbin_map.T == i] = elinm_file[0].data[i]
-                    elinr_data.T[vorbin_map.T == i] = elinr_file[0].data[i]
-                cnt += 1
-        else:
-            print('Rearranging into datacube formats: ' + str(
-                round(100. * cnt / rss_file[0].data.shape[0], 2)) + '%', end='\r')
-            contm_data[:, y[i], x[i]] = contm_file[0].data[i]
-            contm_err[:, y[i], x[i]] = contm_file[1].data[i]
-            contm_badp[:, y[i], x[i]] = contm_file[2].data[i]
-            contm_norm[:, y[i], x[i]] = contm_file[3].data[i]
-            contr_data[:, y[i], x[i]] = contr_file[0].data[i]
-            if args.el_flag == 1:
-                elinm_data[:, y[i], x[i]] = elinm_file[0].data[i]
-                elinr_data[:, y[i], x[i]] = elinr_file[0].data[i]
-
-        print('')
-
-        tab_st = stelt_t.copy()
-
-        tx = []
-        ty = []
-
-        stelt_maps = []
-
-        stelt_maps_n = stelt_file[1].data.names
-        stelt_maps_n.remove('fiber')
-        stelt_maps_n.remove('base_coeff')
-
-        if args.el_flag == 1:
-            fiber_zero_indices = np.where(elint_t['fiber'] == 0)[0]
-
-            # If there are any fiber=0 rows, keep only the first one
-            if len(fiber_zero_indices) > 1:
-                # mark all except the first for removal
-                to_remove = fiber_zero_indices[1:]
-                mask = np.ones(len(elint_t), dtype=bool)
-                mask[to_remove] = False
-            else:
-                # nothing to remove
-                mask = np.ones(len(elint_t), dtype=bool)
-
-            # Apply mask
-            elint_t = elint_t[mask]
-            tab_el = elint_t.copy()
-            elint_maps = []
-            elint_maps_n = elint_file[1].data.names
-            elint_maps_n.remove('fiber')
-
-        base_coeff_t = Table(stel_template[1].data)
-        base_coeff_maps = []
-
-        if args.el_flag == 1:
-            for i in np.arange(len(elint_maps_n)):
-                elint_maps.append(vorbin_map.copy()*np.nan)
-        for i in np.arange(len(stelt_maps_n)):
-            stelt_maps.append(vorbin_map.copy()*np.nan)
-        for i in np.arange(len(base_coeff_t)):
-            base_coeff_maps.append(vorbin_map.copy()*np.nan)
-
-        if args.el_flag == 1:
-            elint_maps = np.reshape(elint_maps, (len(elint_maps_n), elint_maps[0].shape[0], elint_maps[0].shape[1]))
-        stelt_maps = np.reshape(stelt_maps, (len(stelt_maps_n), stelt_maps[0].shape[0], stelt_maps[0].shape[1]))
-        base_coeff_maps = np.reshape(base_coeff_maps,
-                                     (len(base_coeff_maps), base_coeff_maps[0].shape[0], base_coeff_maps[0].shape[1]))
-
-        for row_idx, fiber_id in enumerate(bins):
-            if args.vorbin_flag == 1:
-                if np.sum(stelt_file[1].data['fiber'] == row_idx) > 0:
-                    tx.append(np.where(vorbin_map == fiber_id)[1])
-                    ty.append(np.where(vorbin_map == fiber_id)[0])
-                    for i in np.arange(len(stelt_maps)):
-                        stelt_maps[i][vorbin_map == fiber_id] = \
-                            stelt_file[1].data[stelt_maps_n[i]][stelt_file[1].data['fiber'] == row_idx][0]
-                    for i in np.arange(len(base_coeff_maps)):
-                        base_coeff_maps[i][vorbin_map == fiber_id] = \
-                            stelt_file[1].data['base_coeff'][stelt_file[1].data['fiber'] == row_idx][0][i]
-                else:
-                    tx.append([np.nan])
-                    ty.append([np.nan])
-                if args.el_flag == 1:
-                    if np.sum(elint_file[1].data['fiber'] == row_idx) > 0:
-                        for i in np.arange(len(elint_maps)):
-                            elint_maps[i][vorbin_map == fiber_id] = \
-                                elint_file[1].data[elint_maps_n[i]][elint_file[1].data['fiber'] == row_idx][0]
-            else:
-                tx.append(x[row_idx])
-                ty.append(y[row_idx])
-                for i in np.arange(len(stelt_maps)):
-                    stelt_maps[i][y[row_idx], x[row_idx]] = stelt_file[1].data[stelt_maps_n[i]][row_idx]
-                for i in np.arange(len(base_coeff_maps)):
-                    base_coeff_maps[i][y[row_idx], x[row_idx]] = stelt_file[1].data['base_coeff'][row_idx][i]
-                if args.el_flag == 1:
-                    for i in np.arange(len(elint_maps)):
-                        elint_maps[i][y[row_idx], x[row_idx]] = elint_file[1].data[elint_maps_n[i]][row_idx]
-
-        if args.vorbin_flag == 1:
-            ttx = np.concatenate(tx)
-            tty = np.concatenate(ty)
-        else:
-            ttx = tx
-            tty = ty
-
-        if args.vorbin_flag == 1:
-            for row_idx, fiber_id in enumerate(bins):
-                print('Organizing tables formats: ' +
-                      str(round(100. * row_idx / len(bins), 2)) + '%', end='\r')
-                for j in np.arange(len(np.where(vorbin_map == fiber_id)[0]) - 1):
-                    if args.el_flag == 1:
-                        tab_el.add_row(tab_el[tab_el['fiber'] == fiber_id][0])
-                    tab_st.add_row(tab_st[tab_st['fiber'] == fiber_id][0])
-            print('')
-
-        tab_st = tab_st[tab_st.argsort(['fiber'])]
-
-        tab_st.add_column(ttx, name='x_cor', index=0)
-        tab_st.add_column(tty, name='y_cor', index=1)
-
-        if args.el_flag == 1:
-            tab_el = tab_el[tab_el.argsort(['fiber'])]
-
-            tab_el.add_column(ttx, name='x_cor', index=0)
-            tab_el.add_column(tty, name='y_cor', index=1)
-
-        # create RSS file
-
-        cube_head = fits.Header()
-        cube_head['SIMPLE'] = True
-        cube_head['BITPIX'] = -32
-        cube_head['NAXIS'] = 3
-        cube_head['NAXIS1'] = contm_data.shape[2]
-        cube_head['NAXIS2'] = contm_data.shape[1]
-        cube_head['NAXIS3'] = contm_data.shape[0]
-        cube_head['CTYPE3'] = 'WAVELENGTH'
-        cube_head['CUNIT3'] = 'Angstrom'
-        cube_head['CDELT3'] = contm_file[0].header['CDELT1']
-        cube_head['DISPAXIS'] = contm_file[0].header['DISPAXIS']
-        cube_head['CRVAL3'] = contm_file[0].header['CRVAL1']
-        cube_head['CRPIX3'] = contm_file[0].header['CRPIX1']
-        cube_head['CRPIX1'] = wcs_c[1].header['CRPIX1']
-        cube_head['CRPIX2'] = wcs_c[1].header['CRPIX2']
-        cube_head['CRVAL1'] = wcs_c[1].header['CRVAL1']
-        cube_head['CRVAL2'] = wcs_c[1].header['CRVAL2']
-        cube_head['CDELT1'] = wcs_c[1].header['CDELT1']
-        cube_head['CDELT2'] = wcs_c[1].header['CDELT2']
-        cube_head['CTYPE1'] = 'RA---TAN'
-        cube_head['CTYPE2'] = 'DEC--TAN'
-        cube_head['CUNIT1'] = 'deg'
-        cube_head['CUNIT2'] = 'deg'
-
-        n_contm = fits.HDUList([fits.PrimaryHDU(data=contm_data, header=cube_head),
-                                fits.ImageHDU(data=contm_err, header=cube_head, name='ERROR'),
-                                fits.ImageHDU(data=contm_badp, header=cube_head, name='BADPIX'),
-                                fits.ImageHDU(data=contm_norm, header=cube_head, name='NORMALIZE')])
-        n_contr = fits.HDUList([fits.PrimaryHDU(data=contr_data, header=cube_head)])
-
-        n_tab_stell = fits.HDUList([stelt_file[0].copy(),
-                                    fits.BinTableHDU(tab_st, header=stelt_file[1].header)])
-
-        if args.el_flag == 1:
-            n_elinm = fits.HDUList([fits.PrimaryHDU(data=elinm_data, header=cube_head)])
-            n_elinr = fits.HDUList([fits.PrimaryHDU(data=elinr_data, header=cube_head)])
-
-            n_tab_eline = fits.HDUList([elint_file[0].copy(),
-                                        fits.BinTableHDU(tab_el, header=elint_file[1].header)])
-
-        map_head = fits.Header()
-        map_head['SIMPLE'] = True
-        map_head['BITPIX'] = -32
-        map_head['NAXIS'] = 2
-        map_head['NAXIS1'] = vorbin_map.shape[1]
-        map_head['NAXIS2'] = vorbin_map.shape[0]
-        map_head['DISPAXIS'] = 1
-        map_head['CRPIX1'] = wcs_c[1].header['CRPIX1']
-        map_head['CRPIX2'] = wcs_c[1].header['CRPIX2']
-        map_head['CRVAL1'] = wcs_c[1].header['CRVAL1']
-        map_head['CRVAL2'] = wcs_c[1].header['CRVAL2']
-        map_head['CDELT1'] = wcs_c[1].header['CDELT1']
-        map_head['CDELT2'] = wcs_c[1].header['CDELT2']
-        map_head['CTYPE1'] = 'RA---TAN'
-        map_head['CTYPE2'] = 'DEC--TAN'
-        map_head['CUNIT1'] = 'deg'
-        map_head['CUNIT2'] = 'deg'
-
-        hdu_stelt_maps = fits.HDUList([fits.PrimaryHDU()])
-        hdu_base_coeff_maps = fits.HDUList(
-            [fits.PrimaryHDU(), fits.BinTableHDU(base_coeff_t, name=lines[1].split()[1][:-5])])
-
-        for i in np.arange(len(stelt_maps)):
-            hdu_stelt_maps.append(fits.ImageHDU(data=stelt_maps[i], name=stelt_maps_n[i], header=map_head))
-        for i in np.arange(len(base_coeff_maps)):
-            hdu_base_coeff_maps.append(
-                fits.ImageHDU(data=base_coeff_maps[i], name='Template ' + str(i), header=map_head))
-
-        if args.el_flag == 1:
-            hdu_elint_maps = fits.HDUList([fits.PrimaryHDU()])
-
-            for i in np.arange(len(elint_maps)):
-                hdu_elint_maps.append(fits.ImageHDU(data=elint_maps[i], name=elint_maps_n[i], header=map_head))
-
-        print('Saving data...')
-
-        n_contm.writeto(res_dir + gal + '_red_cont_model.fits', overwrite=True)
-        n_contr.writeto(res_dir + gal + '_red_cont_res.fits', overwrite=True)
-
-        n_tab_stell.writeto(res_dir + gal + '_red_stellar_table.fits', overwrite=True)
-
-        hdu_stelt_maps.writeto(res_dir + gal + '_red_stellar_maps.fits', overwrite=True)
-        hdu_base_coeff_maps.writeto(res_dir + gal + '_red_base_coeff_maps.fits', overwrite=True)
-
-        if args.el_flag == 1:
-            n_elinm.writeto(res_dir + gal + '_red_eline_model.fits', overwrite=True)
-            n_elinr.writeto(res_dir + gal + '_red_eline_res.fits', overwrite=True)
-
-            n_tab_eline.writeto(res_dir + gal + '_red_eline_table.fits', overwrite=True)
-
-            hdu_elint_maps.writeto(res_dir + gal + '_red_eline_maps.fits', overwrite=True)
-
-    # =================== running for aps cube ===========================
-
-    if args.aps_fit_flag == 1:
-
-        res_dir = gal_dir + '/pyp_results/' + np.sort([x for x in os.listdir(gal_dir + '/pyp_results/')
-                                                       if ('APS' in x)])[-1] + '/'
-
-        # if args.vorbin_flag == 1:
-
-        # # wcs_c = fits.open(gal_dir + '/' + gal + '_cube.fits')
-        # # c = fits.open(gal_dir + '/aps_cube_vorbin.fits')
-        # c = fits.open(gal_dir + '/' + gal + '_vorbin_cube.fits')
-        # # rss_file = fits.open(res_dir + gal + '_APS_vorbin_RSS.fits')
-
-        if args.vorbin_flag == 1:
-            c = fits.open(gal_dir + '/' + gal + '_vorbin_cube.fits')
-            mode = 'aps_vorbin'
-        elif args.vorbin_flag == 0:
-            c = fits.open(gal_dir + '/' + gal + '_cube.fits')
-            mode = 'aps'
-            coords = fits.getdata(res_dir + gal + '_'+mode+'_RSS_coords.fits')
-            x = coords['X']
-            y = coords['Y']
-        else:
-            raise ValueError(f"Invalid input: {value}. Expected 0 or 1.")
-
-        rss_file = fits.open(res_dir + gal + '_' + mode + '_RSS.fits')
-        contm_file = fits.open(res_dir + gal + '_'+mode+'.cont_model.fits')
-        contr_file = fits.open(res_dir + gal + '_'+mode+'.cont_res.fits')
-
-        stelt_file = fits.open(res_dir + gal + '_'+mode+'.stellar_table.fits')
-
-        if args.el_flag == 1:
-            elinm_file = fits.open(res_dir + gal + '_'+mode+'.eline_model.fits')
-            elinr_file = fits.open(res_dir + gal + '_'+mode+'.eline_res.fits')
-
-            elint_file = fits.open(res_dir + gal + '_'+mode+'.eline_table.fits')
-
-            elint_t = Table(elint_file[1].data)
-
-        # vorbin_map = fits.getdata(gal_dir + '/vorbin_map_aps.fits')
-        vorbin_map = fits.getdata(gal_dir + '/vorbin_map.fits')
-
-        params_stel = open(res_dir + '/parameters_stellar_aps_'+ob, 'r')
-        lines = params_stel.readlines()
-
-        stelt_t = Table(stelt_file[1].data)
-
-        axis_header = fits.Header()
-        axis_header['NAXIS1'] = c[1].header['NAXIS1']
-        axis_header['NAXIS2'] = c[1].header['NAXIS2']
-        axis_header['CDELT1'] = c[1].header['CDELT1']
-        axis_header['CDELT2'] = c[1].header['CDELT2']
-        axis_header['CRPIX1'] = c[1].header['CRPIX1']
-        axis_header['CRPIX2'] = c[1].header['CRPIX2']
-        axis_header['CRVAL1'] = c[1].header['CRVAL1']
-        axis_header['CRVAL2'] = c[1].header['CRVAL2']
-        axis_header['CTYPE1'] = c[1].header['CTYPE1']
-        axis_header['CTYPE2'] = c[1].header['CTYPE2']
-        axis_header['CUNIT1'] = c[1].header['CUNIT1']
-        axis_header['CUNIT2'] = c[1].header['CUNIT2']
-
-        # wcs = WCS(axis_header)
-
-        # aps_ra = c[2].data['X_0'] + (c[2].data['X'] / 3600)
-        # aps_dec = c[2].data['Y_0'] + (c[2].data['Y'] / 3600)
-
-        # aps_ra_dec = np.vstack((aps_ra, aps_dec)).T
-
-        # pix_map = np.round(wcs.wcs_world2pix(aps_ra_dec, 0), 0)
-
-        # pix_mapt = pix_map.T.astype(int)
-        # pix_mapt[0] = pix_mapt[0] - np.min(pix_mapt[0])
-        # pix_mapt[1] = pix_mapt[1] - np.min(pix_mapt[1])
-
-        # pix_mapt = pix_mapt.T
-
-        # x_pix, y_pix = pix_map.T.astype(int)
-
-        # bin_id = c[2].data['BIN_ID']
-        # r_bin_id = c[3].data['BIN_ID']
-
-        stel_template = fits.open(args.temp_path + lines[1].split()[1])
-
-        contm_data = np.zeros((contm_file[0].data.shape[1], c[1].data.shape[1], c[1].data.shape[2]))
-        contm_err = np.zeros((contm_file[0].data.shape[1], c[1].data.shape[1], c[1].data.shape[2]))
-        contm_badp = np.zeros((contm_file[0].data.shape[1], c[1].data.shape[1], c[1].data.shape[2]))
-        contm_norm = np.zeros((contm_file[0].data.shape[1], c[1].data.shape[1], c[1].data.shape[2]))
-        contr_data = np.zeros((contm_file[0].data.shape[1], c[1].data.shape[1], c[1].data.shape[2]))
-        if args.el_flag == 1:
-            elinm_data = np.zeros((contm_file[0].data.shape[1], c[1].data.shape[1], c[1].data.shape[2]))
-            elinr_data = np.zeros((contm_file[0].data.shape[1], c[1].data.shape[1], c[1].data.shape[2]))
-
-        cnt = 0
-
-        bins = np.unique(vorbin_map[vorbin_map >= 0]).astype(int)
-
-        if args.vorbin_flag == 1:
-            for i in np.arange(len(bins)):
-                print('Rearranging into datacube formats: ' + str(
-                    round(100. * cnt / bins.shape[0], 2)) + '%', end='\r')
-                contm_data.T[vorbin_map.T == bins[i]] = contm_file[0].data[i]
-                contm_err.T[vorbin_map.T == bins[i]] = contm_file[1].data[i]
-                contm_badp.T[vorbin_map.T == bins[i]] = contm_file[2].data[i]
-                contm_norm.T[vorbin_map.T == bins[i]] = contm_file[3].data[i]
-                contr_data.T[vorbin_map.T == bins[i]] = contr_file[0].data[i]
-                if args.el_flag == 1:
-                    elinm_data.T[vorbin_map.T == bins[i]] = elinm_file[0].data[i]
-                    elinr_data.T[vorbin_map.T == bins[i]] = elinr_file[0].data[i]
-                cnt += 1
-        else:
-            for i in range(rss_file[0].data.shape[0]):
-                print('Rearranging into datacube formats: ' + str(
-                    round(100. * cnt / rss_file[0].data.shape[0], 2)) + '%', end='\r')
-                contm_data[:, y[i], x[i]] = contm_file[0].data[i]
-                contm_err[:, y[i], x[i]] = contm_file[1].data[i]
-                contm_badp[:, y[i], x[i]] = contm_file[2].data[i]
-                contm_norm[:, y[i], x[i]] = contm_file[3].data[i]
-                contr_data[:, y[i], x[i]] = contr_file[0].data[i]
-                if args.el_flag == 1:
-                    elinm_data[:, y[i], x[i]] = elinm_file[0].data[i]
-                    elinr_data[:, y[i], x[i]] = elinr_file[0].data[i]
-                cnt += 1
-
-        print('')
-
-        tab_st = stelt_t.copy()
-
-        tx = []
-        ty = []
-
-        stelt_maps = []
-
-        stelt_maps_n = stelt_file[1].data.names
-        stelt_maps_n.remove('fiber')
-        stelt_maps_n.remove('base_coeff')
-
-        if args.el_flag == 1:
-            fiber_zero_indices = np.where(elint_t['fiber'] == 0)[0]
-
-            # If there are any fiber=0 rows, keep only the first one
-            if len(fiber_zero_indices) > 1:
-                # mark all except the first for removal
-                to_remove = fiber_zero_indices[1:]
-                mask = np.ones(len(elint_t), dtype=bool)
-                mask[to_remove] = False
-            else:
-                # nothing to remove
-                mask = np.ones(len(elint_t), dtype=bool)
-
-            # Apply mask
-            elint_t = elint_t[mask]
-
-            tab_el = elint_t.copy()
-
-            elint_maps = []
-            elint_maps_n = elint_file[1].data.names
-            elint_maps_n.remove('fiber')
-
-        base_coeff_t = Table(stel_template[1].data)
-        base_coeff_maps = []
-
-        if args.el_flag == 1:
-            for i in np.arange(len(elint_maps_n)):
-                elint_maps.append(vorbin_map.copy()*np.nan)
-        for i in np.arange(len(stelt_maps_n)):
-            stelt_maps.append(vorbin_map.copy()*np.nan)
-        for i in np.arange(len(base_coeff_t)):
-            base_coeff_maps.append(vorbin_map.copy()*np.nan)
-
-        if args.el_flag == 1:
-            elint_maps = np.reshape(elint_maps, (len(elint_maps_n), elint_maps[0].shape[0], elint_maps[0].shape[1]))
-        stelt_maps = np.reshape(stelt_maps, (len(stelt_maps_n), stelt_maps[0].shape[0], stelt_maps[0].shape[1]))
-        base_coeff_maps = np.reshape(base_coeff_maps,
-                                     (len(base_coeff_maps), base_coeff_maps[0].shape[0], base_coeff_maps[0].shape[1]))
-
-        for row_idx, fiber_id in enumerate(bins):
-            if args.vorbin_flag == 1:
-                if np.sum(stelt_file[1].data['fiber'] == row_idx) > 0:
-                    tx.append(np.where(vorbin_map == fiber_id)[1])
-                    ty.append(np.where(vorbin_map == fiber_id)[0])
-                    for i in np.arange(len(stelt_maps)):
-                        stelt_maps[i][vorbin_map == fiber_id] = \
-                            stelt_file[1].data[stelt_maps_n[i]][stelt_file[1].data['fiber'] == row_idx][0]
-                    for i in np.arange(len(base_coeff_maps)):
-                        base_coeff_maps[i][vorbin_map == fiber_id] = \
-                            stelt_file[1].data['base_coeff'][stelt_file[1].data['fiber'] == row_idx][0][i]
-                else:
-                    tx.append([np.nan])
-                    ty.append([np.nan])
-                if args.el_flag == 1:
-                    if np.sum(elint_file[1].data['fiber'] == row_idx) > 0:
-                        for i in np.arange(len(elint_maps)):
-                            elint_maps[i][vorbin_map == fiber_id] = \
-                                elint_file[1].data[elint_maps_n[i]][elint_file[1].data['fiber'] == row_idx][0]
-            else:
-                tx.append(x[row_idx])
-                ty.append(y[row_idx])
-                for i in np.arange(len(stelt_maps)):
-                    stelt_maps[i][y[row_idx], x[row_idx]] = stelt_file[1].data[stelt_maps_n[i]][row_idx]
-                for i in np.arange(len(base_coeff_maps)):
-                    base_coeff_maps[i][y[row_idx], x[row_idx]] = stelt_file[1].data['base_coeff'][row_idx][i]
-                if args.el_flag == 1:
-                    for i in np.arange(len(elint_maps)):
-                        elint_maps[i][y[row_idx], x[row_idx]] = elint_file[1].data[elint_maps_n[i]][row_idx]
-
-        if args.vorbin_flag == 1:
-            ttx = np.concatenate(tx)
-            tty = np.concatenate(ty)
-        else:
-            ttx = tx
-            tty = ty
-
-        if args.vorbin_flag == 1:
-            for row_idx, fiber_id in enumerate(bins):
-                print('Organizing tables formats: ' + str(round(100. * row_idx / len(bins), 2)) + '%', end='\r')
-                n_pix = len(np.where(vorbin_map == fiber_id)[0])
-                for j in np.arange(n_pix - 1):
-                    if args.el_flag == 1:
-                        if np.sum(elint_file[1].data['fiber'] == row_idx) > 0:
-                            tab_el.add_row(tab_el[tab_el['fiber'] == row_idx][0])
-                        else:
-                            new_row = tab_el[tab_el['fiber'] == 0][0].copy()
-                            for col in new_row.colnames:
-                                if col != 'fiber':
-                                    new_row[col] = np.nan
-                            new_row['fiber'] = row_idx
-                            tab_el.add_row(new_row)
-                    if np.sum(tab_st['fiber'] == row_idx) > 0:
-                        tab_st.add_row(tab_st[tab_st['fiber'] == row_idx][0])
-            print('')
-
-        tab_st = tab_st[tab_st.argsort(['fiber'])]
-
-        tab_st.add_column(ttx, name='x_cor', index=0)
-        tab_st.add_column(tty, name='y_cor', index=1)
-
-        if args.el_flag == 1:
-            tab_el = tab_el[tab_el.argsort(['fiber'])]
-
-            tab_el.add_column(ttx, name='x_cor', index=0)
-            tab_el.add_column(tty, name='y_cor', index=1)
-
-        # create RSS file
-
-        cube_head = fits.Header()
-        cube_head['SIMPLE'] = True
-        cube_head['BITPIX'] = -32
-        cube_head['NAXIS'] = 3
-        cube_head['NAXIS1'] = contm_data.shape[2]
-        cube_head['NAXIS2'] = contm_data.shape[1]
-        cube_head['NAXIS3'] = contm_data.shape[0]
-        cube_head['CTYPE3'] = 'WAVELENGTH'
-        cube_head['CUNIT3'] = 'Angstrom'
-        cube_head['CDELT3'] = contm_file[0].header['CDELT1']
-        cube_head['DISPAXIS'] = contm_file[0].header['DISPAXIS']
-        cube_head['CRVAL3'] = contm_file[0].header['CRVAL1']
-        cube_head['CRPIX3'] = contm_file[0].header['CRPIX1']
-        # cube_head['CRPIX1'] = wcs_c[0].header['CRPIX1']
-        # cube_head['CRPIX2'] = wcs_c[0].header['CRPIX2']
-        # cube_head['CRVAL1'] = wcs_c[0].header['CRVAL1']
-        # cube_head['CRVAL2'] = wcs_c[0].header['CRVAL2']
-        # cube_head['CDELT1'] = wcs_c[0].header['CDELT1']
-        # cube_head['CDELT2'] = wcs_c[0].header['CDELT2']
-        cube_head['CRPIX1'] = c[1].header['CRPIX1']
-        cube_head['CRPIX2'] = c[1].header['CRPIX2']
-        cube_head['CRVAL1'] = c[1].header['CRVAL1']
-        cube_head['CRVAL2'] = c[1].header['CRVAL2']
-        cube_head['CDELT1'] = c[1].header['CDELT1']
-        cube_head['CDELT2'] = c[1].header['CDELT2']
-        cube_head['CTYPE1'] = 'RA---TAN'
-        cube_head['CTYPE2'] = 'DEC--TAN'
-        cube_head['CUNIT1'] = 'deg'
-        cube_head['CUNIT2'] = 'deg'
-
-        n_contm = fits.HDUList([fits.PrimaryHDU(data=contm_data, header=cube_head),
-                                fits.ImageHDU(data=contm_err, header=cube_head, name='ERROR'),
-                                fits.ImageHDU(data=contm_badp, header=cube_head, name='BADPIX'),
-                                fits.ImageHDU(data=contm_norm, header=cube_head, name='NORMALIZE')])
-        n_contr = fits.HDUList([fits.PrimaryHDU(data=contr_data, header=cube_head)])
-
-        n_tab_stell = fits.HDUList([stelt_file[0].copy(),
-                                    fits.BinTableHDU(tab_st, header=stelt_file[1].header)])
-
-        if args.el_flag == 1:
-            n_elinm = fits.HDUList([fits.PrimaryHDU(data=elinm_data, header=cube_head)])
-            n_elinr = fits.HDUList([fits.PrimaryHDU(data=elinr_data, header=cube_head)])
-
-            n_tab_eline = fits.HDUList([elint_file[0].copy(),
-                                        fits.BinTableHDU(tab_el, header=elint_file[1].header)])
-
-        map_head = fits.Header()
-        map_head['SIMPLE'] = True
-        map_head['BITPIX'] = -32
-        map_head['NAXIS'] = 2
-        map_head['NAXIS1'] = vorbin_map.shape[1]
-        map_head['NAXIS2'] = vorbin_map.shape[0]
-        map_head['DISPAXIS'] = 1
-        map_head['CRPIX1'] = c[1].header['CRPIX1']
-        map_head['CRPIX2'] = c[1].header['CRPIX2']
-        map_head['CRVAL1'] = c[1].header['CRVAL1']
-        map_head['CRVAL2'] = c[1].header['CRVAL2']
-        map_head['CDELT1'] = c[1].header['CDELT1']
-        map_head['CDELT2'] = c[1].header['CDELT2']
-        map_head['CTYPE1'] = 'RA---TAN'
-        map_head['CTYPE2'] = 'DEC--TAN'
-        map_head['CUNIT1'] = 'deg'
-        map_head['CUNIT2'] = 'deg'
-
-        hdu_stelt_maps = fits.HDUList([fits.PrimaryHDU()])
-        hdu_base_coeff_maps = fits.HDUList(
-            [fits.PrimaryHDU(), fits.BinTableHDU(base_coeff_t, name=lines[1].split()[1][:-5])])
-
-        for i in np.arange(len(stelt_maps)):
-            hdu_stelt_maps.append(fits.ImageHDU(data=stelt_maps[i], name=stelt_maps_n[i], header=map_head))
-        for i in np.arange(len(base_coeff_maps)):
-            hdu_base_coeff_maps.append(
-                fits.ImageHDU(data=base_coeff_maps[i], name='Template ' + str(i), header=map_head))
-
-        if args.el_flag == 1:
-            hdu_elint_maps = fits.HDUList([fits.PrimaryHDU()])
-            for i in np.arange(len(elint_maps)):
-                hdu_elint_maps.append(fits.ImageHDU(data=elint_maps[i], name=elint_maps_n[i], header=map_head))
-
-        print('Saving data...')
-
-        n_contm.writeto(res_dir + gal + '_aps_cont_model.fits', overwrite=True)
-        n_contr.writeto(res_dir + gal + '_aps_cont_res.fits', overwrite=True)
-
-        n_tab_stell.writeto(res_dir + gal + '_aps_stellar_table.fits', overwrite=True)
-
-        hdu_stelt_maps.writeto(res_dir + gal + '_aps_stellar_maps.fits', overwrite=True)
-        hdu_base_coeff_maps.writeto(res_dir + gal + '_aps_base_coeff_maps.fits', overwrite=True)
-
-        if args.el_flag == 1:
-            n_elinm.writeto(res_dir + gal + '_aps_eline_model.fits', overwrite=True)
-            n_elinr.writeto(res_dir + gal + '_aps_eline_res.fits', overwrite=True)
-
-            n_tab_eline.writeto(res_dir + gal + '_aps_eline_table.fits', overwrite=True)
-
-            hdu_elint_maps.writeto(res_dir + gal + '_aps_eline_maps.fits', overwrite=True)
+        print(f'{mode.upper()} complete.')
 
