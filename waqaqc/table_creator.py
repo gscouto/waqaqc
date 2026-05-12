@@ -757,21 +757,19 @@ def tab_cre(ob, args):
         cube_head['CTYPE3'] = 'WAVELENGTH'
         cube_head['CUNIT3'] = 'Angstrom'
 
-        cube_head['CDELT3'] = (
-            contm_file[0].header['CDELT1']
-        )
+        cube_head['DISPAXIS'] = (contm_file[0].header['DISPAXIS'])
 
-        cube_head['DISPAXIS'] = (
-            contm_file[0].header['DISPAXIS']
-        )
+        if args.vorbin_flag:
+            # RSS / Voronoi mode
+            cube_head['CDELT3'] = (contm_file[0].header['CDELT1'])
+            cube_head['CRVAL3'] = (contm_file[0].header['CRVAL1'])
+            cube_head['CRPIX3'] = (contm_file[0].header['CRPIX1'])
 
-        cube_head['CRVAL3'] = (
-            contm_file[0].header['CRVAL1']
-        )
-
-        cube_head['CRPIX3'] = (
-            contm_file[0].header['CRPIX1']
-        )
+        else:
+            # Cube mode
+            cube_head['CDELT3'] = (contm_file[0].header['CD3_3'])
+            cube_head['CRVAL3'] = (contm_file[0].header['CRVAL3'])
+            cube_head['CRPIX3'] = (contm_file[0].header['CRPIX3'])
 
         cube_head['CRPIX1'] = cube[1].header['CRPIX1']
         cube_head['CRPIX2'] = cube[1].header['CRPIX2']
