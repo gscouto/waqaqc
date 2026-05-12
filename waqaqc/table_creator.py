@@ -308,12 +308,24 @@ def process_tables_and_maps(
     # ========================================================
 
     stelt_maps_n = list(stelt_file[1].data.names)
-    stelt_maps_n.remove('fiber')
-    stelt_maps_n.remove('base_coeff')
+
+    if 'fiber' in stelt_maps_n:
+        stelt_maps_n.remove('fiber')
+    if 'x_cor' in stelt_maps_n:
+        stelt_maps_n.remove('x_cor')
+    if 'y_cor' in stelt_maps_n:
+        stelt_maps_n.remove('y_cor')
+    if 'base_coeff' in stelt_maps_n:
+        stelt_maps_n.remove('base_coeff')
 
     if args.el_flag:
         elint_maps_n = list(elint_file[1].data.names)
-        elint_maps_n.remove('fiber')
+        if 'fiber' in elint_maps_n:
+            elint_maps_n.remove('fiber')
+        if 'x_cor' in elint_maps_n:
+            elint_maps_n.remove('x_cor')
+        if 'y_cor' in elint_maps_n:
+            elint_maps_n.remove('y_cor')
 
     # ========================================================
     # Create empty maps
@@ -444,10 +456,12 @@ def process_tables_and_maps(
     # Sort tables
     # ========================================================
 
-    tab_st = tab_st[tab_st.argsort(['fiber'])]
+    if 'fiber' in tab_st.colnames:
+        tab_st = tab_st[tab_st.argsort(['fiber'])]
 
     if args.el_flag:
-        tab_el = tab_el[tab_el.argsort(['fiber'])]
+        if 'fiber' in tab_el.colnames:
+            tab_el = tab_el[tab_el.argsort(['fiber'])]
 
     # ========================================================
     # Add coordinates
