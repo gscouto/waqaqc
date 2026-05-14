@@ -186,8 +186,8 @@ def run_mode(mode, ob, args, gal, gal_dir, file_dir, stackcubes):
         if cfg['scale_flux']:
             sens = cube[5].data
 
-            flux *= sens
-            err *= sens
+            flux *= sens[:, None, None]
+            err *= sens[:, None, None]
 
         # Optional sigma clipping
         if args.sigmaclip_flag:
