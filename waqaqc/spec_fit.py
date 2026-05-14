@@ -184,7 +184,7 @@ def run_mode(mode, ob, args, gal, gal_dir, file_dir, stackcubes):
         err = cube[2].data.copy()
 
         if cfg['scale_flux']:
-            sens = np.mean(cube[5].data[:], axis=0)
+            sens = cube[5].data
 
             flux *= sens
             err *= sens
