@@ -293,15 +293,19 @@ def process_tables_and_maps(
     stelt_t = Table(stelt_file[1].data)
 
     if args.el_flag:
+
         elint_t = Table(elint_file[1].data)
 
-        # remove duplicated fiber=0 rows
-        fiber_zero = np.where(elint_t['fiber'] == 0)[0]
+        # Voronoi tables can contain duplicated fiber=0 rows
+        if args.vorbin_flag and 'fiber' in elint_t.colnames:
 
-        if len(fiber_zero) > 1:
-            mask = np.ones(len(elint_t), dtype=bool)
-            mask[fiber_zero[1:]] = False
-            elint_t = elint_t[mask]
+            fiber_zero = np.where(elint_t['fiber'] == 0)[0]
+
+            if len(fiber_zero) > 1:
+                mask = np.ones(len(elint_t), dtype=bool)
+                mask[fiber_zero[1:]] = False
+
+                elint_t = elint_t[mask]
 
         tab_el = elint_t.copy()
 
