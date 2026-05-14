@@ -16,7 +16,7 @@ def run(args):
         print('********************************************')
         print('Runner on OB ' + ob)
         print('********************************************')
-        print('')
+        print('', flush=True)
 
         # ------------------------
 
@@ -26,7 +26,7 @@ def run(args):
                 print('============================================')
                 print('Running APS cube creator')
                 print('============================================')
-                print('')
+                print('', flush=True)
 
                 APS_cube.cube_creator(ob, args)
 
@@ -42,7 +42,7 @@ def run(args):
                 print('============================================')
                 print('Running QC plots')
                 print('============================================')
-                print('')
+                print('', flush=True)
 
                 QC_plots.html_plots(ob, redshift, args)
 
@@ -58,7 +58,7 @@ def run(args):
                 print('============================================')
                 print('Creating PyParadise parameters files')
                 print('============================================')
-                print('')
+                print('', flush=True)
 
                 pyp_params.pp(ob, redshift, args)
 
@@ -74,7 +74,7 @@ def run(args):
                 print('============================================')
                 print('Running PyParadise fitter')
                 print('============================================')
-                print('')
+                print('', flush=True)
 
                 spec_fit.specs(ob, args)
 
@@ -90,7 +90,7 @@ def run(args):
                 print('============================================')
                 print('Creating tables from fit')
                 print('============================================')
-                print('')
+                print('', flush=True)
 
                 table_creator.tab_cre(ob, args)
 
