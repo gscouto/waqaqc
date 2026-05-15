@@ -21,7 +21,6 @@ def pp(ob, redshift, args):
     # read redshift and input velocity and line flux
     z = redshift
 
-    vel = args.line_vel
     line_flux = args.line_flux
 
     # =================== running for blue cube ===========================
@@ -31,7 +30,7 @@ def pp(ob, redshift, args):
         # =======
         # create stellar parameters file
 
-        vel = round(vel + (const.c.to('km/s').value * z), 1)
+        vel = round(args.line_vel + (const.c.to('km/s').value * z), 1)
 
         f = open('parameters_stellar_blue_'+ob, "w+")
 
@@ -266,7 +265,7 @@ def pp(ob, redshift, args):
 
     if args.red_fit_flag == 1:
 
-        vel = round(vel + (const.c.to('km/s').value * z), 1)
+        vel = round(args.line_vel + (const.c.to('km/s').value * z), 1)
 
         # =======
         # create stellar parameters file
@@ -522,6 +521,8 @@ def pp(ob, redshift, args):
     # =================== running for APS ===========================
 
     if args.aps_fit_flag == 1:
+
+        vel = args.line_vel
 
         # =======
         # create stellar parameters file
