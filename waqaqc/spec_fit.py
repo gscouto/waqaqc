@@ -51,6 +51,14 @@ def create_rss_from_cube(cube, vorbin_map=None,
             rss_data[k] = cube[1].data[:, y, x]
             rss_err[k] = cube[2].data[:, y, x]
 
+            sens = cube[5].data
+
+            rss_data[k] *= sens
+            rss_err[k] *= sens
+
+            rss_data *= 1e20
+            rss_err *= 1e20
+
             if apply_sigmaclip:
                 rss_data[k] = sigma_clip_spec(
                     rss_data[k],
@@ -189,6 +197,9 @@ def run_mode(mode, ob, args, gal, gal_dir, file_dir, stackcubes):
             flux *= sens[:, None, None]
             err *= sens[:, None, None]
 
+            flux *= 1e20
+            err *= 1e20
+
         # Optional sigma clipping
         if args.sigmaclip_flag:
 
@@ -208,6 +219,9 @@ def run_mode(mode, ob, args, gal, gal_dir, file_dir, stackcubes):
 
         if 'CDELT3' not in err_header and 'CD3_3' in err_header:
             err_header['CDELT3'] = err_header['CD3_3']
+
+        flux_header['FLUX_NORM'] = 1e-20
+        err_header['FLUX_NORM'] = 1e-20
 
         cube_hdul = fits.HDUList([
 
