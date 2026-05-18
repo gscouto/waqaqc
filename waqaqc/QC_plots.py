@@ -168,6 +168,13 @@ def html_plots(ob, redshift, args):
 
     output_str = str(blue_cube[0].header['OBID']) + '_' + date + '_' + gal_name + '_' + blue_cube[0].header['MODE']
 
+    wa_id_kw = blue_cube[0].header.get('INFILE')
+
+    if wa_id_kw is not None:
+        wa_id = wa_id_kw.split('_')[3]
+    else:
+        wa_id = '_'
+
     targetSN = args.target_snr
     levels = args.levels  # SNR levels to display
 
@@ -288,12 +295,15 @@ def html_plots(ob, redshift, args):
     print('Doing L1 datacubes plots')
     print('')
 
-    fig = plt.figure(figsize=(14, 90))
+    # fig = plt.figure(figsize=(14, 90))
+    fig = plt.figure(figsize=(14, 66))
 
     fig.suptitle('L1 QC plots / CASUVERS = ' + blue_cube[0].header['CASUVERS'], size=22, weight='bold')
 
-    gs = gridspec.GridSpec(20, 2, height_ratios=[1, 0.6, 0.6, 1, 1, 1, 1, 0.6, 0.6, 1, 0.6, 0.6, 1, 1, 1, 1, 1, 1, 0.6,
-                                                 0.6], width_ratios=[0.5, 0.5])
+    # gs = gridspec.GridSpec(20, 2, height_ratios=[1, 0.6, 0.6, 1, 1, 1, 1, 0.6, 0.6, 1, 0.6, 0.6, 1, 1, 1, 1,
+    #                                              1, 1, 0.6, 0.6], width_ratios=[0.5, 0.5])
+    gs = gridspec.GridSpec(14, 2, height_ratios=[1, 0.6, 0.6, 1, 1, 1, 1, 0.6, 0.6, 1, 0.6, 0.6, 1, 0.6],
+                           width_ratios=[0.5, 0.5])
     gs.update(left=0.07, right=0.95, bottom=0.02, top=0.97, wspace=0.2, hspace=0.25)
     props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
 
@@ -525,57 +535,57 @@ def html_plots(ob, redshift, args):
 
     # ------ flux calibration: maps variation along a spectral window
 
-    step = int(len(lam_b) / 5)  # blue
-
-    for k in np.arange(5):
-        step_i = step * k
-        if k == 4:
-            step_f = len(lam_b) - 1
-        else:
-            step_f = step * (k + 1)
-        std_map = np.std(blue_cube[1].data[step_i:step_f, :, :], axis=0)
-        mean_map = np.mean(blue_cube[1].data[step_i:step_f, :, :], axis=0)
-        diff_map = abs(mean_map - std_map)
-        diff_map[diff_map == 0] = np.nan
-        median_diff = np.nanmedian(abs(mean_map - std_map))
-
-        ax = plt.subplot(gs[12 + k, 0])
-        im = ax.imshow(diff_map, origin='lower', norm=LogNorm())
-        plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'abs (mean - std) [counts]')
-        ax.set_title(r'Blue cube flux calibration (part ' + str(k + 1) + '/5) / ' + str(lam_b[step_i]) + '$\AA$ - ' +
-                     str(lam_b[step_f]) + '$\AA$', fontsize=10)
-        plt.contour(diff_map, np.array([median_diff]), linestyles=np.array([':']), colors='white', alpha=0.5)
-        m1 = mlines.Line2D([], [], color='black', linestyle=':', markersize=5, label='median( abs (mean - std)) = ' +
-                                                                                     str(round(median_diff, 1)))
-        ax.legend(handles=[m1], framealpha=1, fontsize=8, loc='lower left')
-        ax.set_xlabel('X [px]')
-        ax.set_ylabel('Y [px]')
-
-    step = int(len(lam_r) / 5)  # red
-
-    for k in np.arange(5):
-        step_i = step * k
-        if k == 4:
-            step_f = len(lam_r) - 1
-        else:
-            step_f = step * (k + 1)
-        std_map = np.std(red_cube[1].data[step_i:step_f, :, :], axis=0)
-        mean_map = np.mean(red_cube[1].data[step_i:step_f, :, :], axis=0)
-        diff_map = abs(mean_map - std_map)
-        diff_map[diff_map == 0] = np.nan
-        median_diff = np.nanmedian(abs(mean_map - std_map))
-
-        ax = plt.subplot(gs[12 + k, 1])
-        im = ax.imshow(diff_map, origin='lower', norm=LogNorm())
-        plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'abs (mean - std) [counts]')
-        ax.set_title(r'Red cube flux calibration (part ' + str(k + 1) + '/5) / ' + str(lam_r[step_i]) + '$\AA$ - ' +
-                     str(lam_r[step_f]) + '$\AA$', fontsize=10)
-        plt.contour(diff_map, np.array([median_diff]), linestyles=np.array([':']), colors='white', alpha=0.5)
-        m1 = mlines.Line2D([], [], color='black', linestyle=':', markersize=5, label='median( abs (mean - std)) = ' +
-                                                                                     str(round(median_diff, 1)))
-        ax.legend(handles=[m1], framealpha=1, fontsize=8, loc='lower left')
-        ax.set_xlabel('X [px]')
-        ax.set_ylabel('Y [px]')
+    # step = int(len(lam_b) / 5)  # blue
+    #
+    # for k in np.arange(5):
+    #     step_i = step * k
+    #     if k == 4:
+    #         step_f = len(lam_b) - 1
+    #     else:
+    #         step_f = step * (k + 1)
+    #     std_map = np.std(blue_cube[1].data[step_i:step_f, :, :], axis=0)
+    #     mean_map = np.mean(blue_cube[1].data[step_i:step_f, :, :], axis=0)
+    #     diff_map = abs(mean_map - std_map)
+    #     diff_map[diff_map == 0] = np.nan
+    #     median_diff = np.nanmedian(abs(mean_map - std_map))
+    #
+    #     ax = plt.subplot(gs[12 + k, 0])
+    #     im = ax.imshow(diff_map, origin='lower', norm=LogNorm())
+    #     plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'abs (mean - std) [counts]')
+    #     ax.set_title(r'Blue cube flux calibration (part ' + str(k + 1) + '/5) / ' + str(lam_b[step_i]) + '$\AA$ - ' +
+    #                  str(lam_b[step_f]) + '$\AA$', fontsize=10)
+    #     plt.contour(diff_map, np.array([median_diff]), linestyles=np.array([':']), colors='white', alpha=0.5)
+    #     m1 = mlines.Line2D([], [], color='black', linestyle=':', markersize=5, label='median( abs (mean - std)) = ' +
+    #                                                                                  str(round(median_diff, 1)))
+    #     ax.legend(handles=[m1], framealpha=1, fontsize=8, loc='lower left')
+    #     ax.set_xlabel('X [px]')
+    #     ax.set_ylabel('Y [px]')
+    #
+    # step = int(len(lam_r) / 5)  # red
+    #
+    # for k in np.arange(5):
+    #     step_i = step * k
+    #     if k == 4:
+    #         step_f = len(lam_r) - 1
+    #     else:
+    #         step_f = step * (k + 1)
+    #     std_map = np.std(red_cube[1].data[step_i:step_f, :, :], axis=0)
+    #     mean_map = np.mean(red_cube[1].data[step_i:step_f, :, :], axis=0)
+    #     diff_map = abs(mean_map - std_map)
+    #     diff_map[diff_map == 0] = np.nan
+    #     median_diff = np.nanmedian(abs(mean_map - std_map))
+    #
+    #     ax = plt.subplot(gs[12 + k, 1])
+    #     im = ax.imshow(diff_map, origin='lower', norm=LogNorm())
+    #     plt.colorbar(im, ax=ax, fraction=0.08, pad=0.04, label=r'abs (mean - std) [counts]')
+    #     ax.set_title(r'Red cube flux calibration (part ' + str(k + 1) + '/5) / ' + str(lam_r[step_i]) + '$\AA$ - ' +
+    #                  str(lam_r[step_f]) + '$\AA$', fontsize=10)
+    #     plt.contour(diff_map, np.array([median_diff]), linestyles=np.array([':']), colors='white', alpha=0.5)
+    #     m1 = mlines.Line2D([], [], color='black', linestyle=':', markersize=5, label='median( abs (mean - std)) = ' +
+    #                                                                                  str(round(median_diff, 1)))
+    #     ax.legend(handles=[m1], framealpha=1, fontsize=8, loc='lower left')
+    #     ax.set_xlabel('X [px]')
+    #     ax.set_ylabel('Y [px]')
 
     # ------
 
@@ -634,7 +644,8 @@ def html_plots(ob, redshift, args):
                                                                                       quiet=1, cvt=False)
             vorbin_sn = 10.
 
-    ax = plt.subplot(gs[17, 0])
+    # ax = plt.subplot(gs[17, 0])
+    ax = plt.subplot(gs[12, 0])
 
     xmin, xmax = 0, sgn_b.shape[1] - 1
     ymin, ymax = 0, sgn_b.shape[0] - 1
@@ -654,7 +665,8 @@ def html_plots(ob, redshift, args):
     ax.imshow(snr_b * 0., zorder=-1, cmap='Greys', interpolation='nearest')
     ax.set_title(r'Voronoi binning / Target SNR = ' + str(vorbin_sn))
 
-    ax = plt.subplot(gs[18, 0])
+    # ax = plt.subplot(gs[18, 0])
+    ax = plt.subplot(gs[13, 0])
 
     rad = np.sqrt((xNode - xpmax_b) ** 2 + (yNode - ypmax_b) ** 2)  # Use centroids, NOT generators
     ax.plot(np.sqrt((x_t_b - xpmax_b) ** 2 + (y_t_b - ypmax_b) ** 2), sgn_tt_b / rms_tt_b, ',k')
@@ -748,7 +760,8 @@ def html_plots(ob, redshift, args):
                                                                                       quiet=1, cvt=False)
             vorbin_sn = 10.
 
-    ax = plt.subplot(gs[17, 1])
+    # ax = plt.subplot(gs[17, 1])
+    ax = plt.subplot(gs[12, 1])
 
     xmin, xmax = 0, sgn_r.shape[1] - 1
     ymin, ymax = 0, sgn_r.shape[0] - 1
@@ -768,7 +781,8 @@ def html_plots(ob, redshift, args):
     ax.imshow(snr_r * 0., zorder=-1, cmap='Greys', interpolation='nearest')
     ax.set_title(r'Voronoi binning / Target SNR = ' + str(vorbin_sn))
 
-    ax = plt.subplot(gs[18, 1])
+    # ax = plt.subplot(gs[18, 1])
+    ax = plt.subplot(gs[13, 1])
 
     rad = np.sqrt((xNode - xpmax_b) ** 2 + (yNode - ypmax_b) ** 2)  # Use centroids, NOT generators
     ax.plot(np.sqrt((x_t_b - xpmax_r) ** 2 + (y_t_b - ypmax_r) ** 2), sgn_tt_b / rms_tt_b, ',k')
@@ -820,37 +834,39 @@ def html_plots(ob, redshift, args):
 
     # ------
 
-    central_waves, x_peaks, y_peaks = get_xy_peak_positions(blue_cube[1].data, lam_b)
+    # central_waves, x_peaks, y_peaks = get_xy_peak_positions(blue_cube[1].data, lam_b)
+    #
+    # cube_central_waves, cube_x_peaks, cube_y_peaks = get_xy_peak_positions(blue_cube[1].data, lam_b,
+    #                                                                        bin_size=blue_cube[1].data.shape[0])
+    #
+    # # ax = plt.subplot(gs[19, 0])
+    # ax = plt.subplot(gs[14, 0])
+    # ax.plot(central_waves, x_peaks - cube_x_peaks[0], '+', color='blue', ms=2,
+    #         label='X center mean = ' + str(round(cube_x_peaks[0], 1)))
+    # ax.plot(central_waves, y_peaks - cube_y_peaks[0], '+', color='red', ms=2,
+    #         label='Y center mean = ' + str(round(cube_y_peaks[0], 1)))
+    # ax.set_xlabel(r'$\lambda$ [$\AA$]')
+    # ax.set_ylabel(r'X and Y center')
+    # ax.set_ylim([-5, 5])
+    # ax.set_title('Peak flux spaxel (Blue)')
+    # ax.legend(markerscale=5)
+    #
+    # central_waves, x_peaks, y_peaks = get_xy_peak_positions(red_cube[1].data, lam_r)
+    #
+    # cube_central_waves, cube_x_peaks, cube_y_peaks = get_xy_peak_positions(red_cube[1].data, lam_r,
+    #                                                                        bin_size=red_cube[1].data.shape[0])
 
-    cube_central_waves, cube_x_peaks, cube_y_peaks = get_xy_peak_positions(blue_cube[1].data, lam_b,
-                                                                           bin_size=blue_cube[1].data.shape[0])
-
-    ax = plt.subplot(gs[19, 0])
-    ax.plot(central_waves, x_peaks - cube_x_peaks[0], '+', color='blue', ms=2,
-            label='X center mean = ' + str(round(cube_x_peaks[0], 1)))
-    ax.plot(central_waves, y_peaks - cube_y_peaks[0], '+', color='red', ms=2,
-            label='Y center mean = ' + str(round(cube_y_peaks[0], 1)))
-    ax.set_xlabel(r'$\lambda$ [$\AA$]')
-    ax.set_ylabel(r'X and Y center')
-    ax.set_ylim([-5, 5])
-    ax.set_title('Peak flux spaxel (Blue)')
-    ax.legend(markerscale=5)
-
-    central_waves, x_peaks, y_peaks = get_xy_peak_positions(red_cube[1].data, lam_r)
-
-    cube_central_waves, cube_x_peaks, cube_y_peaks = get_xy_peak_positions(red_cube[1].data, lam_r,
-                                                                           bin_size=red_cube[1].data.shape[0])
-
-    ax = plt.subplot(gs[19, 1])
-    ax.plot(central_waves, x_peaks - cube_x_peaks[0], '+', color='blue', ms=2,
-            label='X center mean = ' + str(round(cube_x_peaks[0], 1)))
-    ax.plot(central_waves, y_peaks - cube_y_peaks[0], '+', color='red', ms=2,
-            label='Y center mean = ' + str(round(cube_y_peaks[0], 1)))
-    ax.set_xlabel(r'$\lambda$ [$\AA$]')
-    ax.set_ylabel(r'X and Y center')
-    ax.set_ylim([-5, 5])
-    ax.set_title('Peak flux spaxel (Red)')
-    ax.legend(markerscale=5)
+    # # ax = plt.subplot(gs[19, 1])
+    # ax = plt.subplot(gs[14, 1])
+    # ax.plot(central_waves, x_peaks - cube_x_peaks[0], '+', color='blue', ms=2,
+    #         label='X center mean = ' + str(round(cube_x_peaks[0], 1)))
+    # ax.plot(central_waves, y_peaks - cube_y_peaks[0], '+', color='red', ms=2,
+    #         label='Y center mean = ' + str(round(cube_y_peaks[0], 1)))
+    # ax.set_xlabel(r'$\lambda$ [$\AA$]')
+    # ax.set_ylabel(r'X and Y center')
+    # ax.set_ylim([-5, 5])
+    # ax.set_title('Peak flux spaxel (Red)')
+    # ax.legend(markerscale=5)
 
     fig_l1 = output_str + '_L1.png'
 
@@ -1361,6 +1377,7 @@ def html_plots(ob, redshift, args):
         f.write(str(red_fiber_through) + '\n')
         f.write(str(blue_wave_calib) + '\n')
         f.write(str(red_wave_calib) + '\n')
+        f.write(wa_id + '\n')
 
     os.makedirs(qc_plot_dir, exist_ok=True)
     os.system('mv ' + str(blue_cube[0].header['OBID']) + '*.png ' + qc_plot_dir + '/.')
