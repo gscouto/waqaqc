@@ -480,15 +480,15 @@ def pp(ob, redshift, args):
         h.write('\n')
 
         h.write('[observed-frame]\n')
-        h.write('6860 6890    ! telluric lines\n')
+        h.write('6860 6950    ! telluric lines\n')
         if blue_cube[0].header['MODE'] == 'LOWRES':
             h.write('7560 7710    ! weave (red gap)\n')
         if blue_cube[0].header['MODE'] == 'HIGHRES':
             h.write('5930 5975    ! weave (blue border)\n')
             h.write('6410 6440    ! weave (red gap)\n')
             h.write('5930 5975    ! weave (red border)\n')
-        h.write('7950 8500    ! sky lines\n')
-        h.write('8700 8870    ! sky lines\n')
+        h.write('7160 7340    ! sky lines\n')
+        h.write('8120 8350    ! sky lines\n')
 
         h.close()
 
@@ -506,15 +506,15 @@ def pp(ob, redshift, args):
 
         f.write('\n')
         f.write('[observed-frame]\n')
-        f.write('6860 6890    ! telluric lines\n')
+        f.write('6860 6950    ! telluric lines\n')
         if blue_cube[0].header['MODE'] == 'LOWRES':
             f.write('7560 7710    ! weave (red gap)\n')
         if blue_cube[0].header['MODE'] == 'HIGHRES':
             f.write('5930 5975    ! weave (blue border)\n')
             f.write('6410 6440    ! weave (red gap)\n')
             f.write('5930 5975    ! weave (red border)\n')
-        f.write('7950 8500    ! sky lines\n')
-        f.write('8700 8870    ! sky lines\n')
+        f.write('7160 7340     ! sky lines\n')
+        f.write('8120 8350    ! sky lines\n')
 
         f.close()
 
