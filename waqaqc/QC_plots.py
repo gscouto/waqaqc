@@ -168,10 +168,21 @@ def html_plots(ob, redshift, args):
 
     output_str = str(blue_cube[0].header['OBID']) + '_' + date + '_' + gal_name + '_' + blue_cube[0].header['MODE']
 
+    # wa_id_kw = blue_cube[0].header.get('INFILE')
+    #
+    # if wa_id_kw is not None:
+    #     wa_id = wa_id_kw.split('_')[3]
+    # else:
+    #     wa_id = '_'
+
     wa_id_kw = blue_cube[0].header.get('INFILE')
 
     if wa_id_kw is not None:
-        wa_id = wa_id_kw.split('_')[3]
+        match = re.search(r'J\d+\.\d+[+-]\d+\.\d+', wa_id_kw)
+        if match:
+            wa_id = match.group(0)
+        else:
+            wa_id = '_'
     else:
         wa_id = '_'
 
