@@ -177,14 +177,20 @@ def html_plots(ob, redshift, args):
 
     wa_id_kw = blue_cube[0].header.get('INFILE')
 
+    wa_id = '_'
+
     if wa_id_kw is not None:
-        match = re.search(r'J\d+\.\d+[+-]\d+\.\d+', wa_id_kw)
-        if match:
-            wa_id = match.group(0)
+        matches = re.findall(r'J\d+\.\d+[+-]\d+\.\d+', wa_id_kw)
+        if matches:
+            if len(matches) >= 2:
+                wa_id = matches[1]
+            else:
+                wa_id = matches[0]
         else:
-            wa_id = '_'
-    else:
-        wa_id = '_'
+            base = os.path.basename(wa_id_kw)
+            parts = re.split(r'[_/]', base)
+            if len(parts) >= 3:
+                wa_id = parts[2]
 
     targetSN = args.target_snr
     levels = args.levels  # SNR levels to display
