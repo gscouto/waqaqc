@@ -711,8 +711,6 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
         ax.set_title('flux calibration / ' + file_list[k])
         ax.legend()
 
-    breakpoint()
-
     # ------
 
     fig_l0 = output_str + '_L0.png'
