@@ -559,10 +559,8 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
         breakpoint()
 
         if (single_file[1].name[:-5] == 'BLUE') & (mode == 'LOWRES'):
-            sgn_band = np.mean((single_file[1].data * np.mean(single_file[5].data[:], axis=0))
-                               [:, (sky_lam > 5000) & (sky_lam < 6000)], axis=1)
-            rms_band = np.sqrt(1 / np.mean((single_file[2].data * np.mean(single_file[5].data[:], axis=0))
-                                           [:, (sky_lam > 5000) & (sky_lam < 6000)], axis=1))
+            sgn_band = np.mean(single_file[1].data[:, (sky_lam > 5000) & (sky_lam < 6000)], axis=1)
+            rms_band = np.sqrt(1 / np.mean(single_file[2].data[:, (sky_lam > 5000) & (sky_lam < 6000)], axis=1))
             snr_band = sgn_band / rms_band
             snr_band = snr_band * np.sqrt(spec_pix)
 
@@ -574,10 +572,8 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
             ins_mode = 'blueLR'
 
         if (single_file[1].name[:-5] == 'RED') & (mode == 'LOWRES'):
-            sgn_band = np.mean((single_file[1].data * np.mean(single_file[5].data[:], axis=0))
-                               [:, (sky_lam > 8000) & (sky_lam < 9000)], axis=1)
-            rms_band = np.sqrt(1 / np.mean((single_file[2].data * np.mean(single_file[5].data[:], axis=0))
-                                           [:, (sky_lam > 8000) & (sky_lam < 9000)], axis=1))
+            sgn_band = np.mean(single_file[1].data[:, (sky_lam > 8000) & (sky_lam < 9000)], axis=1)
+            rms_band = np.sqrt(1 / np.mean(single_file[2].data[:, (sky_lam > 8000) & (sky_lam < 9000)], axis=1))
             snr_band = sgn_band / rms_band
             snr_band = snr_band * np.sqrt(spec_pix)
 
@@ -589,10 +585,8 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
             ins_mode = 'redLR'
 
         if (single_file[1].name[:-5] == 'BLUE') & (mode == 'HIGHRES'):
-            sgn_band = np.mean((single_file[1].data * np.mean(single_file[5].data[:], axis=0))
-                               [:, (sky_lam > 5000) & (sky_lam < 6000)], axis=1)
-            rms_band = np.sqrt(1 / np.mean((single_file[2].data * np.mean(single_file[5].data[:], axis=0))
-                                           [:, (sky_lam > 5000) & (sky_lam < 6000)], axis=1))
+            sgn_band = np.mean(single_file[1].data[:, (sky_lam > 5000) & (sky_lam < 6000)], axis=1)
+            rms_band = np.sqrt(1 / np.mean(single_file[2].data[:, (sky_lam > 5000) & (sky_lam < 6000)], axis=1))
             snr_band = sgn_band / rms_band
             snr_band = snr_band * np.sqrt(spec_pix)
 
@@ -604,10 +598,8 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
             ins_mode = 'greenHR'
 
         if (single_file[1].name[:-5] == 'RED') & (mode == 'HIGHRES'):
-            sgn_band = np.mean((single_file[1].data * np.mean(single_file[5].data[:], axis=0))
-                               [:, (sky_lam > 6550) & (sky_lam < 7550)], axis=1)
-            rms_band = np.sqrt(1 / np.mean((single_file[2].data * np.mean(single_file[5].data[:], axis=0))
-                                           [:, (sky_lam > 6550) & (sky_lam < 7550)], axis=1))
+            sgn_band = np.mean(single_file[1].data[:, (sky_lam > 6550) & (sky_lam < 7550)], axis=1)
+            rms_band = np.sqrt(1 / np.mean(single_file[2].data[:, (sky_lam > 6550) & (sky_lam < 7550)], axis=1))
             snr_band = sgn_band / rms_band
             snr_band = snr_band * np.sqrt(spec_pix)
 
