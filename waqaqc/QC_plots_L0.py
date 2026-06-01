@@ -556,6 +556,8 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
         # ------ estimate SNR using the ETC
 
+        breakpoint()
+
         if (single_file[1].name[:-5] == 'BLUE') & (mode == 'LOWRES'):
             sgn_band = np.mean((single_file[1].data * np.mean(single_file[5].data[:], axis=0))
                                [:, (sky_lam > 5000) & (sky_lam < 6000)], axis=1)
