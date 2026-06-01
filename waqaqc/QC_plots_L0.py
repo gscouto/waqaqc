@@ -556,8 +556,6 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
         # ------ estimate SNR using the ETC
 
-        breakpoint()
-
         if (single_file[1].name[:-5] == 'BLUE') & (mode == 'LOWRES'):
             sgn_band = np.mean(single_file[1].data[:, (sky_lam > 5000) & (sky_lam < 6000)], axis=1)
             rms_band = np.sqrt(1 / np.mean(single_file[2].data[:, (sky_lam > 5000) & (sky_lam < 6000)], axis=1))
@@ -692,6 +690,8 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
         ax.grid()
 
     # ------ flux calibration plots
+
+    breakpoint()
 
     for k in np.arange(len(file_list)):
         single_file = fits.open(file_dir + file_list[k])
