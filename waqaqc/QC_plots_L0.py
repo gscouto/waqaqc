@@ -689,9 +689,53 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
         ax.set_ylabel(r'SNR$_{\mathrm{obs}}$ / SNR$_{\mathrm{ETC}}$ [per $\AA$]')
         ax.grid()
 
+        # ------ estimating SDSS band magnitudes
+
+        # sdss = filters.load_filters('sdss2010-g', 'sdss2010-r', 'sdss2010-i')
+
+        from speclite import filters
+        import astropy.units as u
+
+        if (single_file[1].name[:-5] == 'BLUE') & (mode == 'LOWRES'):
+            sdss = filters.load_filters('sdss2010-g')
+
+            flux = single_file[1].data * np.median(single_file[5].data, axis=0) * u.erg / u.s / u.cm ** 2 / u.AA
+            lam = ((np.arange(single_file[1].header['NAXIS1']) * single_file[1].header['CD1_1']) +
+                   single_file[1].header['CRVAL1']) * u.AA
+
+            g_mags = sdss.get_ab_magnitudes(flux, lam)['sdss2010-g'].value
+
+        if (single_file[1].name[:-5] == 'RED') & (mode == 'LOWRES'):
+            sdss = filters.load_filters('sdss2010-i')
+
+            flux = single_file[1].data * np.median(single_file[5].data, axis=0) * u.erg / u.s / u.cm ** 2 / u.AA
+            lam = ((np.arange(single_file[1].header['NAXIS1']) * single_file[1].header['CD1_1']) +
+                   single_file[1].header['CRVAL1']) * u.AA
+
+            i_mags = sdss.get_ab_magnitudes(flux, lam)['sdss2010-i'].value
+
     # ------ flux calibration plots
 
     breakpoint()
+
+    # testing
+
+    # from astroquery.sdss import SDSS
+
+    # g_r = g_mags - r_mags
+    # r_i = r_mags - i_mags
+
+    # res = SDSS.query_region(nsc, radius=2*u.arcsec, photoobj_fields=['ra','dec','u','g','r','i','z','type'])
+    #
+    # sdss_coord = SkyCoord(res['ra'], res['dec'], unit='deg')
+    #
+    # sep = coord.separation(sdss_coord)
+    #
+    # res_targ = res[np.argmin(sep)]
+
+
+    # testing
+
 
     for k in np.arange(len(file_list)):
         single_file = fits.open(file_dir + file_list[k])
