@@ -3,22 +3,21 @@ from astropy.io import fits
 import os
 from datetime import datetime
 
+
 # ============================================================
 # Utilities
 # ============================================================
 
 
 def sigma_clip_spec(spec, limit_sigma):
-
     diff = np.diff(spec)
     limit = limit_sigma * np.nanstd(diff)
 
     for j in np.where(diff > limit)[0]:
-
-        spec[j-4:j+5] = (
-            np.nanmedian(spec[j-10:j-5]) +
-            np.nanmedian(spec[j+5:j+10])
-        ) / 2.
+        spec[j - 4:j + 5] = (
+                                    np.nanmedian(spec[j - 10:j - 5]) +
+                                    np.nanmedian(spec[j + 5:j + 10])
+                            ) / 2.
 
     return spec
 
@@ -26,7 +25,6 @@ def sigma_clip_spec(spec, limit_sigma):
 def create_rss_from_cube(cube, vorbin_map=None,
                          apply_sigmaclip=False,
                          sigmaclip_limit=5):
-
     # ========================================================
     # Voronoi case
     # ========================================================
@@ -49,12 +47,22 @@ def create_rss_from_cube(cube, vorbin_map=None,
             y, x = bin_coords[bin_id]
 
             rss_data[k] = cube[1].data[:, y, x]
-            rss_err[k] = cube[2].data[:, y, x]
-
-            sens = cube[5].data
+            # rss_err[k] = cube[2].data[:, y, x]
 
             rss_data[k] *= sens
-            rss_err[k] *= sens
+            # rss_err[k] *= sens
+
+            ivar = cube[2].data[:, y, x]
+
+            ivar /= sens ** 2
+
+            rss_err[k] = np.where(
+                ivar > 0,
+                1.0 / np.sqrt(ivar),
+                np.nan
+            )
+
+            sens = cube[5].data
 
             rss_data *= 1e20
             rss_err *= 1e20
@@ -69,7 +77,6 @@ def create_rss_from_cube(cube, vorbin_map=None,
 
 
 def build_rss_header(cube, rss_data, vorbin_flag):
-
     h = fits.Header()
 
     h['SIMPLE'] = True
@@ -100,7 +107,6 @@ def build_rss_header(cube, rss_data, vorbin_flag):
 # ============================================================
 
 def run_mode(mode, ob, args, gal, gal_dir, file_dir, stackcubes):
-
     mode_cfg = {
 
         'red': {
@@ -151,9 +157,9 @@ def run_mode(mode, ob, args, gal, gal_dir, file_dir, stackcubes):
     # ========================================================
 
     res_dir = (
-        gal_dir + '/pyp_results/' +
-        mode.upper() + '_' +
-        datetime.now().strftime('%Y-%m-%d_%H.%M.%S')
+            gal_dir + '/pyp_results/' +
+            mode.upper() + '_' +
+            datetime.now().strftime('%Y-%m-%d_%H.%M.%S')
     )
 
     os.makedirs(res_dir, exist_ok=True)
@@ -189,14 +195,22 @@ def run_mode(mode, ob, args, gal, gal_dir, file_dir, stackcubes):
             cube = fits.open(gal_dir + '/' + cfg['cube_file'])
 
         flux = cube[1].data.copy()
-        err = cube[2].data.copy()
+        # err = cube[2].data.copy()
+        ivar = cube[2].data.copy()
 
         if cfg['scale_flux']:
             sens = cube[5].data
 
             flux *= sens[:, None, None]
-            err *= sens[:, None, None]
+            # err *= sens[:, None, None]
 
+            ivar /= sens[:, None, None] ** 2
+
+            err = np.where(
+                ivar > 0,
+                1.0 / np.sqrt(ivar),
+                np.nan
+            )
             flux *= 1e20
             err *= 1e20
 
@@ -314,7 +328,6 @@ def run_mode(mode, ob, args, gal, gal_dir, file_dir, stackcubes):
     # ========================================================
 
     if args.boot_flag:
-
         boot_cmd = (
             f'ParadiseApp.py '
             f'{input_name} '
@@ -352,7 +365,6 @@ def run_mode(mode, ob, args, gal, gal_dir, file_dir, stackcubes):
 # ============================================================
 
 def specs(ob, args):
-
     file_dir = args.data_path + ob + '/'
 
     stackcubes = np.sort([
@@ -365,13 +377,12 @@ def specs(ob, args):
     gal = blue_cube[0].header['CCNAME1']
 
     gal_dir = (
-        str(blue_cube[0].header['OBID']) + '_' +
-        gal + '_' +
-        blue_cube[0].header['MODE']
+            str(blue_cube[0].header['OBID']) + '_' +
+            gal + '_' +
+            blue_cube[0].header['MODE']
     )
 
     for mode in ['red', 'blue', 'aps']:
-
         run_mode(
             mode,
             ob,
