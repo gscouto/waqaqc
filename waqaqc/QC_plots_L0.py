@@ -746,7 +746,11 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     g_i_sdss = res_targ['g'] - res_targ['i']
     g_i_weave = g_mags - i_mags
 
-    ax.plot(g_i_sdss - g_i_weave)
+    delta_g_i = g_i_sdss - g_i_weave
+    delta_g_i_median = np.nanmedian(g_i_sdss - g_i_weave)
+
+    plt.plot(delta_g_i, '.')
+    plt.savefig('teste.png')
 
     # ------
 
