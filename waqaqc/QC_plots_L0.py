@@ -858,6 +858,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
     ax = plt.subplot(gs[-2, 1])
     sc = ax.scatter(r_mags, delta_ri, c=fiber_id, cmap='viridis', s=5)
+    ax.axhspan(delta_ri_median - delta_ri_std, delta_ri_median + delta_ri_std, color='gray', alpha=0.2, zorder=0)
     ax.set_ylabel('Δ(r-i) (single - fibtable)')
     ax.set_xlabel('r mag')
     ax.axhline(0, color='black', linestyle='-', linewidth=1)
@@ -870,6 +871,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
     ax = plt.subplot(gs[-2, 2])
     sc = ax.scatter(g_mags, delta_gi, c=fiber_id, cmap='viridis', s=5)
+    ax.axhspan(delta_gi_median - delta_gi_std, delta_gi_median + delta_gi_std, color='gray', alpha=0.2, zorder=0)
     ax.set_ylabel('Δ(g-i) (single - fibtable)')
     ax.set_xlabel('g mag')
     ax.axhline(0, color='black', linestyle='-', linewidth=1)
@@ -882,6 +884,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
     ax = plt.subplot(gs[-1, 0])
     sc = ax.scatter(fiber_id, delta_gr, c=g_mags, cmap='viridis', s=5)
+    ax.axhspan(delta_gr_median - delta_gr_std, delta_gr_median + delta_gr_std, color='gray', alpha=0.2, zorder=0)
     ax.set_ylabel('Δ(g-r) (single - fibtable)')
     ax.set_xlabel('fiber #')
     ax.axhline(0, color='black', linestyle='-', linewidth=1)
@@ -894,6 +897,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
     ax = plt.subplot(gs[-1, 1])
     sc = ax.scatter(fiber_id, delta_ri, c=r_mags, cmap='viridis', s=5)
+    ax.axhspan(delta_ri_median - delta_ri_std, delta_ri_median + delta_ri_std, color='gray', alpha=0.2, zorder=0)
     ax.set_ylabel('Δ(r-i) (single - fibtable)')
     ax.set_xlabel('fiber #')
     ax.axhline(0, color='black', linestyle='-', linewidth=1)
@@ -906,6 +910,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
     ax = plt.subplot(gs[-1, 2])
     sc = ax.scatter(fiber_id, delta_gi, c=g_mags, cmap='viridis', s=5)
+    ax.axhspan(delta_gi_median - delta_gi_std, delta_gi_median + delta_gi_std, color='gray', alpha=0.2, zorder=0)
     ax.set_ylabel('Δ(g-i) (single - fibtable)')
     ax.set_xlabel('fiber #')
     ax.axhline(0, color='black', linestyle='-', linewidth=1)
