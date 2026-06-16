@@ -763,17 +763,23 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     delta_r = r_mags - r_cat
     delta_i = i_mags - i_cat
 
+    mask = (g_mags < 24) & (r_mags < 24)
+
     delta_gr = ((g_mags - r_mags) -(g_cat - r_cat))
-    delta_gr_median = np.nanmedian(delta_gr)
-    delta_gr_std = np.nanstd(delta_gr)
+    delta_gr_median = np.nanmedian(delta_gr[mask])
+    delta_gr_std = np.nanstd(delta_gr[mask])
+
+    mask = (r_mags < 24) & (i_mags < 24)
 
     delta_ri = ((r_mags - i_mags) -(r_cat - i_cat))
-    delta_ri_median = np.nanmedian(delta_ri)
-    delta_ri_std = np.nanstd(delta_ri)
+    delta_ri_median = np.nanmedian(delta_ri[mask])
+    delta_ri_std = np.nanstd(delta_ri[mask])
+
+    mask = (g_mags < 24) & (i_mags < 24)
 
     delta_gi = ((g_mags - i_mags) -(g_cat - i_cat))
-    delta_gi_median = np.nanmedian(delta_gi)
-    delta_gi_std = np.nanstd(delta_gi)
+    delta_gi_median = np.nanmedian(delta_gi[mask])
+    delta_gi_std = np.nanstd(delta_gi[mask])
 
     fiber_id = np.arange(len(g_mags))
 
