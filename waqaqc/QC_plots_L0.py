@@ -727,9 +727,9 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
             wave_blue = (np.arange(n_blue) * single_file['BLUE_DATA'].header['CD1_1'] +
                          single_file['BLUE_DATA'].header['CRVAL1']) * u.AA
 
-            g_cat_b = single_file[6].data['MAG_G']
-            r_cat_b = single_file[6].data['MAG_R']
-            i_cat_b = single_file[6].data['MAG_I']
+            g_cat = single_file[6].data['MAG_G']
+            r_cat = single_file[6].data['MAG_R']
+            i_cat = single_file[6].data['MAG_I']
 
         if (single_file[1].name[:-5] == 'RED') & (mode == 'LOWRES'):
             red_flux = single_file['RED_DATA'].data
@@ -739,10 +739,6 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
             wave_red = (np.arange(n_red) * single_file['RED_DATA'].header['CD1_1'] +
                         single_file['RED_DATA'].header['CRVAL1']) * u.AA
-
-            g_cat_r = single_file[6].data['MAG_G']
-            r_cat_r = single_file[6].data['MAG_R']
-            i_cat_r = single_file[6].data['MAG_I']
 
     blue_flux = blue_flux * sens_blue * u.erg / u.s / u.cm ** 2 / u.AA
     red_flux = red_flux * sens_red * u.erg / u.s / u.cm ** 2 / u.AA
@@ -763,31 +759,52 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     r_mags = mags['sdss2010-r'].value
     i_mags = mags['sdss2010-i'].value
 
-    breakpoint()
+    delta_g = g_mags - g_cat
+    delta_r = r_mags - r_cat
+    delta_i = i_mags - i_cat
 
-    delta_g = g_mags - g_cat_b
-    delta_i = i_mags - i_cat_b
+    delta_gr = ((g_mags - r_mags) -(g_cat - r_cat))
+    delta_gr_median = np.nanmedian(delta_gr)
 
-    delta_gi = ((g_mags - i_mags) -(g_cat_b - i_cat_b))
+    delta_ri = ((r_mags - i_mags) -(r_cat - i_cat))
+    delta_ri_median = np.nanmedian(delta_ri)
+
+    delta_gi = ((g_mags - i_mags) -(g_cat - i_cat))
     delta_gi_median = np.nanmedian(delta_gi)
 
     plt.figure()
 
-    plt.subplot(311)
+    plt.subplot(231)
     plt.plot(delta_g, '.', ms=2)
     plt.ylabel('Δg')
 
-    plt.subplot(312)
+    plt.subplot(232)
+    plt.plot(delta_r, '.', ms=2)
+    plt.ylabel('Δr')
+
+    plt.subplot(233)
     plt.plot(delta_i, '.', ms=2)
     plt.ylabel('Δi')
 
-    plt.subplot(313)
+    plt.subplot(234)
+    plt.plot(delta_gr, '.', ms=2)
+    plt.ylabel('Δ(g-r)')
+    plt.xlabel('Fiber')
+
+    plt.subplot(235)
+    plt.plot(delta_ri, '.', ms=2)
+    plt.ylabel('Δ(r-i)')
+    plt.xlabel('Fiber')
+
+    plt.subplot(236)
     plt.plot(delta_gi, '.', ms=2)
     plt.ylabel('Δ(g-i)')
     plt.xlabel('Fiber')
 
     plt.tight_layout()
     plt.savefig('teste.png')
+
+    breakpoint()
 
     # ------
 
