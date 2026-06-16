@@ -772,29 +772,40 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     delta_gi = ((g_mags - i_mags) -(g_cat - i_cat))
     delta_gi_median = np.nanmedian(delta_gi)
 
+    fiber_id = np.arange(len(g_mags))
+
     ax = plt.subplot(gs[-2, 0])
-    ax.plot(g_mags, delta_g, '.', ms=5)
+    sc = ax.scatter(g_mags, delta_g, c=fiber_id, cmap='viridis', s=5)
     ax.set_ylabel('Δg mag (single - fibtable)')
     ax.set_xlabel('g mag')
     ax.axhline(0, color='black', linestyle='-', linewidth=1)
     ax.set_ylim([-1, 1])
     ax.grid(True, alpha=0.5)
 
+    cb = plt.colorbar(sc, ax=ax)
+    cb.set_label('Fiber ID')
+
     ax = plt.subplot(gs[-2, 1])
-    ax.plot(r_mags, delta_r, '.', ms=5)
+    sc = ax.scatter(r_mags, delta_r, c=fiber_id, cmap='viridis', s=5)
     ax.set_ylabel('Δr mag (single - fibtable)')
     ax.set_xlabel('r mag')
     ax.axhline(0, color='black', linestyle='-', linewidth=1)
     ax.set_ylim([-1, 1])
     ax.grid(True, alpha=0.5)
 
+    cb = plt.colorbar(sc, ax=ax)
+    cb.set_label('Fiber ID')
+
     ax = plt.subplot(gs[-2, 2])
-    ax.plot(i_mags, delta_i, '.', ms=5)
+    sc = ax.scatter(i_mags, delta_i, c=fiber_id, cmap='viridis', s=5)
     ax.set_ylabel('Δi mag (single - fibtable)')
     ax.set_xlabel('i mag')
     ax.axhline(0, color='black', linestyle='-', linewidth=1)
     ax.set_ylim([-1, 1])
     ax.grid(True, alpha=0.5)
+
+    cb = plt.colorbar(sc, ax=ax)
+    cb.set_label('Fiber ID')
 
     ax = plt.subplot(gs[-1, 0])
     ax.plot(delta_gr, '.', ms=5)
