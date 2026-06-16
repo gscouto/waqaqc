@@ -841,7 +841,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     cb.set_label('i mag')
 
     ax = plt.subplot(gs[-1, 0])
-    ax.plot(delta_gr, '.', ms=5)
+    sc = ax.scatter(fiber_id, delta_gr, c=g_mags, cmap='viridis', s=5)
     ax.set_ylabel('Δ(g-r) (single - fibtable)')
     ax.set_xlabel('fiber #')
     ax.axhline(0, color='black', linestyle='-', linewidth=1)
@@ -849,8 +849,11 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     ax.set_ylim([-1, 1])
     ax.grid(True, alpha=0.5)
 
+    cb = plt.colorbar(sc, ax=ax)
+    cb.set_label('g mag')
+
     ax = plt.subplot(gs[-1, 1])
-    ax.plot(delta_ri, '.', ms=5)
+    sc = ax.scatter(fiber_id, delta_ri, c=r_mags, cmap='viridis', s=5)
     ax.set_ylabel('Δ(r-i) (single - fibtable)')
     ax.set_xlabel('fiber #')
     ax.axhline(0, color='black', linestyle='-', linewidth=1)
@@ -858,14 +861,20 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     ax.set_ylim([-1, 1])
     ax.grid(True, alpha=0.5)
 
+    cb = plt.colorbar(sc, ax=ax)
+    cb.set_label('r mag')
+
     ax = plt.subplot(gs[-1, 2])
-    ax.plot(delta_gi, '.', ms=5)
+    sc = ax.scatter(fiber_id, delta_gi, c=g_mags, cmap='viridis', s=5)
     ax.set_ylabel('Δ(g-i) (single - fibtable)')
     ax.set_xlabel('fiber #')
     ax.axhline(0, color='black', linestyle='-', linewidth=1)
     ax.axhline(delta_gi_median, color='black', linestyle='--', linewidth=1)
     ax.set_ylim([-1, 1])
     ax.grid(True, alpha=0.5)
+
+    cb = plt.colorbar(sc, ax=ax)
+    cb.set_label('g mag')
 
     # ------
 
