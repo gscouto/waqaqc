@@ -776,6 +776,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     ax.plot(g_mags, delta_g, '.', ms=5)
     ax.set_ylabel('Δg mag (single - fibtable)')
     ax.set_xlabel('g mag')
+    ax.axhline(0, color='black', linestyle='-', linewidth=1)
     ax.set_ylim([-1, 1])
     ax.grid(True, alpha=0.5)
 
@@ -783,6 +784,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     ax.plot(r_mags, delta_r, '.', ms=5)
     ax.set_ylabel('Δr mag (single - fibtable)')
     ax.set_xlabel('r mag')
+    ax.axhline(0, color='black', linestyle='-', linewidth=1)
     ax.set_ylim([-1, 1])
     ax.grid(True, alpha=0.5)
 
@@ -790,6 +792,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     ax.plot(i_mags, delta_i, '.', ms=5)
     ax.set_ylabel('Δi mag (single - fibtable)')
     ax.set_xlabel('i mag')
+    ax.axhline(0, color='black', linestyle='-', linewidth=1)
     ax.set_ylim([-1, 1])
     ax.grid(True, alpha=0.5)
 
@@ -797,6 +800,8 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     ax.plot(delta_gr, '.', ms=5)
     ax.set_ylabel('Δ(g-r) (single - fibtable)')
     ax.set_xlabel('fiber #')
+    ax.axhline(0, color='black', linestyle='-', linewidth=1)
+    ax.axhline(delta_gr_median, color='black', linestyle='--', linewidth=1)
     ax.set_ylim([-1, 1])
     ax.grid(True, alpha=0.5)
 
@@ -804,6 +809,8 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     ax.plot(delta_ri, '.', ms=5)
     ax.set_ylabel('Δ(r-i) (single - fibtable)')
     ax.set_xlabel('fiber #')
+    ax.axhline(0, color='black', linestyle='-', linewidth=1)
+    ax.axhline(delta_ri_median, color='black', linestyle='--', linewidth=1)
     ax.set_ylim([-1, 1])
     ax.grid(True, alpha=0.5)
 
@@ -811,6 +818,8 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     ax.plot(delta_gi, '.', ms=5)
     ax.set_ylabel('Δ(g-i) (single - fibtable)')
     ax.set_xlabel('fiber #')
+    ax.axhline(0, color='black', linestyle='-', linewidth=1)
+    ax.axhline(delta_gi_median, color='black', linestyle='--', linewidth=1)
     ax.set_ylim([-1, 1])
     ax.grid(True, alpha=0.5)
 
