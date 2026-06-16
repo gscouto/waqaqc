@@ -797,7 +797,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     cb.set_label('Fiber ID')
 
     ax = plt.subplot(gs[-4, 2])
-    sc = ax.scatter(i_mags, delta_i, c=fiber_id, cmap='viridis', s=5)
+    sc = ax.scatter(fiber_id, i_mags, delta_i, c=fiber_id, cmap='viridis', s=5)
     ax.set_ylabel('Δi mag (single - fibtable)')
     ax.set_xlabel('i mag')
     ax.axhline(0, color='black', linestyle='-', linewidth=1)
@@ -808,7 +808,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     cb.set_label('Fiber ID')
 
     ax = plt.subplot(gs[-3, 0])
-    sc = ax.scatter(delta_g, c=g_mags, cmap='viridis', s=5)
+    sc = ax.scatter(fiber_id, delta_g, c=g_mags, cmap='viridis', s=5)
     ax.set_ylabel('Δg mag (single - fibtable)')
     ax.set_xlabel('fiber #')
     ax.axhline(0, color='black', linestyle='-', linewidth=1)
@@ -819,7 +819,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     cb.set_label('g mag')
 
     ax = plt.subplot(gs[-3, 1])
-    sc = ax.scatter(delta_r, c=r_mags, cmap='viridis', s=5)
+    sc = ax.scatter(fiber_id, delta_r, c=r_mags, cmap='viridis', s=5)
     ax.set_ylabel('Δr mag (single - fibtable)')
     ax.set_xlabel('fiber #')
     ax.axhline(0, color='black', linestyle='-', linewidth=1)
