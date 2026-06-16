@@ -772,7 +772,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     delta_gi = ((g_mags - i_mags) -(g_cat - i_cat))
     delta_gi_median = np.nanmedian(delta_gi)
 
-    ax = plt.subplot(gs[12 + k, 0])
+    ax = plt.subplot(gs[-2, 0])
     ax.plot(g_mags, delta_g, '.', ms=2)
     ax.set_ylabel('Δg mag (single - fibtable)')
     ax.set_ylabel('g mag')
