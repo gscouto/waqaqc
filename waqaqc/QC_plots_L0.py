@@ -152,7 +152,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
     mode = blue_cube[0].header['MODE']
 
-    rows = 11 + len(file_list)
+    rows = 13 + len(file_list)
 
     fig = plt.figure(figsize=(14, 3.5 * rows))
 
@@ -772,18 +772,23 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     delta_gi = ((g_mags - i_mags) -(g_cat - i_cat))
     delta_gi_median = np.nanmedian(delta_gi)
 
+    ax = plt.subplot(gs[12 + k, :])
+    ax.plot(g_mags, delta_g, '.', ms=2)
+    ax.ylabel('Δg mag (single - fibtable)')
+    ax.ylabel('g mag')
+
     plt.figure()
 
     plt.subplot(231)
-    plt.plot(delta_g, '.', ms=2)
+    plt.plot(g_mags, delta_g, '.', ms=2)
     plt.ylabel('Δg')
 
     plt.subplot(232)
-    plt.plot(delta_r, '.', ms=2)
+    plt.plot(r_mags, delta_r, '.', ms=2)
     plt.ylabel('Δr')
 
     plt.subplot(233)
-    plt.plot(delta_i, '.', ms=2)
+    plt.plot(i_mags, delta_i, '.', ms=2)
     plt.ylabel('Δi')
 
     plt.subplot(234)
