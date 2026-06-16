@@ -719,34 +719,56 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     for k in np.arange(len(single_file_list)):
         single_file = fits.open(file_dir + file_list[k])
         if (single_file[1].name[:-5] == 'BLUE') & (mode == 'LOWRES'):
-            sdss = filters.load_filters('sdss2010-g')
+            blue_flux = single_file['BLUE_DATA'].data
+            sens_blue = single_file['BLUE_SENSFUNC'].data
 
-            flux = (single_file[1].data * single_file[5].data * u.erg / u.s / u.cm ** 2 / u.AA)
-            lam = (np.arange(single_file[1].header['NAXIS1']) *
-                   single_file[1].header['CD1_1'] +single_file[1].header['CRVAL1']) * u.AA
-
-            g_mags = sdss.get_ab_magnitudes(flux, lam)['sdss2010-g'].value
-
-            g_cat = single_file[6].data['MAG_G']
+            g_cat_b = single_file[6].data['MAG_G']
+            r_cat_b = single_file[6].data['MAG_R']
+            i_cat_b = single_file[6].data['MAG_I']
 
         if (single_file[1].name[:-5] == 'RED') & (mode == 'LOWRES'):
-            sdss = filters.load_filters('sdss2010-i')
+            red_flux = single_file['RED_DATA'].data
+            sens_red = single_file['RED_SENSFUNC'].data
 
-            flux = single_file[1].data * single_file[5].data * u.erg / u.s / u.cm ** 2 / u.AA
-            lam = ((np.arange(single_file[1].header['NAXIS1']) * single_file[1].header['CD1_1']) +
-                   single_file[1].header['CRVAL1']) * u.AA
+            g_cat_r = single_file[6].data['MAG_G']
+            r_cat_r = single_file[6].data['MAG_R']
+            i_cat_r = single_file[6].data['MAG_I']
 
-            i_mags = sdss.get_ab_magnitudes(flux, lam)['sdss2010-i'].value
+    n_blue = blue_flux.shape[1]
+    n_red = red_flux.shape[1]
 
-            i_cat = single_file[6].data['MAG_I']
+    wave_blue = (np.arange(n_blue) * single_file['BLUE_DATA'].header['CD1_1'] +
+                 single_file['BLUE_DATA'].header['CRVAL1']) * u.AA
 
-    delta_g = g_mags - g_cat
-    delta_i = i_mags - i_cat
+    wave_red = (np.arange(n_red) * single_file['RED_DATA'].header['CD1_1'] +
+                single_file['RED_DATA'].header['CRVAL1']) * u.AA
 
-    delta_gi = ((g_mags - i_mags) -(g_cat - i_cat))
-    delta_gi_median = np.nanmedian(delta_gi)
+    blue_flux = blue_flux * sens_blue * u.erg / u.s / u.cm ** 2 / u.AA
+    red_flux = red_flux * sens_red * u.erg / u.s / u.cm ** 2 / u.AA
+
+    lambda_split = 5900 * u.AA
+
+    mask_blue = wave_blue < lambda_split
+    mask_red = wave_red >= lambda_split
+
+    wave_full = np.concatenate([wave_blue[mask_blue], wave_red[mask_red]])
+    flux_full = np.concatenate([blue_flux[:, mask_blue], red_flux[:, mask_red]], axis=1)
+
+    sdss = filters.load_filters('sdss2010-g', 'sdss2010-r', 'sdss2010-i')
+
+    mags = sdss.get_ab_magnitudes(flux_full, wave_full)
+
+    g_mags = mags['sdss2010-g'].value
+    r_mags = mags['sdss2010-r'].value
+    i_mags = mags['sdss2010-i'].value
 
     breakpoint()
+
+    delta_g = g_mags - g_cat_b
+    delta_i = i_mags - i_cat_b
+
+    delta_gi = ((g_mags - i_mags) -(g_cat_b - i_cat_b))
+    delta_gi_median = np.nanmedian(delta_gi)
 
     plt.figure()
 
