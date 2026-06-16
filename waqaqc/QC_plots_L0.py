@@ -765,12 +765,15 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
     delta_gr = ((g_mags - r_mags) -(g_cat - r_cat))
     delta_gr_median = np.nanmedian(delta_gr)
+    delta_gr_std = np.nanstd(delta_gr)
 
     delta_ri = ((r_mags - i_mags) -(r_cat - i_cat))
     delta_ri_median = np.nanmedian(delta_ri)
+    delta_ri_std = np.nanstd(delta_ri)
 
     delta_gi = ((g_mags - i_mags) -(g_cat - i_cat))
     delta_gi_median = np.nanmedian(delta_gi)
+    delta_gi_std = np.nanstd(delta_gi)
 
     fiber_id = np.arange(len(g_mags))
 
@@ -842,39 +845,40 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
     ax = plt.subplot(gs[-2, 0])
     sc = ax.scatter(g_mags, delta_gr, c=fiber_id, cmap='viridis', s=5)
+    ax.axhspan(delta_gr_median - delta_gr_std, delta_gr_median + delta_gr_std, color='gray', alpha=0.2, zorder=0)
     ax.set_ylabel('Δ(g-r) (single - fibtable)')
-    ax.set_xlabel('fiber #')
+    ax.set_xlabel('g mag')
     ax.axhline(0, color='black', linestyle='-', linewidth=1)
     ax.axhline(delta_gr_median, color='black', linestyle='--', linewidth=1)
     ax.set_ylim([-1, 1])
     ax.grid(True, alpha=0.5)
 
     cb = plt.colorbar(sc, ax=ax)
-    cb.set_label('g mag')
+    cb.set_label('fiber #')
 
     ax = plt.subplot(gs[-2, 1])
     sc = ax.scatter(r_mags, delta_ri, c=fiber_id, cmap='viridis', s=5)
     ax.set_ylabel('Δ(r-i) (single - fibtable)')
-    ax.set_xlabel('fiber #')
+    ax.set_xlabel('r mag')
     ax.axhline(0, color='black', linestyle='-', linewidth=1)
     ax.axhline(delta_ri_median, color='black', linestyle='--', linewidth=1)
     ax.set_ylim([-1, 1])
     ax.grid(True, alpha=0.5)
 
     cb = plt.colorbar(sc, ax=ax)
-    cb.set_label('r mag')
+    cb.set_label('fiber #')
 
     ax = plt.subplot(gs[-2, 2])
     sc = ax.scatter(g_mags, delta_gi, c=fiber_id, cmap='viridis', s=5)
     ax.set_ylabel('Δ(g-i) (single - fibtable)')
-    ax.set_xlabel('fiber #')
+    ax.set_xlabel('g mag')
     ax.axhline(0, color='black', linestyle='-', linewidth=1)
     ax.axhline(delta_gi_median, color='black', linestyle='--', linewidth=1)
     ax.set_ylim([-1, 1])
     ax.grid(True, alpha=0.5)
 
     cb = plt.colorbar(sc, ax=ax)
-    cb.set_label('g mag')
+    cb.set_label('fiber #')
 
     ax = plt.subplot(gs[-1, 0])
     sc = ax.scatter(fiber_id, delta_gr, c=g_mags, cmap='viridis', s=5)
