@@ -773,9 +773,12 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     delta_gi_median = np.nanmedian(delta_gi)
 
     ax = plt.subplot(gs[-2, 0])
-    ax.plot(g_mags, delta_g, '.', ms=2)
+    ax.plot(g_mags, delta_g, '.', ms=5)
+    ax.ayhline(24, color='black', linestyle='--', linewidth=1)
     ax.set_ylabel('Δg mag (single - fibtable)')
-    ax.set_ylabel('g mag')
+    ax.set_xlabel('g mag')
+    ax.set_ylim([-1, 1])
+    ax.grid(True, alpha=0.5)
 
     plt.figure()
 
