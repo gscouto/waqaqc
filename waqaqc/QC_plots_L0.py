@@ -152,7 +152,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
     mode = blue_cube[0].header['MODE']
 
-    rows = 13 + len(file_list)
+    rows = 15 + len(file_list)
 
     fig = plt.figure(figsize=(14, 3.5 * rows))
 
@@ -774,7 +774,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
     fiber_id = np.arange(len(g_mags))
 
-    ax = plt.subplot(gs[-2, 0])
+    ax = plt.subplot(gs[-4, 0])
     sc = ax.scatter(g_mags, delta_g, c=fiber_id, cmap='viridis', s=5)
     ax.set_ylabel('Δg mag (single - fibtable)')
     ax.set_xlabel('g mag')
@@ -785,7 +785,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     cb = plt.colorbar(sc, ax=ax)
     cb.set_label('Fiber ID')
 
-    ax = plt.subplot(gs[-2, 1])
+    ax = plt.subplot(gs[-4, 1])
     sc = ax.scatter(r_mags, delta_r, c=fiber_id, cmap='viridis', s=5)
     ax.set_ylabel('Δr mag (single - fibtable)')
     ax.set_xlabel('r mag')
@@ -796,7 +796,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     cb = plt.colorbar(sc, ax=ax)
     cb.set_label('Fiber ID')
 
-    ax = plt.subplot(gs[-2, 2])
+    ax = plt.subplot(gs[-4, 2])
     sc = ax.scatter(i_mags, delta_i, c=fiber_id, cmap='viridis', s=5)
     ax.set_ylabel('Δi mag (single - fibtable)')
     ax.set_xlabel('i mag')
@@ -806,6 +806,39 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
     cb = plt.colorbar(sc, ax=ax)
     cb.set_label('Fiber ID')
+
+    ax = plt.subplot(gs[-3, 0])
+    sc = ax.scatter(delta_g, c=g_mags, cmap='viridis', s=5)
+    ax.set_ylabel('Δg mag (single - fibtable)')
+    ax.set_xlabel('fiber #')
+    ax.axhline(0, color='black', linestyle='-', linewidth=1)
+    ax.set_ylim([-1, 1])
+    ax.grid(True, alpha=0.5)
+
+    cb = plt.colorbar(sc, ax=ax)
+    cb.set_label('g mag')
+
+    ax = plt.subplot(gs[-3, 1])
+    sc = ax.scatter(delta_r, c=r_mags, cmap='viridis', s=5)
+    ax.set_ylabel('Δr mag (single - fibtable)')
+    ax.set_xlabel('fiber #')
+    ax.axhline(0, color='black', linestyle='-', linewidth=1)
+    ax.set_ylim([-1, 1])
+    ax.grid(True, alpha=0.5)
+
+    cb = plt.colorbar(sc, ax=ax)
+    cb.set_label('r mag')
+
+    ax = plt.subplot(gs[-3, 2])
+    sc = ax.scatter(delta_i, c=i_mags, cmap='viridis', s=5)
+    ax.set_ylabel('Δi mag (single - fibtable)')
+    ax.set_xlabel('fiber #')
+    ax.axhline(0, color='black', linestyle='-', linewidth=1)
+    ax.set_ylim([-1, 1])
+    ax.grid(True, alpha=0.5)
+
+    cb = plt.colorbar(sc, ax=ax)
+    cb.set_label('i mag')
 
     ax = plt.subplot(gs[-1, 0])
     ax.plot(delta_gr, '.', ms=5)
