@@ -809,8 +809,6 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     plt.tight_layout()
     plt.savefig('teste.png')
 
-    breakpoint()
-
     # ------
 
     fig_l0 = output_str + '_L0.png'
@@ -818,6 +816,8 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     fig.savefig(fig_l0)
 
     print('')
+
+    breakpoint()
 
     # ------ create master resolution file
 
