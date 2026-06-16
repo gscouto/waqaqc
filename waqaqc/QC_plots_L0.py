@@ -715,16 +715,19 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
         ax.legend()
 
     # ------ SDSS flux calibration plots
+
     for k in np.arange(len(single_file_list)):
         single_file = fits.open(file_dir + file_list[k])
         if (single_file[1].name[:-5] == 'BLUE') & (mode == 'LOWRES'):
             sdss = filters.load_filters('sdss2010-g')
 
-            flux = single_file[1].data * single_file[5].data * u.erg / u.s / u.cm ** 2 / u.AA
-            lam = ((np.arange(single_file[1].header['NAXIS1']) * single_file[1].header['CD1_1']) +
-                   single_file[1].header['CRVAL1']) * u.AA
+            flux = (single_file[1].data * single_file[5].data * u.erg / u.s / u.cm ** 2 / u.AA)
+            lam = (np.arange(single_file[1].header['NAXIS1']) *
+                   single_file[1].header['CD1_1'] +single_file[1].header['CRVAL1']) * u.AA
 
             g_mags = sdss.get_ab_magnitudes(flux, lam)['sdss2010-g'].value
+
+            g_cat = single_file[6].data['MAG_G']
 
         if (single_file[1].name[:-5] == 'RED') & (mode == 'LOWRES'):
             sdss = filters.load_filters('sdss2010-i')
@@ -735,21 +738,32 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
             i_mags = sdss.get_ab_magnitudes(flux, lam)['sdss2010-i'].value
 
-    res = SDSS.query_region(nsc, radius=2 * u.arcsec, photoobj_fields=['ra', 'dec', 'u', 'g', 'r', 'i', 'z', 'type'])
+            i_cat = single_file[6].data['MAG_I']
 
-    sdss_coord = SkyCoord(res['ra'], res['dec'], unit='deg')
-    sep = nsc.separation(sdss_coord)
-    res_targ = res[np.argmin(sep)]
+    delta_g = g_mags - g_cat
+    delta_i = i_mags - i_cat
+
+    delta_gi = ((g_mags - i_mags) -(g_cat - i_cat))
+    delta_gi_median = np.nanmedian(delta_gi)
 
     breakpoint()
 
-    g_i_sdss = res_targ['g'] - res_targ['i']
-    g_i_weave = g_mags - i_mags
+    plt.figure()
 
-    delta_g_i = g_i_sdss - g_i_weave
-    delta_g_i_median = np.nanmedian(g_i_sdss - g_i_weave)
+    plt.subplot(311)
+    plt.plot(delta_g, '.', ms=2)
+    plt.ylabel('Δg')
 
-    plt.plot(delta_g_i, '.')
+    plt.subplot(312)
+    plt.plot(delta_i, '.', ms=2)
+    plt.ylabel('Δi')
+
+    plt.subplot(313)
+    plt.plot(delta_gi, '.', ms=2)
+    plt.ylabel('Δ(g-i)')
+    plt.xlabel('Fiber')
+
+    plt.tight_layout()
     plt.savefig('teste.png')
 
     # ------
