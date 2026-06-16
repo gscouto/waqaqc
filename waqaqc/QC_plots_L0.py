@@ -727,6 +727,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
             i_cat_b = single_file[6].data['MAG_I']
 
         if (single_file[1].name[:-5] == 'RED') & (mode == 'LOWRES'):
+            breakpoint()
             red_flux = single_file['RED_DATA'].data
             sens_red = single_file['RED_SENSFUNC'].data
 
