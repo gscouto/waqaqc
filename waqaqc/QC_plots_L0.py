@@ -929,8 +929,6 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
     print('')
 
-    breakpoint()
-
     # ------ create master resolution file
 
     file_list_b = [x for x in os.listdir(gal_dir) if ("BLUE" in x) & ('resol' in x)]
