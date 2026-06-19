@@ -46,6 +46,8 @@ def create_rss_from_cube(cube, vorbin_map=None,
         for k, bin_id in enumerate(bins):
             y, x = bin_coords[bin_id]
 
+            sens = cube[5].data
+
             rss_data[k] = cube[1].data[:, y, x]
             # rss_err[k] = cube[2].data[:, y, x]
 
@@ -61,8 +63,6 @@ def create_rss_from_cube(cube, vorbin_map=None,
                 1.0 / np.sqrt(ivar),
                 np.nan
             )
-
-            sens = cube[5].data
 
             rss_data *= 1e20
             rss_err *= 1e20
@@ -195,22 +195,22 @@ def run_mode(mode, ob, args, gal, gal_dir, file_dir, stackcubes):
             cube = fits.open(gal_dir + '/' + cfg['cube_file'])
 
         flux = cube[1].data.copy()
-        # err = cube[2].data.copy()
-        ivar = cube[2].data.copy()
+        err = cube[2].data.copy()
+        # ivar = cube[2].data.copy()
 
         if cfg['scale_flux']:
             sens = cube[5].data
 
             flux *= sens[:, None, None]
-            # err *= sens[:, None, None]
+            err *= sens[:, None, None]
 
-            ivar /= sens[:, None, None] ** 2
-
-            err = np.where(
-                ivar > 0,
-                1.0 / np.sqrt(ivar),
-                np.nan
-            )
+            # ivar /= sens[:, None, None] ** 2
+            #
+            # err = np.where(
+            #     ivar > 0,
+            #     1.0 / np.sqrt(ivar),
+            #     np.nan
+            # )
             flux *= 1e20
             err *= 1e20
 
