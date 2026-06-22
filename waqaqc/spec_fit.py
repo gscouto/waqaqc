@@ -49,20 +49,20 @@ def create_rss_from_cube(cube, vorbin_map=None,
             sens = cube[5].data
 
             rss_data[k] = cube[1].data[:, y, x]
-            # rss_err[k] = cube[2].data[:, y, x]
+            rss_err[k] = cube[2].data[:, y, x]
 
             rss_data[k] *= sens
-            # rss_err[k] *= sens
+            rss_err[k] *= sens
 
-            ivar = cube[2].data[:, y, x]
-
-            ivar /= sens ** 2
-
-            rss_err[k] = np.where(
-                ivar > 0,
-                1.0 / np.sqrt(ivar),
-                np.nan
-            )
+            # ivar = cube[2].data[:, y, x]
+            #
+            # ivar /= sens ** 2
+            #
+            # rss_err[k] = np.where(
+            #     ivar > 0,
+            #     1.0 / np.sqrt(ivar),
+            #     np.nan
+            # )
 
             rss_data *= 1e20
             rss_err *= 1e20
