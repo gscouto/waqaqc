@@ -25,7 +25,7 @@ defaults = {
     'line_vel': 0,
     'aps_lam_min': 3600,
     'aps_lam_max': 8750,
-    'blue_lam_min': 3800,
+    'blue_lam_min': 3600,
     'blue_lam_max': 5475,
     'red_lam_min': 5800,
     'red_lam_max': 9400,
