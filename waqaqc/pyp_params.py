@@ -211,12 +211,14 @@ def pp(ob, redshift, args):
             h.write('3712  3742\n')
         if z < 1.562:
             h.write('3850  3895\n')
+        h.write('3950 3990    !H7\n')
         if z < 1.474:
             h.write('4080  4110\n')
         if z < 1.392:
             h.write('4320  4375\n')
         # if z < 1.307:
         # h.write('4600  4750\n')
+        h.write('4666 4706    !He II\n')
         if z < 1.242:
             h.write('4840  4880\n')
         if z < 1.217:
@@ -243,8 +245,10 @@ def pp(ob, redshift, args):
         f.write('[rest-frame]\n')
         f.write('3712 3742    !OII, H13\n')
         f.write('3850 3895    !NeIII, HeI, H8\n')
+        f.write('3950 3990    !H7\n')
         f.write('4080 4110    !Hd\n')
         f.write('4320 4375    !Hg\n')
+        f.write('4666 4706    !He II\n')
         # f.write('4600 4750    !blueWRbump\n')
         f.write('4840 4880    !Hb\n')
         f.write('4940 4980    !OIII\n')
@@ -770,12 +774,14 @@ def pp(ob, redshift, args):
             h.write('3712  3742\n')
         if z < 1.413:
             h.write('3850  3895\n')
+        h.write('3950 3990    !H7\n')
         if z < 1.287:
             h.write('4080  4110\n')
         if z < 1.148:
             h.write('4320  4375\n')
-        if z < 0.979:
-            h.write('4600  4750\n')
+        # if z < 0.979:
+        #     h.write('4600  4750\n')
+        h.write('4666 4706    !He II\n')
         if z < 0.926:
             h.write('4840  4880\n')
         if z < 0.887:
@@ -820,9 +826,11 @@ def pp(ob, redshift, args):
         f.write('[rest-frame]\n')
         f.write('3712 3742    !OII, H13\n')
         f.write('3850 3895    !NeIII, HeI, H8\n')
+        f.write('3950 3990    !H7\n')
         f.write('4080 4110    !Hd\n')
         f.write('4320 4375    !Hg\n')
-        f.write('4600 4750    !blueWRbump\n')
+        f.write('4666 4706    !He II\n')
+        # f.write('4600 4750    !blueWRbump\n')
         f.write('4840 4880    !Hb\n')
         f.write('4940 4980    !OIII\n')
         f.write('4990 5022    !OIII\n')
