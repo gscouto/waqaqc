@@ -930,7 +930,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     cb.set_label('g mag')
 
     median_flux_calib = 100 * (1 - (np.nanmean([delta_gr_median, delta_ri_median, delta_gi_median])/0.5))
-    std_flux_calib = 100 * (1 - np.nanmean([delta_gr_std, delta_ri_std, delta_gi_std]) / 0.75
+    std_flux_calib = 100 * (1 - np.nanmean([delta_gr_std, delta_ri_std, delta_gi_std])) / 0.75
 
     # ------
 
