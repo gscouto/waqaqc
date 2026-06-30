@@ -20,6 +20,8 @@ from waqaqc import QC_plots_L0
 
 matplotlib.use("Agg")
 
+Ned.TIMEOUT = 180
+
 
 def vorbin_loop(args):
     i, vorbin_m, cam = args
@@ -1369,7 +1371,19 @@ def html_plots(ob, redshift, args):
         frame="icrs"
     )
 
-    res = Ned.query_region(coord, radius=10 * u.arcsec)
+    def query_region_retry(coord, radius, ntries=5, delay=5):
+        for i in range(ntries):
+            try:
+                return Ned.query_region(coord, radius=radius)
+            except Exception as e:
+                print(f"NED query failed (attempt {i + 1}/{ntries}): {e}")
+
+                if i == ntries - 1:
+                    raise
+
+                time.sleep(delay)
+
+    res = query_region_retry(coord, radius=10 * u.arcsec)
 
     gal = res[res["Type"].astype(str) == "G"]
 
