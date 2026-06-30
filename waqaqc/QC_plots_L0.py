@@ -929,8 +929,13 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     cb = plt.colorbar(sc, ax=ax)
     cb.set_label('g mag')
 
-    median_flux_calib = 100 * (1 - (np.nanmean([delta_gr_median, delta_ri_median, delta_gi_median])/0.5))
+    median_flux_calib = 100 * (1 - (np.nanmean([abs(delta_gr_median), abs(delta_ri_median), abs(delta_gi_median)])/0.5))
     std_flux_calib = 100 * (1 - np.nanmean([delta_gr_std, delta_ri_std, delta_gi_std])) / 0.75
+
+    if median_flux_calib < 0:
+        median_flux_calib = 0
+    if std_flux_calib < 0:
+        std_flux_calib = 0
 
     # ------
 
