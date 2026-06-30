@@ -16,6 +16,7 @@ import warnings
 import multiprocessing as mp
 from scipy.optimize import curve_fit
 import re
+import time
 from waqaqc import QC_plots_L0
 
 matplotlib.use("Agg")
