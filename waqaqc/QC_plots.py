@@ -303,7 +303,7 @@ def html_plots(ob, redshift, args):
                                    output_str, redshift, spec_pix, args)
 
     fig_l0, blue_spec_resol, red_spec_resol, blue_fiber_through, red_fiber_through, \
-        blue_wave_calib, red_wave_calib = L0_results
+        blue_wave_calib, red_wave_calib, median_flux_calib, std_flux_calib = L0_results
 
     # ==================================================================
 
@@ -1394,6 +1394,8 @@ def html_plots(ob, redshift, args):
         f.write(str(red_fiber_through) + '\n')
         f.write(str(blue_wave_calib) + '\n')
         f.write(str(red_wave_calib) + '\n')
+        f.write(str(median_flux_calib) + '\n')
+        f.write(str(std_flux_calib) + '\n')
         f.write(wa_id + '\n')
 
     os.makedirs(qc_plot_dir, exist_ok=True)

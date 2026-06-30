@@ -149,6 +149,8 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     blue_fiber_through = 0
     red_wave_calib = 0
     blue_wave_calib = 0
+    median_flux_calib = 0
+    std_flux_calib = 0
 
     mode = blue_cube[0].header['MODE']
 
@@ -714,7 +716,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
         ax.set_title('flux calibration / ' + file_list[k])
         ax.legend()
 
-    # ------ SDSS flux calibration plots
+    # ------ colors flux calibration plots
 
     for k in np.arange(len(single_file_list)):
         single_file = fits.open(file_dir + file_list[k])
@@ -765,19 +767,19 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
     mask = (g_mags < 24) & (r_mags < 24)
 
-    delta_gr = ((g_mags - r_mags) -(g_cat - r_cat))
+    delta_gr = ((g_mags - r_mags) - (g_cat - r_cat))
     delta_gr_median = np.nanmedian(delta_gr[mask])
     delta_gr_std = np.nanstd(delta_gr[mask])
 
     mask = (r_mags < 24) & (i_mags < 24)
 
-    delta_ri = ((r_mags - i_mags) -(r_cat - i_cat))
+    delta_ri = ((r_mags - i_mags) - (r_cat - i_cat))
     delta_ri_median = np.nanmedian(delta_ri[mask])
     delta_ri_std = np.nanstd(delta_ri[mask])
 
     mask = (g_mags < 24) & (i_mags < 24)
 
-    delta_gi = ((g_mags - i_mags) -(g_cat - i_cat))
+    delta_gi = ((g_mags - i_mags) - (g_cat - i_cat))
     delta_gi_median = np.nanmedian(delta_gi[mask])
     delta_gi_std = np.nanstd(delta_gi[mask])
 
@@ -927,6 +929,9 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     cb = plt.colorbar(sc, ax=ax)
     cb.set_label('g mag')
 
+    median_flux_calib = np.nanmean([delta_gr_median, delta_ri_median, delta_gi_median])
+    std_flux_calib = np.nanmean([delta_gr_std, delta_ri_std, delta_gi_std])
+
     # ------
 
     fig_l0 = output_str + '_L0.png'
@@ -983,7 +988,7 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     np.savetxt(gal_dir + '/resol_table_mean.txt', np.column_stack((modes, avs)), fmt='%s')
 
     return fig_l0, blue_spec_resol, red_spec_resol, blue_fiber_through, red_fiber_through, blue_wave_calib, \
-           red_wave_calib
+           red_wave_calib, median_flux_calib, std_flux_calib
 
 
 def polynom(x, a, b, c):
