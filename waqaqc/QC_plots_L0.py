@@ -718,11 +718,10 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
     # ------ colors flux calibration plots
 
-    breakpoint()
-
     for k in np.arange(len(single_file_list)):
         single_file = fits.open(file_dir + file_list[k])
-        if (single_file[1].name[:-5] == 'BLUE') & (mode == 'LOWRES'):
+        # if (single_file[1].name[:-5] == 'BLUE') & (mode == 'LOWRES'):
+        if (single_file[1].name[:-5] == 'BLUE'):
             blue_flux = single_file['BLUE_DATA'].data
             sens_blue = single_file['BLUE_SENSFUNC'].data
 
@@ -735,7 +734,8 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
             r_cat = single_file[6].data['MAG_R']
             i_cat = single_file[6].data['MAG_I']
 
-        if (single_file[1].name[:-5] == 'RED') & (mode == 'LOWRES'):
+        # if (single_file[1].name[:-5] == 'RED') & (mode == 'LOWRES'):
+        if (single_file[1].name[:-5] == 'RED'):
             red_flux = single_file['RED_DATA'].data
             sens_red = single_file['RED_SENSFUNC'].data
 
@@ -743,8 +743,6 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
             wave_red = (np.arange(n_red) * single_file['RED_DATA'].header['CD1_1'] +
                         single_file['RED_DATA'].header['CRVAL1']) * u.AA
-
-    breakpoint()
 
     blue_flux = blue_flux * sens_blue * u.erg / u.s / u.cm ** 2 / u.AA
     red_flux = red_flux * sens_red * u.erg / u.s / u.cm ** 2 / u.AA
