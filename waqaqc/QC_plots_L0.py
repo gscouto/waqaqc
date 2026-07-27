@@ -149,8 +149,8 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     blue_fiber_through = 0
     red_wave_calib = 0
     blue_wave_calib = 0
-    median_flux_calib = 0
-    std_flux_calib = 0
+    median_flux_calib = np.nan
+    std_flux_calib = np.nan
 
     mode = blue_cube[0].header['MODE']
 
@@ -718,226 +718,226 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
     # ------ colors flux calibration plots
 
-    for k in np.arange(len(single_file_list)):
-        single_file = fits.open(file_dir + file_list[k])
-        # if (single_file[1].name[:-5] == 'BLUE') & (mode == 'LOWRES'):
-        if (single_file[1].name[:-5] == 'BLUE'):
-            blue_flux = single_file['BLUE_DATA'].data
-            sens_blue = single_file['BLUE_SENSFUNC'].data
+    if mode == 'LOWRES':
 
-            n_blue = blue_flux.shape[1]
+        for k in np.arange(len(single_file_list)):
+            single_file = fits.open(file_dir + file_list[k])
+            if single_file[1].name[:-5] == 'BLUE':
+                blue_flux = single_file['BLUE_DATA'].data
+                sens_blue = single_file['BLUE_SENSFUNC'].data
 
-            wave_blue = (np.arange(n_blue) * single_file['BLUE_DATA'].header['CD1_1'] +
-                         single_file['BLUE_DATA'].header['CRVAL1']) * u.AA
+                n_blue = blue_flux.shape[1]
 
-            g_cat = single_file[6].data['MAG_G']
-            r_cat = single_file[6].data['MAG_R']
-            i_cat = single_file[6].data['MAG_I']
+                wave_blue = (np.arange(n_blue) * single_file['BLUE_DATA'].header['CD1_1'] +
+                             single_file['BLUE_DATA'].header['CRVAL1']) * u.AA
 
-        # if (single_file[1].name[:-5] == 'RED') & (mode == 'LOWRES'):
-        if (single_file[1].name[:-5] == 'RED'):
-            red_flux = single_file['RED_DATA'].data
-            sens_red = single_file['RED_SENSFUNC'].data
+                g_cat = single_file[6].data['MAG_G']
+                r_cat = single_file[6].data['MAG_R']
+                i_cat = single_file[6].data['MAG_I']
 
-            n_red = red_flux.shape[1]
+            if single_file[1].name[:-5] == 'RED':
+                red_flux = single_file['RED_DATA'].data
+                sens_red = single_file['RED_SENSFUNC'].data
 
-            wave_red = (np.arange(n_red) * single_file['RED_DATA'].header['CD1_1'] +
-                        single_file['RED_DATA'].header['CRVAL1']) * u.AA
+                n_red = red_flux.shape[1]
 
-    blue_flux = blue_flux * sens_blue * u.erg / u.s / u.cm ** 2 / u.AA
-    red_flux = red_flux * sens_red * u.erg / u.s / u.cm ** 2 / u.AA
+                wave_red = (np.arange(n_red) * single_file['RED_DATA'].header['CD1_1'] +
+                            single_file['RED_DATA'].header['CRVAL1']) * u.AA
 
-    lambda_split = 5900 * u.AA
+        blue_flux = blue_flux * sens_blue * u.erg / u.s / u.cm ** 2 / u.AA
+        red_flux = red_flux * sens_red * u.erg / u.s / u.cm ** 2 / u.AA
 
-    mask_blue = wave_blue < lambda_split
-    mask_red = wave_red >= lambda_split
+        lambda_split = 5900 * u.AA
 
-    wave_full = np.concatenate([wave_blue[mask_blue], wave_red[mask_red]])
-    flux_full = np.concatenate([blue_flux[:, mask_blue], red_flux[:, mask_red]], axis=1)
+        mask_blue = wave_blue < lambda_split
+        mask_red = wave_red >= lambda_split
 
-    sdss = filters.load_filters('sdss2010-g', 'sdss2010-r', 'sdss2010-i')
+        wave_full = np.concatenate([wave_blue[mask_blue], wave_red[mask_red]])
+        flux_full = np.concatenate([blue_flux[:, mask_blue], red_flux[:, mask_red]], axis=1)
 
-    mags = sdss.get_ab_magnitudes(flux_full, wave_full)
+        sdss = filters.load_filters('sdss2010-g', 'sdss2010-r', 'sdss2010-i')
 
-    g_mags = mags['sdss2010-g'].value
-    r_mags = mags['sdss2010-r'].value
-    i_mags = mags['sdss2010-i'].value
+        mags = sdss.get_ab_magnitudes(flux_full, wave_full)
 
-    delta_g = g_mags - g_cat
-    delta_r = r_mags - r_cat
-    delta_i = i_mags - i_cat
+        g_mags = mags['sdss2010-g'].value
+        r_mags = mags['sdss2010-r'].value
+        i_mags = mags['sdss2010-i'].value
 
-    mask = (g_mags < 24) & (r_mags < 24)
+        delta_g = g_mags - g_cat
+        delta_r = r_mags - r_cat
+        delta_i = i_mags - i_cat
 
-    delta_gr = ((g_mags - r_mags) - (g_cat - r_cat))
-    delta_gr_median = np.nanmedian(delta_gr[mask])
-    delta_gr_std = np.nanstd(delta_gr[mask])
+        mask = (g_mags < 24) & (r_mags < 24)
 
-    mask = (r_mags < 24) & (i_mags < 24)
+        delta_gr = ((g_mags - r_mags) - (g_cat - r_cat))
+        delta_gr_median = np.nanmedian(delta_gr[mask])
+        delta_gr_std = np.nanstd(delta_gr[mask])
 
-    delta_ri = ((r_mags - i_mags) - (r_cat - i_cat))
-    delta_ri_median = np.nanmedian(delta_ri[mask])
-    delta_ri_std = np.nanstd(delta_ri[mask])
+        mask = (r_mags < 24) & (i_mags < 24)
 
-    mask = (g_mags < 24) & (i_mags < 24)
+        delta_ri = ((r_mags - i_mags) - (r_cat - i_cat))
+        delta_ri_median = np.nanmedian(delta_ri[mask])
+        delta_ri_std = np.nanstd(delta_ri[mask])
 
-    delta_gi = ((g_mags - i_mags) - (g_cat - i_cat))
-    delta_gi_median = np.nanmedian(delta_gi[mask])
-    delta_gi_std = np.nanstd(delta_gi[mask])
+        mask = (g_mags < 24) & (i_mags < 24)
 
-    fiber_id = np.arange(len(g_mags))
+        delta_gi = ((g_mags - i_mags) - (g_cat - i_cat))
+        delta_gi_median = np.nanmedian(delta_gi[mask])
+        delta_gi_std = np.nanstd(delta_gi[mask])
 
-    ax = plt.subplot(gs[-4, 0])
-    sc = ax.scatter(g_mags, delta_g, c=fiber_id, cmap='viridis', s=5)
-    ax.set_ylabel('Δg mag (single - fibtable)')
-    ax.set_xlabel('g mag')
-    ax.axhline(0, color='black', linestyle='-', linewidth=1)
-    ax.set_ylim([-1, 1])
-    ax.grid(True, alpha=0.5)
+        fiber_id = np.arange(len(g_mags))
 
-    cb = plt.colorbar(sc, ax=ax)
-    cb.set_label('Fiber ID')
+        ax = plt.subplot(gs[-4, 0])
+        sc = ax.scatter(g_mags, delta_g, c=fiber_id, cmap='viridis', s=5)
+        ax.set_ylabel('Δg mag (single - fibtable)')
+        ax.set_xlabel('g mag')
+        ax.axhline(0, color='black', linestyle='-', linewidth=1)
+        ax.set_ylim([-1, 1])
+        ax.grid(True, alpha=0.5)
 
-    ax = plt.subplot(gs[-4, 1])
-    sc = ax.scatter(r_mags, delta_r, c=fiber_id, cmap='viridis', s=5)
-    ax.set_ylabel('Δr mag (single - fibtable)')
-    ax.set_xlabel('r mag')
-    ax.axhline(0, color='black', linestyle='-', linewidth=1)
-    ax.set_ylim([-1, 1])
-    ax.grid(True, alpha=0.5)
+        cb = plt.colorbar(sc, ax=ax)
+        cb.set_label('Fiber ID')
 
-    cb = plt.colorbar(sc, ax=ax)
-    cb.set_label('Fiber ID')
+        ax = plt.subplot(gs[-4, 1])
+        sc = ax.scatter(r_mags, delta_r, c=fiber_id, cmap='viridis', s=5)
+        ax.set_ylabel('Δr mag (single - fibtable)')
+        ax.set_xlabel('r mag')
+        ax.axhline(0, color='black', linestyle='-', linewidth=1)
+        ax.set_ylim([-1, 1])
+        ax.grid(True, alpha=0.5)
 
-    ax = plt.subplot(gs[-4, 2])
-    sc = ax.scatter(i_mags, delta_i, c=fiber_id, cmap='viridis', s=5)
-    ax.set_ylabel('Δi mag (single - fibtable)')
-    ax.set_xlabel('i mag')
-    ax.axhline(0, color='black', linestyle='-', linewidth=1)
-    ax.set_ylim([-1, 1])
-    ax.grid(True, alpha=0.5)
+        cb = plt.colorbar(sc, ax=ax)
+        cb.set_label('Fiber ID')
 
-    cb = plt.colorbar(sc, ax=ax)
-    cb.set_label('Fiber ID')
+        ax = plt.subplot(gs[-4, 2])
+        sc = ax.scatter(i_mags, delta_i, c=fiber_id, cmap='viridis', s=5)
+        ax.set_ylabel('Δi mag (single - fibtable)')
+        ax.set_xlabel('i mag')
+        ax.axhline(0, color='black', linestyle='-', linewidth=1)
+        ax.set_ylim([-1, 1])
+        ax.grid(True, alpha=0.5)
 
-    ax = plt.subplot(gs[-3, 0])
-    sc = ax.scatter(fiber_id, delta_g, c=g_mags, cmap='viridis', s=5)
-    ax.set_ylabel('Δg mag (single - fibtable)')
-    ax.set_xlabel('fiber #')
-    ax.axhline(0, color='black', linestyle='-', linewidth=1)
-    ax.set_ylim([-1, 1])
-    ax.grid(True, alpha=0.5)
+        cb = plt.colorbar(sc, ax=ax)
+        cb.set_label('Fiber ID')
 
-    cb = plt.colorbar(sc, ax=ax)
-    cb.set_label('g mag')
+        ax = plt.subplot(gs[-3, 0])
+        sc = ax.scatter(fiber_id, delta_g, c=g_mags, cmap='viridis', s=5)
+        ax.set_ylabel('Δg mag (single - fibtable)')
+        ax.set_xlabel('fiber #')
+        ax.axhline(0, color='black', linestyle='-', linewidth=1)
+        ax.set_ylim([-1, 1])
+        ax.grid(True, alpha=0.5)
 
-    ax = plt.subplot(gs[-3, 1])
-    sc = ax.scatter(fiber_id, delta_r, c=r_mags, cmap='viridis', s=5)
-    ax.set_ylabel('Δr mag (single - fibtable)')
-    ax.set_xlabel('fiber #')
-    ax.axhline(0, color='black', linestyle='-', linewidth=1)
-    ax.set_ylim([-1, 1])
-    ax.grid(True, alpha=0.5)
+        cb = plt.colorbar(sc, ax=ax)
+        cb.set_label('g mag')
 
-    cb = plt.colorbar(sc, ax=ax)
-    cb.set_label('r mag')
+        ax = plt.subplot(gs[-3, 1])
+        sc = ax.scatter(fiber_id, delta_r, c=r_mags, cmap='viridis', s=5)
+        ax.set_ylabel('Δr mag (single - fibtable)')
+        ax.set_xlabel('fiber #')
+        ax.axhline(0, color='black', linestyle='-', linewidth=1)
+        ax.set_ylim([-1, 1])
+        ax.grid(True, alpha=0.5)
 
-    ax = plt.subplot(gs[-3, 2])
-    sc = ax.scatter(fiber_id, delta_i, c=i_mags, cmap='viridis', s=5)
-    ax.set_ylabel('Δi mag (single - fibtable)')
-    ax.set_xlabel('fiber #')
-    ax.axhline(0, color='black', linestyle='-', linewidth=1)
-    ax.set_ylim([-1, 1])
-    ax.grid(True, alpha=0.5)
+        cb = plt.colorbar(sc, ax=ax)
+        cb.set_label('r mag')
 
-    cb = plt.colorbar(sc, ax=ax)
-    cb.set_label('i mag')
+        ax = plt.subplot(gs[-3, 2])
+        sc = ax.scatter(fiber_id, delta_i, c=i_mags, cmap='viridis', s=5)
+        ax.set_ylabel('Δi mag (single - fibtable)')
+        ax.set_xlabel('fiber #')
+        ax.axhline(0, color='black', linestyle='-', linewidth=1)
+        ax.set_ylim([-1, 1])
+        ax.grid(True, alpha=0.5)
 
-    ax = plt.subplot(gs[-2, 0])
-    sc = ax.scatter(g_mags, delta_gr, c=fiber_id, cmap='viridis', s=5)
-    ax.axhspan(delta_gr_median - delta_gr_std, delta_gr_median + delta_gr_std, color='gray', alpha=0.2, zorder=0)
-    ax.set_ylabel('Δ(g-r) (single - fibtable)')
-    ax.set_xlabel('g mag')
-    ax.axhline(0, color='black', linestyle='-', linewidth=1)
-    ax.axhline(delta_gr_median, color='black', linestyle='--', linewidth=1)
-    ax.set_ylim([-1, 1])
-    ax.grid(True, alpha=0.5)
+        cb = plt.colorbar(sc, ax=ax)
+        cb.set_label('i mag')
 
-    cb = plt.colorbar(sc, ax=ax)
-    cb.set_label('fiber #')
+        ax = plt.subplot(gs[-2, 0])
+        sc = ax.scatter(g_mags, delta_gr, c=fiber_id, cmap='viridis', s=5)
+        ax.axhspan(delta_gr_median - delta_gr_std, delta_gr_median + delta_gr_std, color='gray', alpha=0.2, zorder=0)
+        ax.set_ylabel('Δ(g-r) (single - fibtable)')
+        ax.set_xlabel('g mag')
+        ax.axhline(0, color='black', linestyle='-', linewidth=1)
+        ax.axhline(delta_gr_median, color='black', linestyle='--', linewidth=1)
+        ax.set_ylim([-1, 1])
+        ax.grid(True, alpha=0.5)
 
-    ax = plt.subplot(gs[-2, 1])
-    sc = ax.scatter(r_mags, delta_ri, c=fiber_id, cmap='viridis', s=5)
-    ax.axhspan(delta_ri_median - delta_ri_std, delta_ri_median + delta_ri_std, color='gray', alpha=0.2, zorder=0)
-    ax.set_ylabel('Δ(r-i) (single - fibtable)')
-    ax.set_xlabel('r mag')
-    ax.axhline(0, color='black', linestyle='-', linewidth=1)
-    ax.axhline(delta_ri_median, color='black', linestyle='--', linewidth=1)
-    ax.set_ylim([-1, 1])
-    ax.grid(True, alpha=0.5)
+        cb = plt.colorbar(sc, ax=ax)
+        cb.set_label('fiber #')
 
-    cb = plt.colorbar(sc, ax=ax)
-    cb.set_label('fiber #')
+        ax = plt.subplot(gs[-2, 1])
+        sc = ax.scatter(r_mags, delta_ri, c=fiber_id, cmap='viridis', s=5)
+        ax.axhspan(delta_ri_median - delta_ri_std, delta_ri_median + delta_ri_std, color='gray', alpha=0.2, zorder=0)
+        ax.set_ylabel('Δ(r-i) (single - fibtable)')
+        ax.set_xlabel('r mag')
+        ax.axhline(0, color='black', linestyle='-', linewidth=1)
+        ax.axhline(delta_ri_median, color='black', linestyle='--', linewidth=1)
+        ax.set_ylim([-1, 1])
+        ax.grid(True, alpha=0.5)
 
-    ax = plt.subplot(gs[-2, 2])
-    sc = ax.scatter(g_mags, delta_gi, c=fiber_id, cmap='viridis', s=5)
-    ax.axhspan(delta_gi_median - delta_gi_std, delta_gi_median + delta_gi_std, color='gray', alpha=0.2, zorder=0)
-    ax.set_ylabel('Δ(g-i) (single - fibtable)')
-    ax.set_xlabel('g mag')
-    ax.axhline(0, color='black', linestyle='-', linewidth=1)
-    ax.axhline(delta_gi_median, color='black', linestyle='--', linewidth=1)
-    ax.set_ylim([-1, 1])
-    ax.grid(True, alpha=0.5)
+        cb = plt.colorbar(sc, ax=ax)
+        cb.set_label('fiber #')
 
-    cb = plt.colorbar(sc, ax=ax)
-    cb.set_label('fiber #')
+        ax = plt.subplot(gs[-2, 2])
+        sc = ax.scatter(g_mags, delta_gi, c=fiber_id, cmap='viridis', s=5)
+        ax.axhspan(delta_gi_median - delta_gi_std, delta_gi_median + delta_gi_std, color='gray', alpha=0.2, zorder=0)
+        ax.set_ylabel('Δ(g-i) (single - fibtable)')
+        ax.set_xlabel('g mag')
+        ax.axhline(0, color='black', linestyle='-', linewidth=1)
+        ax.axhline(delta_gi_median, color='black', linestyle='--', linewidth=1)
+        ax.set_ylim([-1, 1])
+        ax.grid(True, alpha=0.5)
 
-    ax = plt.subplot(gs[-1, 0])
-    sc = ax.scatter(fiber_id, delta_gr, c=g_mags, cmap='viridis', s=5)
-    ax.axhspan(delta_gr_median - delta_gr_std, delta_gr_median + delta_gr_std, color='gray', alpha=0.2, zorder=0)
-    ax.set_ylabel('Δ(g-r) (single - fibtable)')
-    ax.set_xlabel('fiber #')
-    ax.axhline(0, color='black', linestyle='-', linewidth=1)
-    ax.axhline(delta_gr_median, color='black', linestyle='--', linewidth=1)
-    ax.set_ylim([-1, 1])
-    ax.grid(True, alpha=0.5)
+        cb = plt.colorbar(sc, ax=ax)
+        cb.set_label('fiber #')
 
-    cb = plt.colorbar(sc, ax=ax)
-    cb.set_label('g mag')
+        ax = plt.subplot(gs[-1, 0])
+        sc = ax.scatter(fiber_id, delta_gr, c=g_mags, cmap='viridis', s=5)
+        ax.axhspan(delta_gr_median - delta_gr_std, delta_gr_median + delta_gr_std, color='gray', alpha=0.2, zorder=0)
+        ax.set_ylabel('Δ(g-r) (single - fibtable)')
+        ax.set_xlabel('fiber #')
+        ax.axhline(0, color='black', linestyle='-', linewidth=1)
+        ax.axhline(delta_gr_median, color='black', linestyle='--', linewidth=1)
+        ax.set_ylim([-1, 1])
+        ax.grid(True, alpha=0.5)
 
-    ax = plt.subplot(gs[-1, 1])
-    sc = ax.scatter(fiber_id, delta_ri, c=r_mags, cmap='viridis', s=5)
-    ax.axhspan(delta_ri_median - delta_ri_std, delta_ri_median + delta_ri_std, color='gray', alpha=0.2, zorder=0)
-    ax.set_ylabel('Δ(r-i) (single - fibtable)')
-    ax.set_xlabel('fiber #')
-    ax.axhline(0, color='black', linestyle='-', linewidth=1)
-    ax.axhline(delta_ri_median, color='black', linestyle='--', linewidth=1)
-    ax.set_ylim([-1, 1])
-    ax.grid(True, alpha=0.5)
+        cb = plt.colorbar(sc, ax=ax)
+        cb.set_label('g mag')
 
-    cb = plt.colorbar(sc, ax=ax)
-    cb.set_label('r mag')
+        ax = plt.subplot(gs[-1, 1])
+        sc = ax.scatter(fiber_id, delta_ri, c=r_mags, cmap='viridis', s=5)
+        ax.axhspan(delta_ri_median - delta_ri_std, delta_ri_median + delta_ri_std, color='gray', alpha=0.2, zorder=0)
+        ax.set_ylabel('Δ(r-i) (single - fibtable)')
+        ax.set_xlabel('fiber #')
+        ax.axhline(0, color='black', linestyle='-', linewidth=1)
+        ax.axhline(delta_ri_median, color='black', linestyle='--', linewidth=1)
+        ax.set_ylim([-1, 1])
+        ax.grid(True, alpha=0.5)
 
-    ax = plt.subplot(gs[-1, 2])
-    sc = ax.scatter(fiber_id, delta_gi, c=g_mags, cmap='viridis', s=5)
-    ax.axhspan(delta_gi_median - delta_gi_std, delta_gi_median + delta_gi_std, color='gray', alpha=0.2, zorder=0)
-    ax.set_ylabel('Δ(g-i) (single - fibtable)')
-    ax.set_xlabel('fiber #')
-    ax.axhline(0, color='black', linestyle='-', linewidth=1)
-    ax.axhline(delta_gi_median, color='black', linestyle='--', linewidth=1)
-    ax.set_ylim([-1, 1])
-    ax.grid(True, alpha=0.5)
+        cb = plt.colorbar(sc, ax=ax)
+        cb.set_label('r mag')
 
-    cb = plt.colorbar(sc, ax=ax)
-    cb.set_label('g mag')
+        ax = plt.subplot(gs[-1, 2])
+        sc = ax.scatter(fiber_id, delta_gi, c=g_mags, cmap='viridis', s=5)
+        ax.axhspan(delta_gi_median - delta_gi_std, delta_gi_median + delta_gi_std, color='gray', alpha=0.2, zorder=0)
+        ax.set_ylabel('Δ(g-i) (single - fibtable)')
+        ax.set_xlabel('fiber #')
+        ax.axhline(0, color='black', linestyle='-', linewidth=1)
+        ax.axhline(delta_gi_median, color='black', linestyle='--', linewidth=1)
+        ax.set_ylim([-1, 1])
+        ax.grid(True, alpha=0.5)
 
-    median_flux_calib = 100 * (1 - (np.nanmean([abs(delta_gr_median), abs(delta_ri_median), abs(delta_gi_median)])/0.5))
-    std_flux_calib = 100 * (1 - np.nanmean([delta_gr_std, delta_ri_std, delta_gi_std])) / 0.75
+        cb = plt.colorbar(sc, ax=ax)
+        cb.set_label('g mag')
 
-    if median_flux_calib < 0:
-        median_flux_calib = 0
-    if std_flux_calib < 0:
-        std_flux_calib = 0
+        median_flux_calib = 100 * (1 - (np.nanmean([abs(delta_gr_median), abs(delta_ri_median), abs(delta_gi_median)])/0.5))
+        std_flux_calib = 100 * (1 - np.nanmean([delta_gr_std, delta_ri_std, delta_gi_std])) / 0.75
+
+        if median_flux_calib < 0:
+            median_flux_calib = 0
+        if std_flux_calib < 0:
+            std_flux_calib = 0
 
     # ------
 
