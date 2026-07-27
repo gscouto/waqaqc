@@ -718,6 +718,8 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
 
     # ------ colors flux calibration plots
 
+    breakpoint()
+
     for k in np.arange(len(single_file_list)):
         single_file = fits.open(file_dir + file_list[k])
         if (single_file[1].name[:-5] == 'BLUE') & (mode == 'LOWRES'):
