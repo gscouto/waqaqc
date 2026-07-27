@@ -744,6 +744,8 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
             wave_red = (np.arange(n_red) * single_file['RED_DATA'].header['CD1_1'] +
                         single_file['RED_DATA'].header['CRVAL1']) * u.AA
 
+    breakpoint()
+
     blue_flux = blue_flux * sens_blue * u.erg / u.s / u.cm ** 2 / u.AA
     red_flux = red_flux * sens_red * u.erg / u.s / u.cm ** 2 / u.AA
 
