@@ -938,6 +938,8 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
             median_flux_calib = 0
         if std_flux_calib < 0:
             std_flux_calib = 0
+        if std_flux_calib > 100:
+            std_flux_calib = 100
 
     # ------
 
