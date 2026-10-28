@@ -931,9 +931,9 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
         cb = plt.colorbar(sc, ax=ax)
         cb.set_label('g mag')
 
-        median_flux_calib = 100 * (1 - (np.nanmean([abs(delta_gr_median), abs(delta_ri_median),
-                                                    abs(delta_gi_median)])/0.5))
-        std_flux_calib = 100 * (1 - (np.nanmean([delta_gr_std, delta_ri_std, delta_gi_std])/0.5))
+        median_flux_calib = np.round(100 * (1 - (np.nanmean([abs(delta_gr_median), abs(delta_ri_median),
+                                                    abs(delta_gi_median)])/0.5)))
+        std_flux_calib = np.round(100 * (1 - (np.nanmean([delta_gr_std, delta_ri_std, delta_gi_std])/0.5)))
 
         if median_flux_calib < 0:
             median_flux_calib = 0
@@ -998,7 +998,8 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
     np.savetxt(gal_dir + '/resol_table_mean.txt', np.column_stack((modes, avs)), fmt='%s')
 
     return fig_l0, blue_spec_resol, red_spec_resol, blue_fiber_through, red_fiber_through, blue_wave_calib, \
-           red_wave_calib, median_flux_calib, std_flux_calib
+           red_wave_calib, median_flux_calib, std_flux_calib, delta_gr_median, delta_ri_median, delta_gi_median, \
+           delta_gr_std, delta_ri_std, delta_gi_std
 
 
 def polynom(x, a, b, c):

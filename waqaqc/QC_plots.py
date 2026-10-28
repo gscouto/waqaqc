@@ -306,7 +306,8 @@ def html_plots(ob, redshift, args):
                                    output_str, redshift, spec_pix, args)
 
     fig_l0, blue_spec_resol, red_spec_resol, blue_fiber_through, red_fiber_through, \
-        blue_wave_calib, red_wave_calib, median_flux_calib, std_flux_calib = L0_results
+    blue_wave_calib, red_wave_calib, median_flux_calib, std_flux_calib, delta_gr_median, \
+    delta_ri_median, delta_gi_median, delta_gr_std, delta_ri_std, delta_gi_std  = L0_results
 
     # ==================================================================
 
@@ -1412,6 +1413,14 @@ def html_plots(ob, redshift, args):
         f.write(str(median_flux_calib) + '\n')
         f.write(str(std_flux_calib) + '\n')
         f.write(wa_id + '\n')
+
+    with open(output_str + "_extra.txt", "w") as f:
+        f.write(delta_gr_median + '\n')
+        f.write(delta_ri_median + '\n')
+        f.write(delta_gi_median + '\n')
+        f.write(delta_gr_std + '\n')
+        f.write(delta_ri_std + '\n')
+        f.write(delta_gi_std + '\n')
 
     os.makedirs(qc_plot_dir, exist_ok=True)
     os.system('mv ' + str(blue_cube[0].header['OBID']) + '*.png ' + qc_plot_dir + '/.')
