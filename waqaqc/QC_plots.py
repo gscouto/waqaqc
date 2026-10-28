@@ -1415,12 +1415,12 @@ def html_plots(ob, redshift, args):
         f.write(wa_id + '\n')
 
     with open(output_str + "_extra.txt", "w") as f:
-        f.write(delta_gr_median + '\n')
-        f.write(delta_ri_median + '\n')
-        f.write(delta_gi_median + '\n')
-        f.write(delta_gr_std + '\n')
-        f.write(delta_ri_std + '\n')
-        f.write(delta_gi_std + '\n')
+        f.write(str(round(delta_gr_median,2)) + '\n')
+        f.write(str(round(delta_ri_median,2)) + '\n')
+        f.write(str(round(delta_gi_median,2)) + '\n')
+        f.write(str(round(delta_gr_std,2)) + '\n')
+        f.write(str(round(delta_ri_std,2)) + '\n')
+        f.write(str(round(delta_gi_std,2)) + '\n')
 
     os.makedirs(qc_plot_dir, exist_ok=True)
     os.system('mv ' + str(blue_cube[0].header['OBID']) + '*.png ' + qc_plot_dir + '/.')
