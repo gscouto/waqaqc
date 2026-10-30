@@ -942,6 +942,14 @@ def plots(blue_cube, file_dir, gal_dir, file_list, warc_list, output_str, redshi
         if std_flux_calib > 100:
             std_flux_calib = 100
 
+    else:
+        delta_gr_median = np.nan
+        delta_ri_median = np.nan
+        delta_gi_median = np.nan
+        delta_gr_std = np.nan
+        delta_ri_std = np.nan
+        delta_gi_std = np.nan
+
     # ------
 
     fig_l0 = output_str + '_L0.png'
